@@ -1,0 +1,85 @@
+<%- include('../layouts/header') -%>
+
+    <link rel="stylesheet" href="/styles/signup.css">
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const passwordInput = document.getElementById('exampleInputPassword1');
+            const confirmPasswordInput = document.getElementById('exampleInputPassword2');
+            const confirmPasswordMessage = document.getElementById('confirmPasswordMessage');
+            const submitButton = document.getElementById('submitButton');
+
+            function updatePasswordMessage() {
+                const password1 = passwordInput.value.trim();
+                const password2 = confirmPasswordInput.value.trim();
+
+                if ((password1 || password2) && password1 !== password2) {
+                    confirmPasswordMessage.textContent = 'Passwords do not match';
+                    confirmPasswordMessage.style.color = 'red';
+                    submitButton.disabled = true;
+                } else {
+                    confirmPasswordMessage.textContent = '';
+                    submitButton.disabled = false;
+                }
+            }
+
+            passwordInput.addEventListener('input', updatePasswordMessage);
+            confirmPasswordInput.addEventListener('input', updatePasswordMessage);
+        });
+    </script>
+
+
+    <section class="bg-dark">
+        <div class="container-fluid py-5 h-100">
+            <div class="logo-container">
+                <!-- Add your logo here -->
+                <img src="/images/logo.jpg" alt="Logo" width="100">
+            </div>
+            <div class="row justify-content-center align-items-center h-100">
+                <div class="col-12 col-lg-9 col-xl-7">
+                    <div class="card shadow-2-strong card-registration bg-transparent gradient-custom" style="border-radius: 15px;">
+                        <div class="card-body p-4 p-md-5">
+                            <div class="text-center">
+                                <p class="mb-1 pb-0 pb-md-0 mb-md-1 text-danger">Let's get you started on strides</p>
+                                <h4 class="mb-0 pb-md-0 mb-md-5 text-danger">Register Yourself</h3>
+                            </div>
+                            <%- include('../layouts/_messages') -%>
+                            <form method="POST" action="/signup">
+                                <div class="mb-3">
+                                    <input type="text" name="name" class="form-control" id="exampleInputName" placeholder="Name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <input type="email" class="form-control" id="exampleInputEmail1"
+                                        aria-describedby="emailHelp" placeholder="Email" name="email" required>
+                                    <div id="emailHelp" class="form-text Secondary text-light"> We'll never share your email with anyone else.
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <input type="password" class="form-control" id="exampleInputPassword1" placeholder="Password" name="password" required>
+                                </div>
+                                <div class="mb-3">
+                                    <input type="password" class="form-control" id="exampleInputPassword2" placeholder="Confirm Password" name="confirmPassword" required>
+                                </div>
+                                <small id="confirmPasswordMessage"></small>
+                                <div class="mb-3">
+                                    <input type="tel" class="form-control" id="exampleInputMobile" pattern="\+\d{12}" placeholder="Phone" name="phone" required>
+                                </div>
+                                <div class="mb-3">
+                                    <input type="date" class="form-control" id="exampleInputDOB" placeholder="Date of Birth" name="dateOfBirth" required>
+                                    <small class="Secondary text-light"> Date of Birth</small>
+                                </div>
+
+                                <button type="submit" class="  btn btn-danger d-block mx-auto">Signup</button>
+
+                                <p class="text-center mt-5 mb-0 text-light">Have already an account? <a href="/login"
+                                        class="fw-bold text-body"><u class="text-primary">Login here</u></a></p>
+
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <%- include('../layouts/footer') -%>

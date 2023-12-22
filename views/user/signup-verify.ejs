@@ -1,0 +1,108 @@
+<%- include('../layouts/header') -%>
+
+<link rel="stylesheet" href="/styles/signup.css">
+
+<section class="bg-dark">
+    <div class="container-fluid py-5 h-100">
+        <div class="logo-container">
+            <!-- Add your logo here -->
+            <img src="/images/logo.jpg" alt="Logo" width="50">
+        </div>
+        <div class="row justify-content-center align-items-center h-100">
+            <div class="col-12 col-lg-9 col-xl-7">
+                <div class="card shadow-2-strong card-registration bg-transparent gradient-custom" style="border-radius: 15px;">
+                    <div class="card-body p-4 p-md-5">
+
+                        <!-- Add signup button at the top-right -->
+                        <a href="/signup" class="btn btn-primary d-flex justify-content-end mb-3" style="width: 100px;">Go to Signup</a>
+
+                        <!-- Timer -->
+                        <div id="timer" class="text-center text-light mt-3">Calculating...</div>
+
+                        <!-- Add this button where you want the "Resend OTP" button to be displayed -->
+                        
+
+                        <a  id="resendButton" href="/resend-otp" class="btn btn-primary  mb-3" style="width: 100px; display: none;">Resend OTP</a>
+
+                        <div class="text-center">
+                            <h4 class="mb-0 pb-md-0 mb-md-5 text-danger">Verify Your Email and Phone</h3>
+                        </div>
+                        <%- include('../layouts/_messages') -%>
+                        <form method="POST" action="/signup-verify">
+
+                            <!-- OTP from Email -->
+                            <div class="mb-3">
+                                <label for="emailOtp" class="form-label text-light">Enter OTP from Email:</label>
+                                <input type="text" class="form-control" id="emailOtp" placeholder="Email OTP" name="emailOtp" required>
+                            </div>
+
+                            <!-- OTP from Phone -->
+                            <div class="mb-3">
+                                <label for="phoneOtp" class="form-label text-light">Enter OTP from Phone:</label>
+                                <input type="text" class="form-control" id="phoneOtp" placeholder="Phone OTP" name="phoneOtp" required>
+                            </div>
+
+                            <button type="submit" class="btn btn-danger d-block mx-auto">Verify</button>
+
+                            <p class="text-center mt-5 mb-0 text-light">Don't have an account yet? <a href="/signup"
+                                    class="fw-bold text-body"><u class="text-primary">Signup here</u></a></p>
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Add this script block at the end of your EJS template -->
+<!-- Add this script block at the end of your EJS template -->
+<script>
+    // Function to update the timer
+    function updateTimer() {
+        // Calculate the remaining time
+        const now = new Date();
+        const timeDifference = expirationTime - now;
+
+        // Check if the timer has expired
+        if (timeDifference < 0) {
+            // Stop the timer
+            clearTimeout(timerId);
+
+            // Perform any action when the timer expires
+            // For example, you can redirect the user or show a message
+            console.log('Timer expired!');
+            
+            // Show the "Resend OTP" button
+            const resendButton = document.getElementById('resendButton');
+            resendButton.style.display = 'block';
+        } else {
+            // Calculate minutes and seconds
+            const minutes = Math.floor((timeDifference % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((timeDifference % (1000 * 60)) / 1000);
+
+            // Display the remaining time
+            const timerElement = document.getElementById('timer');
+            timerElement.textContent = `OTP is valid for ${minutes}:${seconds}`;
+
+            // Call the updateTimer function again after 1 second
+            timerId = setTimeout(updateTimer, 1000);
+        }
+    }
+
+    // Get the OTP created time from the server
+    const otpCreatedTime = '<%= otpCreatedTime %>'; // Ensure it's a valid JavaScript date string
+
+    // Calculate the expiration time (2 minutes from otpCreatedTime)
+    let expirationTime = new Date(otpCreatedTime);
+    expirationTime.setMinutes(expirationTime.getMinutes() + 2);
+
+    // Call the updateTimer function initially
+    let timerId = setTimeout(updateTimer, 0);
+
+    
+</script>
+
+
+
+<%- include('../layouts/footer') -%>

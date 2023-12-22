@@ -1,0 +1,460 @@
+<style>
+    body {
+        font-family: 'Lato', sans-serif;
+    }
+
+    .overlay {
+        height: 100%;
+        width: 0;
+        position: fixed;
+        z-index: 2050;
+        top: 0;
+        left: 0;
+        background-color: rgb(0, 0, 0);
+        background-color: rgba(0, 0, 0, 0.9);
+        overflow-x: hidden;
+        transition: 0.5s;
+    }
+
+    .overlay-content {
+        position: relative;
+        top: 25%;
+        width: 100%;
+        text-align: center;
+        margin-top: 30px;
+    }
+
+    .overlay a {
+        padding: 8px;
+        text-decoration: none;
+        font-size: 36px;
+        color: #818181;
+        display: block;
+        transition: 0.3s;
+    }
+
+    .overlay a:hover,
+    .overlay a:focus {
+        color: #f1f1f1;
+    }
+
+    .overlay .closebtn {
+        position: absolute;
+        top: 20px;
+        right: 45px;
+        font-size: 60px;
+    }
+
+    .block-4-image img {
+        width: 100%;
+        height: 400px;
+    }
+
+    @media screen and (max-height: 450px) {
+        .overlay a {
+            font-size: 20px
+        }
+
+        .overlay .closebtn {
+            font-size: 40px;
+            top: 15px;
+            right: 35px;
+        }
+    }
+
+    @media (min-width: 992px) and (max-width: 1199.98px) {
+        .block-4-image img {
+            height: 340px;
+        }
+    }
+    @media (min-width: 768px) and (max-width: 991.98px) {
+        .block-4-image img {
+            height: 290px;
+        }
+    }
+    @media (min-width: 576px) and (max-width: 767.98px) {
+        .block-4-image img {
+            height: 260px;
+        }
+    }
+</style>
+
+
+<%- include('../layouts/user-header') -%>
+
+
+    <div class="site-wrap">
+        <%- include('../layouts/user-navbar') -%>
+            <%- include('../layouts/_messages') -%>
+
+                <!-- overlay body -->
+                <div id="myNav" class="overlay">
+                    <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+                    <div class="overlay-content">
+
+
+                        <!-- form content inside overlay-->
+
+                        <!-- New Heading for Filters -->
+                        <div class="mb-4">
+                            <h2 class="h5 text-uppercase font-weight-bold ">FILTERS</h2>
+                        </div>
+
+
+
+                        <!-- Add this at the top or bottom of your EJS template -->
+                        <form action="/products" method="get">
+                            <div class="container-fluid">
+                                <div class="row">
+
+                                    <!-- Gender Filter -->
+                                    <div class="col-10 col-sm-6 col-md-3 border p-3 mx-md-3 mx-lg-2 rounded mb-4 bg-white text-black text-left">
+                                        <div class="form-group">
+                                            <label>
+                                                <h4>Gender</h4>
+                                            </label>
+                                            <div class="form-check">
+                                                <input type="checkbox" id="gender_men" name="gender[]" value="men"
+                                                    class="form-check-input" <% if (selectedFilters.gender &&
+                                                    selectedFilters.gender.includes('men')) { %>checked<% } %>>
+                                                    <label for="gender_men" class="form-check-label">Men</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input type="checkbox" id="gender_women" name="gender[]" value="women"
+                                                    class="form-check-input" <% if (selectedFilters.gender &&
+                                                    selectedFilters.gender.includes('women')) { %>checked<% } %>>
+                                                    <label for="gender_women" class="form-check-label">Women</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input type="checkbox" id="gender_unisex" name="gender[]" value="unisex"
+                                                    class="form-check-input" <% if (selectedFilters.gender &&
+                                                    selectedFilters.gender.includes('unisex')) { %>checked<% } %>>
+                                                    <label for="gender_unisex" class="form-check-label">Unisex</label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+                                    <!-- Category Filter -->
+                                    <div class="col-10 col-sm-6 col-md-3 border p-3 mx-md-3 mx-lg-2 rounded mb-4 bg-white text-black text-left">
+                                        <div class="form-group">
+                                            <label>
+                                                <h4>Category</h4>
+                                            </label>
+                                            <% filterOptions.categories.forEach((category)=> { %>
+                                                <div class="form-check">
+                                                    <input type="checkbox" id="category_<%= category %>"
+                                                        name="category[]" value="<%= category %>"
+                                                        class="form-check-input" <% if (selectedFilters.category &&
+                                                        selectedFilters.category.includes(category)) { %>checked<% } %>>
+                                                        <label for="category_<%= category %>" class="form-check-label">
+                                                            <%= category %>
+                                                        </label>
+                                                </div>
+                                                <% }); %>
+                                        </div>
+                                    </div>
+
+
+                                    <!-- Brand Filter -->
+                                    <div class="col-10 col-sm-6 col-md-3 border p-3 mx-md-3 mx-lg-2 rounded mb-4 bg-white text-black text-left">
+                                        <div class="form-group">
+                                            <label>
+                                                <h4>Brand</h4>
+                                            </label>
+                                            <% filterOptions.brands.forEach((brand)=> { %>
+                                                <div class="form-check">
+                                                    <input type="checkbox" id="brand_<%= brand %>" name="brands[]"
+                                                        value="<%= brand %>" class="form-check-input" <% if
+                                                        (selectedFilters.brands &&
+                                                        selectedFilters.brands.includes(brand)) { %>checked<% } %>>
+                                                        <label for="brand_<%= brand %>" class="form-check-label">
+                                                            <%= brand %>
+                                                        </label>
+                                                </div>
+                                                <% }); %>
+                                        </div>
+                                    </div>
+
+
+                                    <!-- Color Filter -->
+                                    <div class="col-10 col-sm-6 col-md-3 border p-3 mx-md-3 mx-lg-2 rounded mb-4 bg-white text-black text-left">
+                                        <div class="form-group">
+                                            <label>
+                                                <h4>Color</h4>
+                                            </label>
+                                            <% filterOptions.colors.forEach((color)=> { %>
+                                                <div class="form-check">
+                                                    <input type="checkbox" id="color_<%= color %>" name="colors[]"
+                                                        value="<%= color %>" class="form-check-input" <% if
+                                                        (selectedFilters.colors &&
+                                                        selectedFilters.colors.includes(color)) { %>checked<% } %>>
+                                                        <label for="color_<%= color %>" class="form-check-label">
+                                                            <%= color %>
+                                                        </label>
+                                                </div>
+                                                <% }); %>
+                                        </div>
+                                    </div>
+
+
+
+                                    <!-- Price Range Filters (Min and Max) -->
+                                    <div class="col-10 col-sm-6 col-md-3 border p-3 mx-md-3 mx-lg-2 rounded mb-4 bg-white text-black text-left">
+                                        <div class="form-group">
+                                            <label for="minPrice">
+                                                <h4>Min Price:</h4>
+                                            </label>
+                                            <input type="text" id="minPrice" name="minPrice" class="form-control"
+                                                placeholder="Min Price" <% if (selectedFilters.minPrice !==null &&
+                                                !isNaN(selectedFilters.minPrice)) { %> value="<%=
+                                                selectedFilters.minPrice %>"<% } %> >
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="maxPrice">
+                                                <h4>Max Price:</h4>
+                                            </label>
+                                            <input type="text" id="maxPrice" name="maxPrice" class="form-control"
+                                                placeholder="Max Price" <% if (selectedFilters.maxPrice !==null &&
+                                                !isNaN(selectedFilters.maxPrice)) { %> value="<%=
+                                                selectedFilters.maxPrice %>"<% } %>>
+                                        </div>
+                                    </div>
+
+
+                                    <!-- Size Filters -->
+
+                                    <% if (Array.isArray(selectedFilters.sizes)) { %>
+                                        <%= selectedFilters.sizes.join(', ') %>
+                        <% } else if (selectedFilters.sizes) { %>
+                            <%= selectedFilters.sizes %>
+                        <% } %>
+                        <div class="col-10 col-sm-6 col-md-3 border p-3 mx-md-3 mx-lg-2 rounded mb-4 bg-white text-black text-left">
+                            <div class="form-group">
+                                <label>
+                                    <h4>Size</h4>
+                                </label>
+                                <div class="form-check">
+                                    <input type="checkbox" id="s_sm" name="sizes[]" value="small"
+                                        class="form-check-input" <% if (selectedFilters.sizes &&
+                                        selectedFilters.sizes.includes("small")) { %>checked<% } %>>
+                                        <label for="s_sm" class="form-check-label">Small</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="checkbox" id="s_md" name="sizes[]" value="medium"
+                                        class="form-check-input" <% if (selectedFilters.sizes &&
+                                        selectedFilters.sizes.includes("medium")) { %>checked<% } %>>
+                                        <label for="s_md" class="form-check-label">Medium</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="checkbox" id="s_lg" name="sizes[]" value="large"
+                                        class="form-check-input" <% if (selectedFilters.sizes &&
+                                        selectedFilters.sizes.includes("large")) { %>checked<% } %>>
+                                        <label for="s_lg" class="form-check-label">Large</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="checkbox" id="s_xlg" name="sizes[]" value="extraLarge"
+                                        class="form-check-input" <% if (selectedFilters.sizes &&
+                                        selectedFilters.sizes.includes("extraLarge")) { %>checked<% } %>>
+                                        <label for="s_xlg" class="form-check-label">Extra Large</label>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <!-- Discount Filter -->
+                        <div class="col-10 col-sm-6 col-md-3 border p-3 mx-md-3 mx-lg-4 rounded mb-4 bg-white text-black text-left">
+                            <div class="form-group">
+                                <label for="discount">
+                                    <h4>Discount</h4>
+                                </label>
+                                <select name="discount" id="discount" class="form-control">
+                                    <option  selected >None</option>
+                                    <option value="20" <% if (selectedFilters.discount===20) { %> selected
+                                        <% } %> >Min 20%</option>
+                                    <option value="40" <% if (selectedFilters.discount===40) { %> selected
+                                        <% } %> >Min 40%</option>
+                                    <option value="60" <% if (selectedFilters.discount===60) { %> selected
+                                        <% } %> >Min 60%</option>
+                                </select>
+                            </div>
+                        </div>
+
+                            </div>
+                        </div>
+                        
+
+                        <button type="submit" class="btn btn-primary">Filter Now</button>
+                    </form>
+
+
+
+                </div>
+              </div>
+                <div class="site-wrap">
+
+                </div>
+
+
+
+                <div class="site-section">
+                    <div class="container-fluid">
+
+                        <div class="row mb-5">
+                            <div class="col-12 order-2">
+
+                                <!-- Filter button -->
+                                <span style="font-size:30px;cursor:pointer; z-index: 3000;" onclick="openNav()">&#9776; Filter </span>
+
+                                <div class="row">
+                                    <div class="col-md-12 mb-5">
+                                        <div class="d-flex">
+                                            <div class="ml-auto">
+                                                <div class="btn-group">
+                                                    <button type="button"
+                                                        class="btn btn-secondary btn-sm dropdown-toggle"
+                                                        id="dropdownMenuReference" data-toggle="dropdown">Sort
+                                                        By</button>
+                                                    <div class="dropdown-menu" aria-labelledby="dropdownMenuReference">
+                                                        <a class="dropdown-item" href="#">Latest Products</a>
+                                                        <a class="dropdown-item" href="#">Popularity</a>
+                                                        <div class="dropdown-divider"></div>
+                                                        <a class="dropdown-item" href="#">Price, low to high</a>
+                                                        <a class="dropdown-item" href="#">Price, high to low</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-5 col-12">
+                                    <% for(let i=0; i<products.length;i++){ %>
+                                        <div class="col-10 offset-1 offset-sm-0 col-sm-6 col-md-4 col-lg-4 col-xl-3 mb-4" data-aos="fade-up">
+                                            <div class="block-4 text-center border">
+                                                <figure class="block-4-image">
+                                                    <a href="/products/<%=products[i]._id%>">
+                                                        <img src="/images/productImages/<%=products[i].images.image1.name%>"
+                                                            alt="Image placeholder" class="img-fluid"
+                                                            >
+                                                    </a>
+                                                </figure>
+                                                <div class="block-4-text p-2">
+                                                    <!-- Name and Wishlist Icon in the same row -->
+                                                    <div class="row align-items-center text-left m-0">
+                                                        <div class="col-8 p-0">
+                                                            <!-- Name -->
+                                                            <a href="shop-single.html" class="text-left">
+                                                                <h3 class="font-weight-bold mb-2">
+                                                                    <%=products[i].brandName%>
+                                                                </h3>
+                                                            </a>
+                                                        </div>
+                                                        <div class="col-4 pr-0">
+                                                            <!-- Wishlist Icon -->
+                                                            <a href="#" class="float-right pr-0"><span
+                                                                    class="icon icon-heart-o"></span></a>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Description -->
+                                                    <p class="mb-2 text-left">
+                                                        <%=products[i].productName%>
+                                                    </p>
+
+                                                    <!-- Prices and Offer -->
+                                                    <div class="row align-items-center text-left m-0">
+                                                        <div class="col-4 p-0">
+                                                            <!-- Final Price -->
+                                                            <p class="text-primary font-weight-bold m-0">
+                                                                <%=products[i].finalPrice%>
+                                                            </p>
+                                                        </div>
+                                                        <div class="col-4 p-0">
+                                                            <!-- Original Price -->
+                                                            <p class="text-muted m-0">
+                                                                <del>
+                                                                    <%=products[i].initialPrice%>
+                                                                </del>
+                                                            </p>
+                                                        </div>
+                                                        <div class="col-4 pl-0">
+                                                            <!-- Offer Badge -->
+                                                            <span class="badge badge-success">-
+                                                                <%=products[i].discountPercentage%>%
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <%}%>
+
+
+
+
+                                </div>
+
+
+                                <!-- Pagination -->
+                                <div class="row" data-aos="fade-up">
+                                    <div class="col-md-12 text-center">
+                                        <div class="site-block-27">
+
+                                            <% function generatePageLink(pageNumber, filters) { const
+                                                queryString=Object.entries(filters) .filter(([key, value])=> value !=
+                                                null) // Exclude null or undefined values
+                                                .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+                                                .join(' &'); return `/products?page=${pageNumber}${queryString ?
+                                            `&${queryString}` : '' }`; } %>
+
+
+                                            <% if (currentPage> 1) { %>
+                                                <a href="<%= generatePageLink(currentPage - 1, selectedFilters) %>"
+                                                    class="prev border rounded px-2 mx-1">&lt;</a>
+                                                <% } %>
+
+                                                    <% for (let i=1; i <=totalPages; i++) { %>
+                                                        <a href="<%= generatePageLink(i, selectedFilters) %>"
+                                                            class="<%= i === currentPage ? 'active' : '' %> border rounded px-2 mx-1">
+                                                            <%= i %>
+                                                        </a>
+                                                        <% } %>
+
+                                                            <% if (currentPage < totalPages) { %>
+                                                                <a href="<%= generatePageLink(currentPage + 1, selectedFilters) %>"
+                                                                    class="next border rounded px-2 mx-1"> &gt;</a>
+                                                                <% } %>
+
+                                </div>
+                            </div>
+                    </div>
+
+
+
+                </div>
+
+
+    </div>
+
+
+
+    </div>
+    </div>
+
+
+    </div>
+
+    <script>
+        function openNav() {
+            document.getElementById("myNav").style.width = "100%";
+        }
+
+        function closeNav() {
+            document.getElementById("myNav").style.width = "0%";
+        }
+    </script>
+
+    <%- include('../layouts/user-footer') -%>

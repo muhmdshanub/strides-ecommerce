@@ -1,0 +1,328 @@
+<%- include('../layouts/admin-header') -%>
+
+
+    <style>
+        .tm-product-img-dummy {
+            max-width: 100%;
+            /* Ensure the image does not exceed its container's width */
+            overflow: hidden;
+            /* Hide any overflow beyond the container */
+        }
+
+        .tm-product-img-dummy img {
+            max-width: 100%;
+            /* Ensure the image itself does not exceed its container's width */
+            height: auto;
+            /* Maintain the aspect ratio of the image */
+        }
+    </style>
+
+
+    <%- include('../layouts/admin-navbar') -%>
+
+        <div class="container tm-mt-big tm-mb-big">
+            <div class="row">
+                <div class="col-xl-9 col-lg-10 col-md-12 col-sm-12 mx-auto">
+                    <div class="tm-bg-primary-dark tm-block tm-block-h-auto">
+                        <%- include('../layouts/_messages.ejs') -%>
+                            <div class="row">
+                                <div class="col-12">
+                                    <h2 class="tm-block-title d-inline-block">Add Product</h2>
+                                </div>
+                            </div>
+
+                            <form action="" class="tm-edit-product-form" method="post" enctype="multipart/form-data">
+                                <div class="row tm-edit-product-row">
+                                    <div class="col-xl-6 col-lg-6 col-md-12">
+
+                                        <div class="form-group mb-3">
+                                            <label for="brandName">BRAND</label>
+                                            <input id="brandName" name="brandName" value="<%= product.brandName %>"
+                                                type="text" class="form-control validate" required />
+                                        </div>
+                                        <div class="form-group mb-3">
+                                            <label for="productName">Product Name</label>
+                                            <input id="productName" name="productName"
+                                                value="<%= product.productName %>" type="text"
+                                                class="form-control validate" required />
+                                        </div>
+                                        <div class="form-group mb-3">
+                                            <label for="description">Description</label>
+                                            <textarea name="description" class="form-control validate" rows="3"
+                                                required><%=product.description%></textarea>
+                                        </div>
+                                        <div class="form-group mb-3">
+                                            <label for="gender">Gender</label>
+                                            <select class="custom-select tm-select-accounts" id="gender" name="gender"
+                                                required>
+                                                <option selected> Select gender </option>
+                                                <option value="men" <%=product.gender==='men' ? 'selected' : '' %>>MEN
+                                                </option>
+                                                <option value="women" <%=product.gender==='women' ? 'selected' : '' %>
+                                                    >WOMEN</option>
+                                                <option value="unisex" <%=product.gender==='unisex' ? 'selected' : '' %>
+                                                    >UNISEX</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group mb-3">
+                                            <label for="colors">Colors</label>
+
+                                            <div class="border rounded">
+                                                <label for="colorBlack">Black</label>
+
+                                                <% const selectedColors=product.colors.map(color=> color.toLowerCase());
+                                                    %>
+
+                                                    <input type="checkbox" id="colorBlack" name="colors[]" value="black"
+                                                        <%=selectedColors.includes('black') ? 'checked' : '' %>>
+
+                                                    <label for="colorWhite">White</label>
+                                                    <input type="checkbox" id="colorWhite" name="colors[]" value="white"
+                                                        <%=selectedColors.includes('white') ? 'checked' : '' %>>
+
+                                                    <label for="colorBlue">Blue</label>
+                                                    <input type="checkbox" id="colorBlue" name="colors[]" value="blue"
+                                                        <%=selectedColors.includes('blue') ? 'checked' : '' %>>
+
+                                                    <label for="colorRed">Red</label>
+                                                    <input type="checkbox" id="colorRed" name="colors[]" value="red"
+                                                        <%=selectedColors.includes('red') ? 'checked' : '' %>>
+
+                                                    <label for="colorGreen">Green</label>
+                                                    <input type="checkbox" id="colorGreen" name="colors[]" value="green"
+                                                        <%=selectedColors.includes('green') ? 'checked' : '' %>>
+
+                                                    <label for="colorYellow">Yellow</label>
+                                                    <input type="checkbox" id="colorYellow" name="colors[]"
+                                                        value="yellow" <%=selectedColors.includes('yellow') ? 'checked'
+                                                        : '' %>>
+
+                                                    <label for="colorOrange">Orange</label>
+                                                    <input type="checkbox" id="colorOrange" name="colors[]"
+                                                        value="orange" <%=selectedColors.includes('orange') ? 'checked'
+                                                        : '' %>>
+
+                                                    <label for="colorPink">Pink</label>
+                                                    <input type="checkbox" id="colorPink" name="colors[]" value="pink"
+                                                        <%=selectedColors.includes('pink') ? 'checked' : '' %>>
+
+                                                    <label for="colorPurple">Purple</label>
+                                                    <input type="checkbox" id="colorPurple" name="colors[]"
+                                                        value="purple" <%=selectedColors.includes('purple') ? 'checked'
+                                                        : '' %>>
+
+                                                    <label for="colorGrey">Grey</label>
+                                                    <input type="checkbox" id="colorGrey" name="colors[]" value="grey"
+                                                        <%=selectedColors.includes('grey') ? 'checked' : '' %>>
+
+                                                    <label for="colorBrown">Brown</label>
+                                                    <input type="checkbox" id="colorBrown" name="colors[]" value="brown"
+                                                        <%=selectedColors.includes('brown') ? 'checked' : '' %>>
+                                            </div>
+                                        </div>
+                                        <div class="form-group mb-3">
+                                            <label for="category">Category</label>
+                                            <select class="custom-select tm-select-accounts" id="category"
+                                                name="category">
+                                                <option selected> select Category </option>
+                                                <option value="formals" <%=product.category==='formals' ? 'selected'
+                                                    : '' %> >FORMALS</option>
+                                                <option value="casuals" <%=product.category==='casuals' ? 'selected'
+                                                    : '' %>>CASUALS</option>
+                                                <option value="sports" <%=product.category==='sports' ? 'selected' : ''
+                                                    %>>SPORTS</option>
+                                            </select>
+                                        </div>
+
+
+                                        <div class="row form-group mb-3 text-white">
+                                            <div class="col-xs-12">
+                                                <label for="sizeAndStock">Size wise stock</label>
+                                                <table class="table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Size</th>
+                                                            <th>Available Stock</th>
+                                                            <th>Sold Stock</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td>Small</td>
+                                                            <td><input type="text" name="available_stock_small"
+                                                                    value="<%= product.sizes[0].small.availableStock %>"
+                                                                    class="form-control" required /></td>
+                                                            <td><input type="text" name="sold_stock_small"
+                                                                    value="<%= product.sizes[0].small.soldStock %>"
+                                                                    class="form-control" required /></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Medium</td>
+                                                            <td><input type="text" name="available_stock_medium"
+                                                                    value="<%= product.sizes[0].medium.availableStock %>"
+                                                                    class="form-control" required /></td>
+                                                            <td><input type="text" name="sold_stock_medium"
+                                                                    value="<%= product.sizes[0].medium.soldStock %>"
+                                                                    class="form-control" required /></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Large</td>
+                                                            <td><input type="text" name="available_stock_large"
+                                                                    value="<%= product.sizes[0].large.availableStock %>"
+                                                                    class="form-control" required /></td>
+                                                            <td><input type="text" name="sold_stock_large"
+                                                                    value="<%= product.sizes[0].large.soldStock %>"
+                                                                    class="form-control" required /></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Extra Large</td>
+                                                            <td><input type="text" name="available_stock_extra_large"
+                                                                    value="<%= product.sizes[0].extraLarge.availableStock %>"
+                                                                    class="form-control" required /></td>
+                                                            <td><input type="text" name="sold_stock_extra_large"
+                                                                    value="<%= product.sizes[0].extraLarge.soldStock %>"
+                                                                    class="form-control" required /></td>
+                                                        </tr>
+                                                        <!-- Add more size rows as needed -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <div class="form-group mb-3">
+                                            <label for="price">PRICE</label>
+                                            <input id="price" name="price" value="<%= product.initialPrice %>"
+                                                type="text" class="form-control validate" required />
+                                        </div>
+                                        <div class="form-group mb-3">
+                                            <label for="discount">DISCOUNT</label>
+                                            <input id="discount" name="discount"
+                                                value="<%= product.discountPercentage %>" type="text"
+                                                class="form-control validate" required />
+                                        </div>
+
+                                    </div>
+                                    <!-- Your existing HTML content -->
+
+                                    <div class="col-xl-6 col-lg-6 col-md-12 mx-auto mb-4">
+                                        <% for (let i=1; i <=4; i++) { %>
+                                            <!-- Image upload placeholders for -->
+                                            <div class="tm-product-img-edit mx-auto">
+                                                <img id="selectedImage<%= i %>"
+                                                    src="/images/productImages/<%= product.images['image' + i]?.name %>"
+                                                    alt="Product Image <%= i %>" class="img-fluid d-block mx-auto"
+                                                    style="max-height: 200px; max-width: 100%;" />
+                                                <i class="fas fa-cloud-upload-alt tm-upload-icon"
+                                                    onclick="document.getElementById('fileInput<%= i %>').click();"></i>
+                                            </div>
+
+                                            <!-- File input and upload button for -->
+                                            <div class="custom-file mt-3 mb-3">
+                                                <input id="fileInput<%= i %>" type="file" style="display:none;"
+                                                    onchange="displaySelectedImage(<%= i %>); checkImageModification(<%= i %>);"
+                                                    name="images" />
+                                                <input type="button" class="btn btn-primary btn-block mx-auto"
+                                                    value="CHANGE"
+                                                    onclick="document.getElementById('fileInput<%= i %>').click();" />
+                                            </div>
+
+                                            <!-- Hidden fields for tracking modifications -->
+                                            <input type="hidden" id="originalImage<%= i %>" name="originalImage<%= i %>"
+                                                value="<%= product.images['image' + i]?.name %>" />
+                                            <input type="hidden" id="imageModified<%= i %>" name="imageModified<%= i %>"
+                                                value="false" />
+                                            <% } %>
+
+                                    </div>
+
+
+
+                                    <div class="col-12">
+                                        <button type="submit" class="btn btn-primary btn-block text-uppercase">Update
+                                            Product
+                                            Now</button>
+                                    </div>
+
+                                </div>
+                            </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function displaySelectedImage(imageNumber) {
+                var fileInput = document.getElementById('fileInput' + imageNumber);
+                var selectedImage = document.getElementById('selectedImage' + imageNumber);
+
+                // Check if a file is selected
+                if (fileInput.files && fileInput.files[0]) {
+                    var reader = new FileReader();
+
+                    // Set up the reader to read the selected image
+                    reader.onload = function (e) {
+                        selectedImage.src = e.target.result;
+                    };
+
+                    // Read the selected image as a data URL
+                    reader.readAsDataURL(fileInput.files[0]);
+                }
+            }
+
+            function checkImageModification(index) {
+                var fileInput = document.getElementById('fileInput' + index);
+                var originalImageName = document.getElementById('originalImage' + index).value;
+
+                if (fileInput.files && fileInput.files[0]) {
+                    var reader = new FileReader();
+
+                    reader.onload = function (e) {
+                        var newImageContent = e.target.result;
+
+                        // Compare newImageContent with the content of the default image
+                        if (compareImagesContent(newImageContent, originalImageName)) {
+                            document.getElementById('imageModified' + index).value = 'true';
+                        } else {
+                            // Optionally, you can reset the file input or show a message to the user
+                            fileInput.value = ''; // Reset the file input
+                            alert('Please select a different image.');
+                        }
+                    };
+
+                    reader.readAsDataURL(fileInput.files[0]);
+                }
+            }
+
+            function compareImagesContent(newImageContent, originalImageName) {
+                // Assume originalImageName is the URL of the default image
+                var defaultImage = new Image();
+                defaultImage.src = originalImageName;
+
+                // Create an image from the new image content
+                var newImage = new Image();
+                newImage.src = newImageContent;
+
+                // Compare the dimensions of the images
+                if (defaultImage.width !== newImage.width || defaultImage.height !== newImage.height) {
+                    return true; // Images have different dimensions, consider them modified
+                }
+
+                // Compare the content by converting images to base64 strings
+                var defaultImageBase64 = getBase64FromImage(defaultImage);
+                var newImageBase64 = getBase64FromImage(newImage);
+
+                return defaultImageBase64 !== newImageBase64;
+            }
+
+            function getBase64FromImage(image) {
+                var canvas = document.createElement("canvas");
+                canvas.width = image.width;
+                canvas.height = image.height;
+
+                var context = canvas.getContext("2d");
+                context.drawImage(image, 0, 0);
+
+                return canvas.toDataURL("image/png");
+            }
+        </script>
+
+        <%- include('../layouts/admin-footer') -%>

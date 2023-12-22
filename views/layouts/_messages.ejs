@@ -1,0 +1,11 @@
+<% if (messages.error && messages.error.length > 0) { %>
+    <div class="alert alert-danger" role="alert">
+      <%- messages.error.join('<br>') %>
+    </div>
+  <% } %>
+  
+  <% if (messages.success && messages.success.length > 0) { %>
+    <div class="alert alert-success" role="alert">
+      <%- messages.success.join('<br>') %>
+    </div>
+  <% } %>

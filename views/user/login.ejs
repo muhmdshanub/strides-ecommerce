@@ -1,0 +1,53 @@
+<%- include('../layouts/header') -%>
+
+    <link rel="stylesheet" href="/styles/signup.css">
+    <style>
+        body, html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+    }
+    
+    </style>
+    
+
+
+
+    <section class="bg-dark">
+        <div class="container-fluid mx-1 py-5">
+            <div class="logo-container">
+                <!-- Add your logo here -->
+                <img src="/images/logo.jpg" alt="Logo" width="100">
+            </div>
+            <div class="row justify-content-center align-items-center">
+                <div class="col-12 col-lg-9 col-xl-7">
+                    <div class="card shadow-2-strong card-registration bg-transparent gradient-custom my-5" style="border-radius: 15px;">
+                        <div class="card-body p-4 p-md-5">
+                            <div class="text-center my-5">
+                                <h4 class="mb-0 pb-md-0 mb-md-5 text-danger">LOGIN</h3>
+                            </div>
+                            <%- include('../layouts/_messages') -%>
+                            <form method="POST" action="/login">
+    
+                                <div class="mb-3">
+                                    <input type="text" class="form-control" id="exampleInputEmail1"
+                                        aria-describedby="emailHelp" placeholder="Email or Phone" name="emailOrPhone" required>
+                                </div>
+                                <div class="mb-3">
+                                    <input type="password" class="form-control" id="exampleInputPassword1" placeholder="Password" name="password" required>
+                                </div>
+
+                                <button type="submit" class="  btn btn-danger d-block mx-auto">Signup</button>
+
+                                <p class="text-center mt-5 mb-0 text-light">don't have an account yet? <a href="/signup"
+                                        class="fw-bold text-body"><u class="text-primary">Signup here</u></a></p>
+
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <%- include('../layouts/footer') -%>
