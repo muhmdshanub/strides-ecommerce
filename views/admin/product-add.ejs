@@ -147,14 +147,15 @@
 
                                             </div>
                                         </div>
+                                        
+
                                         <div class="form-group mb-3">
                                             <label for="category">Category</label>
-                                            <select class="custom-select tm-select-accounts" id="category"
-                                                name="category">
+                                            <select class="custom-select tm-select-accounts" id="category" name="category">
                                                 <option selected value="">Select category</option>
-                                                <option value="formals">FORMALS</option>
-                                                <option value="casuals">CASUALS</option>
-                                                <option value="sports">SPORTS</option>
+                                                <% for (const category of categories) { %>
+                                                    <option value="<%= category._id %>"><%= category.name %></option>
+                                                <% } %>
                                             </select>
                                         </div>
 

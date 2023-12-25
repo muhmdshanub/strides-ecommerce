@@ -180,6 +180,9 @@
                             <div
                                 class=" col-12 col-sm-8 col-md-10 offset-md-1 offset-sm-2 col-lg-4 col-xl-5 pl-3 ml-lg-0 pt-5 mt-5 mt-sm-5 mt-lg-0 border border-danger rounded">
 
+                                <form action="/add-to-cart/<%= productId %>" method="POST">
+                                
+                                </form>
                                 <!-- Brand name -->
                                 <h2 class="text-black">
                                     <%= product.brandName %>
@@ -202,16 +205,16 @@
 
                                 <div class="my-md-5 my-sm-1 my-1">
                                     <label class="btn btn-outline-danger rounded-pill">
-                                        <input type="radio" name="size" value="S"> S
+                                        <input type="radio" name="size" value="small"> S
                                     </label>
                                     <label class="btn btn-outline-danger rounded-pill">
-                                        <input type="radio" name="size" value="M"> M
+                                        <input type="radio" name="size" value="medium"> M
                                     </label>
                                     <label class="btn btn-outline-danger rounded-pill">
-                                        <input type="radio" name="size" value="L"> L
+                                        <input type="radio" name="size" value="large"> L
                                     </label>
                                     <label class="btn btn-outline-danger rounded-pill">
-                                        <input type="radio" name="size" value="XL"> XL
+                                        <input type="radio" name="size" value="extraLarge"> XL
                                     </label>
                                 </div>
                                 <!-- Quantity selection with input group -->
@@ -230,8 +233,8 @@
 
                                 <!-- Add to wishlist and Add to cart buttons -->
                                 <div class="mt-0 mt-sm-0 mt-md-5 mb-md-0 mb-sm-2 mb-2 pt-2 pt-sm-2 pt-md-5 d-flex justify-content-between">
-                                    <a href="#" class="btn btn-outline-primary btn-sm mr-2">Add to <br> Wishlist</a>
-                                    <a href="#" class="buy-now btn btn-sm btn-outline-brown bg-danger text-white">Add To
+                                    <a href="#" class="btn btn-outline-primary btn-sm mr-2"  >Add to <br> Wishlist</a>
+                                    <a href="#" class="buy-now btn btn-sm btn-outline-brown bg-danger text-white" >Add To
                                         <br> Cart</a>
                                 </div>
                             </div>
@@ -256,6 +259,11 @@
 
 
 <script>
+
+
+
+
+
 
 // Call imageZoom function for your main image
 document.addEventListener("DOMContentLoaded", function () {

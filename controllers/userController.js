@@ -2,7 +2,9 @@ const otpGenerator = require('otp-generator');
 const mongoose = require('mongoose');
 const User = require('../models/userModel');
 const OTP = require('../models/otpModel');
+const Category = require('../models/categoryModel');
 const Products = require('../models/productModel');
+const Cart = require('../models/cartModel');
 const sendOtpEmail = require('../utils/sendEmail'); // Your function to send OTP via email
 const sendOtpPhone = require('../utils/sendSms'); // Your function to send OTP via phone
 
@@ -139,16 +141,15 @@ const resendOtpHandler = async (req, res) => {
         const newEmailOtp = generateOtp();
        // const newPhoneOtp = generateOtp();
 
-        // Store new OTPs in the database
-        await OTP.findOneAndDelete({ intendedEmail: email });
-        //await OTP.findOneAndDelete({ intendedPhone: phone });
-
-        const newOtpData = await OTP.create({
-            intendedEmail: email,
-            emailOtp: newEmailOtp,
-            //intendedPhone: phone,
-            //phoneOtp: newPhoneOtp,
-        });
+        // Find and update or create a new OTP document
+        const updatedOtpData = await OTP.findOneAndUpdate(
+            { intendedEmail: email },
+                {
+                intendedEmail: email,
+                emailOtp: newEmailOtp,
+            },
+            { upsert: true, new: true }
+            );
 
         req.session.userData.otpCreatedTime = newOtpData.createdAt; // Get the created time
 
@@ -207,10 +208,18 @@ const loadsignupVerify = async (req, res) => {
 
 
 const getFilterOptions = async () => {
-    const brands = await Products.distinct('brandName', { isDeleted: false });
-    const colors = await Products.distinct('colors', { isDeleted: false });
-    const categories = await Products.distinct('category', { isDeleted: false });
-    return { brands, colors, categories };
+    try {
+        const brands = await Products.distinct('brandName', { isDeleted: false });
+        const colors = await Products.distinct('colors', { isDeleted: false });
+
+        // Fetch categories from the Category model
+        const categories = await Category.find({}, '_id name');
+
+        return { brands, colors, categories };
+    } catch (error) {
+        console.error(error.message);
+        throw error;
+    }
 };
 
 
@@ -390,6 +399,16 @@ const signupVerificationHandler = async (req, res) => {
         const userData = await user.save();
 
         if (userData) {
+            // Create a new Cart document for the user
+            const cart = new Cart({ user: userData._id });
+            const cartData = await cart.save();
+
+            if (cartData) {
+                // Update the user's cart field with the new cart's _id
+                userData.cart = cartData._id;
+                const updatedUserData = await userData.save();
+            }
+
             // Remove user data from the session after successful signup
             delete req.session.userData;
 
@@ -461,7 +480,6 @@ const loginHandler = async (req, res) => {
 
 const productSingleLoader = async (req, res) => {
     try {
-
         const productId = req.params.productId;
 
         if (!mongoose.Types.ObjectId.isValid(productId)) {
@@ -469,7 +487,9 @@ const productSingleLoader = async (req, res) => {
             res.redirect('/products');
             return;
         }
-        const productData = await Products.findById(productId);
+
+        const productData = await Products.findById(productId).populate('category');
+
         if (productData) {
             res.render('./user/product-single.ejs', { product: productData });
         } else {
@@ -478,10 +498,11 @@ const productSingleLoader = async (req, res) => {
         }
     } catch (error) {
         console.log(error.message);
-        req.flash('error', 'An error occured');
+        req.flash('error', 'An error occurred');
         res.redirect('/products');
     }
-}
+};
+
 
 const homeLoader = async (req, res) => {
     try {
@@ -490,6 +511,61 @@ const homeLoader = async (req, res) => {
         console.log(error.message);
     }
 }
+
+
+const addToCArtHandler = async (req, res) => {
+    try {
+
+        const productId = req.params.productId;
+        const { size, quantity } = req.body;
+
+        // Get user ID from the session or authentication token
+        const userId = req.session.userId; 
+
+        // Find the user's cart in the Cart collection
+        const cart = await Cart.findOne({ user: userId });
+
+        if (!cart) {
+            return res.status(404).json({ error: 'User\'s cart not found' });
+        }
+
+        // Find the product in the database
+        const product = await Products.findById(productId);
+
+        if (!product) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
+
+        // Check if the product with the selected size already exists in the cart
+        const existingItemIndex = cart.items.findIndex(
+            (item) => item.product.equals(product._id) && item.size === size
+        );
+
+        if (existingItemIndex !== -1) {
+            // If exists, update the quantity
+            cart.items[existingItemIndex].quantity += quantity;
+        } else {
+            // If not, add a new item to the cart
+            cart.items.push({ 
+                product: product._id,
+                size,
+                quantity,
+                totalAmount : quantity * product.finalPrice,
+            
+            });
+            cart.totalItems = cart.items.length ;
+            cart.totalAmount = cart.items.reduce((total, item) => total + item.totalAmount, 0);
+        }
+
+        // Save the cart
+        await cart.save();
+
+        res.json({ message: 'Product added to cart successfully' });
+    } catch (error) {
+        console.error('Error adding product to cart:', error.message);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
 
 
 
@@ -506,4 +582,5 @@ module.exports = {
     homeLoader,
     resendOtpHandler,
     logoutHandler,
+    addToCArtHandler
 }

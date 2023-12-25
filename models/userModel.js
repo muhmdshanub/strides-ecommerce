@@ -2,6 +2,8 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const mongoosePaginate = require('mongoose-paginate-v2');
 
+const Cart = require('./cartModel');
+
 const userSchema = new mongoose.Schema({
 
     name: {
@@ -34,11 +36,12 @@ const userSchema = new mongoose.Schema({
     }],
     cart: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Cart'
+        ref: 'Cart',
+        unique: true,
     }],
     orders: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Order'
+        ref: 'Order',
     }],
     isLogin: {
         type: Boolean,
@@ -82,6 +85,7 @@ userSchema.pre('save', async function (next) {
         next(error);
     }
 });
+
 
 
 userSchema.plugin(mongoosePaginate);

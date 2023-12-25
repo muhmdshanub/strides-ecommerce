@@ -248,16 +248,16 @@
 
                                 <div class="my-md-5 my-sm-1 my-1">
                                     <label class="btn btn-outline-danger rounded-pill">
-                                        <input type="radio" name="size" value="S"> S
+                                        <input type="radio" name="size" value="size"> S
                                     </label>
                                     <label class="btn btn-outline-danger rounded-pill">
-                                        <input type="radio" name="size" value="M"> M
+                                        <input type="radio" name="size" value="medium"> M
                                     </label>
                                     <label class="btn btn-outline-danger rounded-pill">
-                                        <input type="radio" name="size" value="L"> L
+                                        <input type="radio" name="size" value="large"> L
                                     </label>
                                     <label class="btn btn-outline-danger rounded-pill">
-                                        <input type="radio" name="size" value="XL"> XL
+                                        <input type="radio" name="size" value="extraLarge"> XL
                                     </label>
                                 </div>
                                 <!-- Quantity selection with input group -->
@@ -276,8 +276,8 @@
 
                                 <!-- Add to wishlist and Add to cart buttons -->
                                 <div class="mt-0 mt-sm-0 mt-md-5 mb-md-0 mb-sm-2 mb-2 pt-2 pt-sm-2 pt-md-5 d-flex justify-content-between">
-                                    <a href="#" class="btn btn-outline-primary btn-sm mr-2">Add to <br> Wishlist</a>
-                                    <a href="#" class="buy-now btn btn-sm btn-outline-brown bg-danger text-white">Add To
+                                    <a href="#" class="btn btn-outline-primary btn-sm mr-2" onclick="addToWishlist('<%= product._id %>')">Add to <br> Wishlist</a>
+                                    <a href="#" class="buy-now btn btn-sm btn-outline-brown bg-danger text-white" onclick="addToCart('<%= product._id %>')">Add To
                                         <br> Cart</a>
                                 </div>
                             </div>
@@ -290,7 +290,7 @@
                                 <p> <%= product.description %> </p>
                                 <h6>Colors : <%= product.colors.join(', ') %></h6>
                                 <h6>Suitable Gender : <%= product.genders %></h6>
-                                <h6>Category : <%= product.category %></h6>
+                                <h6>Category : <%= product.category?.name %></h6>
                                 
                                 
                 </div>
@@ -303,6 +303,82 @@
 
 <script>
 
+
+function getSelectedSize() {
+        // Logic to get the selected size, you might need to adjust based on your HTML structure
+        const sizeInput = document.querySelector('input[name="size"]:checked');
+        return sizeInput ? sizeInput.value : null;
+    }
+
+    function getQuantity() {
+        // Logic to get the quantity, you might need to adjust based on your HTML structure
+        const quantityInput = document.getElementById('quantityInput');
+        return quantityInput ? parseInt(quantityInput.value, 10) : 1;
+    }
+
+
+
+    async function addToWishlist(productId) {
+        const selectedSize = getSelectedSize();
+
+        if (!selectedSize) {
+            console.error('Please select a size.');
+            return;
+        }
+
+        try {
+            // Use fetch to send an HTTP request to your server's API endpoint for adding to wishlist
+            const response = await fetch(`/api/add-to-wishlist/${productId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ size: selectedSize }),
+            });
+
+            if (response.ok) {
+                // Wishlist item added successfully
+                console.log('Added to Wishlist!');
+                
+            } else {
+                console.error('Failed to add to Wishlist.');
+            }
+        } catch (error) {
+            console.error('Error adding to Wishlist:', error.message);
+        }
+    }
+
+    async function addToCart(productId) {
+
+        const size = getSelectedSize();
+        const quantity = getQuantity();
+        
+
+        if (!size || isNaN(quantity) || quantity < 1) {
+            console.error('Invalid size or quantity.');
+            return;
+        }
+
+        try {
+            // Use fetch to send an HTTP request to your server's API endpoint for adding to cart
+            const response = await fetch(`/add-to-cart/${productId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ size, quantity }),
+            });
+
+            if (response.ok) {
+                // Cart item added successfully
+                console.log('Added to Cart!');
+            } else {
+                console.error('Failed to add to Cart.');
+            }
+        } catch (error) {
+            console.error('Error adding to Cart:', error.message);
+        }
+    }
 
 
 

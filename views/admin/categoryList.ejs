@@ -12,15 +12,19 @@
                             <%- include('../layouts/_messages') -%>
 
                                 
-
+                            <a href="/admin/category-add" class="btn btn-primary btn-block text-uppercase mb-3">Add
+                                new
+                                Category</a>
                                 <div class="tm-category-table-container">
                                     <table class="table table-hover tm-table-small tm-category-table">
                                         <thead>
                                             <tr>
                                                 <th scope="col">Name</th>
+                                                <th scope="col">Description</th>
                                                 <th scope="col">Products</th>
                                                 <th scope="col">Total Sales</th>
                                                 <th scope="col">Sales in 30 days</th>
+                                                <th scope="col">&nbsp;</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -37,6 +41,9 @@
                                                         <td class="tm-category-name">
                                                             <%= categories[i].name %>
                                                         </td>
+                                                        <td class="tm-category-description">
+                                                            <%= categories[i].description %>
+                                                        </td>
 
                                                         <td class="tm-category-name">
                                                             <%= categories[i].productsCount %>
@@ -48,6 +55,13 @@
 
                                                         <td class="tm-category-thirtyDayOrdercount">
                                                             <%= categories[i].ordersCountIn30Days %>
+                                                        </td>
+                                                        <td>
+                                                            <a href="/admin/category-edit/<%= categories[i]._id %>"
+                                                                class="tm-category-edit-link">
+                                                                <i
+                                                                    class="far fa-edit tm-category-edit-icon text-black"></i>
+                                                            </a>
                                                         </td>
 
                                                        

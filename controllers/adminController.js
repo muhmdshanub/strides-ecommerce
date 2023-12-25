@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const Admin = require('../models/adminModel');
 const Products = require('../models/productModel');
 const Users = require('../models/userModel');
+const Category = require('../models/categoryModel');
 
 
 const adminRootHandler = async (req, res) => {
@@ -46,6 +47,10 @@ const productListLoader = async (req, res) => {
         const options = {
             page: page,
             limit: pageSize,
+            populate: {
+                path: 'category',
+                select: 'name', // Specify the fields to populate (only 'name' in this case)
+            },
         };
 
         const productsData = await Products.paginate({ isDeleted: false }, options);
@@ -65,9 +70,10 @@ const productListLoader = async (req, res) => {
 
 const productAddLoader = async (req, res) => {
     try {
+        // Fetch _id and name fields from all categories in the Category collection
+        const categories = await Category.find({}, '_id name');
 
-
-        res.render('./admin/product-add.ejs');
+        res.render('./admin/product-add.ejs', { categories });
     } catch (error) {
         console.log(error.message);
     }
@@ -173,6 +179,14 @@ const productAddHandler = async (req, res) => {
             return res.redirect('/admin/products-add');
         }
 
+         // Fetch category information
+         const categoryInfo = await Category.findById(category);
+
+         if (!categoryInfo) {
+             req.flash('error', 'Invalid category.');
+             return res.redirect('/admin/products-add');
+         }
+
         const colorsArray = req.body.colors || [];
         const filenames = req.files.map((file) => file.filename);
 
@@ -181,7 +195,7 @@ const productAddHandler = async (req, res) => {
             productName,
             gender,
             colors: colorsArray,
-            category,
+            category: categoryInfo._id,
             description,
             initialPrice: parseFloat(price),
             discountPercentage: parseFloat(discount),
@@ -276,7 +290,6 @@ const multipleProductDeletionHandler = async (req, res) => {
 
 const productEditLoader = async (req, res) => {
     try {
-
         const productId = req.params.productId;
 
         if (!mongoose.Types.ObjectId.isValid(productId)) {
@@ -284,19 +297,23 @@ const productEditLoader = async (req, res) => {
             res.redirect('/admin/products-list');
             return;
         }
+
         const productData = await Products.findById(productId);
+        const categories = await Category.find({}, '_id name'); // Fetch categories
+
         if (productData) {
-            res.render('./admin/product-edit.ejs', { product: productData });
+            res.render('./admin/product-edit.ejs', { product: productData, categories });
         } else {
-            req.flash('error', 'Invalid user details');
+            req.flash('error', 'Invalid product details');
             res.redirect('/admin/products-list');
         }
     } catch (error) {
         console.log(error.message);
-        req.flash('error', 'An error occured');
+        req.flash('error', 'An error occurred');
         res.redirect('/admin/products-list');
     }
-}
+};
+
 
 const productEditHandler = async (req, res) => {
     try {
@@ -345,7 +362,13 @@ const productEditHandler = async (req, res) => {
         }
 
 
+        // Fetch category information
+        const categoryInfo = await Category.findById(category);
 
+        if (!categoryInfo) {
+            req.flash('error', 'Invalid category.');
+            return res.redirect('/admin/products-add');
+        }
 
 
 
@@ -384,7 +407,7 @@ const productEditHandler = async (req, res) => {
             productName,
             gender,
             colors: colorsArray,
-            category,
+            category: categoryInfo._id,
             description,
             initialPrice: parseFloat(price),
             discountPercentage: parseFloat(discount),
@@ -576,24 +599,27 @@ const CategoryListLoader = async (req, res) => {
 
         const aggregationPipeline = [
             {
-                $group: {
-                    _id: '$category',
-                    productsCount: { $sum: 1 },
+                $lookup: {
+                    from: 'products', // Use the actual collection name for products
+                    localField: '_id',
+                    foreignField: 'category',
+                    as: 'products',
                 },
             },
             {
                 $project: {
-                    _id: 0,
-                    name: '$_id',
-                    productsCount: 1,
+                    _id: 1,
+                    name: 1,
+                    description: 1,
+                    addedDate: 1,
+                    productsCount: { $size: '$products' }, // Count the number of products
                     ordersCount: 'To be calculated after order model is created',
                     ordersCountIn30Days: 'To be calculated after order model is created',
                 },
             },
         ];
 
-        const categoriesData = await Products.aggregate(aggregationPipeline);
-
+        const categoriesData = await Category.aggregate(aggregationPipeline);
 
         // Manually handle pagination
         const startIdx = (page - 1) * pageSize;
@@ -605,9 +631,6 @@ const CategoryListLoader = async (req, res) => {
             currentPage: page,
             totalPages: Math.ceil(categoriesData.length / pageSize),
         });
-
-
-
     } catch (error) {
         console.error(error.message);
         req.flash('error', 'Internal Server Error');
@@ -615,7 +638,116 @@ const CategoryListLoader = async (req, res) => {
     }
 };
 
+const categoryAddLoader = async (req, res) => {
+    try {
 
+
+        res.render('./admin/category-add.ejs');
+    } catch (error) {
+        console.log(error.message);
+    }
+}
+
+
+const categoryAddHandler = async (req, res) => {
+    try {
+        const {name,description,} = req.body;
+
+
+        
+
+        // Check if required fields are present
+        if ( !name || !description ) {
+
+            req.flash('error', 'All fields are required.');
+            return res.redirect('/admin/category-add');
+        }
+
+        const isCategoryExist = await Category.findOne({ name: name });
+
+        if (isCategoryExist) {
+            req.flash('error', 'Category already exists.');
+            return res.redirect('/admin/category-add');
+        }
+
+
+
+        const category = new Category({
+            name,
+            description,
+        });
+
+        // Save the new product to the database
+        const categoryData = await category.save();
+
+        if (categoryData) {
+            req.flash('success', 'You have successfully added a new category.');
+            return res.redirect('/admin/category-list');
+        }
+    } catch (error) {
+        console.log(error.message)
+        req.flash('error', 'An error occurred. Please try again.');
+        res.redirect('/admin/category-add');
+    }
+};
+
+const categoryEditLoader = async (req, res) => {
+    try {
+
+        const categoryId = req.params.categoryId;
+
+        if (!mongoose.Types.ObjectId.isValid(categoryId)) {
+            req.flash('error', 'Invalid category ID');
+            res.redirect('/admin/category-list');
+            return;
+        }
+        const categoryData = await Category.findById(categoryId);
+        if (categoryData) {
+            res.render('./admin/category-edit.ejs', { category: categoryData });
+        } else {
+            req.flash('error', 'Invalid category details');
+            res.redirect('/admin/category-list');
+        }
+    } catch (error) {
+        console.log(error.message);
+        req.flash('error', 'An error occured');
+        res.redirect('/admin/category-list');
+    }
+}
+
+const categoryEditHandler = async (req, res) => {
+    try {
+        const categoryId = req.params.categoryId;
+        const product = await Category.findById(categoryId);
+        const {name, description} = req.body;
+
+        // Check if required fields are present
+        if (!name ||!description ) {
+            req.flash('error', 'All fields are required.');
+            return res.redirect('/admin/category-edit/' + categoryId);
+        }
+
+        const categoryUpdate = {
+            name,description
+        };
+
+        // Update the product in the database
+        const updatedCategory = await Category.findByIdAndUpdate(
+            categoryId,
+            categoryUpdate,
+            { new: true }
+        );
+
+        if (updatedCategory) {
+            req.flash('success', 'Category updated successfully.');
+            return res.redirect('/admin/category-list/');
+        }
+    } catch (error) {
+        console.error(error);
+        req.flash('error', 'An error occurred. Please try again.');
+        res.redirect('/admin/category-list/');
+    }
+};
 
 module.exports = {
     productListLoader,
@@ -636,4 +768,8 @@ module.exports = {
     CategoryListLoader,
     adminRootHandler,
     logoutHandler,
+    categoryAddLoader,
+    categoryAddHandler,
+    categoryEditLoader,
+    categoryEditHandler,
 }

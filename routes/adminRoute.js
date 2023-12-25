@@ -38,6 +38,12 @@ adminRoute.get('/users-unblock/:userId',auth.isLogin,adminController.singleUserU
 adminRoute.post('/users-bulk-block',auth.isLogin,adminController.multipleUsersBlockHandler);
 adminRoute.post('/users-bulk-unblock',auth.isLogin,adminController.multipleUsersUnblockHandler);
 
-adminRoute.get('/categories-list',auth.isLogin,adminController.CategoryListLoader);
+adminRoute.get('/category-list',auth.isLogin,adminController.CategoryListLoader);
+
+adminRoute.get('/category-add',auth.isLogin,adminController.categoryAddLoader);
+adminRoute.post('/category-add',auth.isLogin,adminController.categoryAddHandler);
+
+adminRoute.get('/category-edit/:categoryId',auth.isLogin,adminController.categoryEditLoader);
+adminRoute.post('/category-edit/:categoryId',auth.isLogin,adminController.categoryEditHandler);
 
   module.exports =adminRoute;

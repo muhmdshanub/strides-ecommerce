@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 const mongoosePaginate = require('mongoose-paginate-v2');
 
+const Category = require('./categoryModel');
+
 
 
 const stockSchema = new mongoose.Schema({
@@ -35,7 +37,7 @@ const stockSchema = new mongoose.Schema({
     description: { type: String, required: true },
     discountPercentage: { type: Number, required: true },
     finalPrice: { type: Number },
-    category: { type: String, required: true },
+    category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
     gender: { type: String, required: true },
     colors: [{ type: String }],
     sizes: [stockSchema],

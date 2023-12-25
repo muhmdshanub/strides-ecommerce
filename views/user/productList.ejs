@@ -134,26 +134,25 @@
                                         </div>
                                     </div>
 
+<!-- Category Filter -->
+<div class="col-10 col-sm-6 col-md-3 border p-3 mx-md-3 mx-lg-2 rounded mb-4 bg-white text-black text-left">
+    <div class="form-group">
+        <label>
+            <h4>Category</h4>
+        </label>
+        <% filterOptions.categories.forEach((category)=> { %>
+            <div class="form-check">
+                <input type="checkbox" id="category_<%= category._id %>" name="category[]" value="<%= category._id %>"
+                    class="form-check-input" <% if (selectedFilters.category &&
+                    selectedFilters.category.includes(category._id.toString())) { %>checked<% } %>>
+                    <label for="category_<%= category._id %>" class="form-check-label">
+                        <%= category.name %>
+                    </label>
+            </div>
+            <% }); %>
+    </div>
+</div>
 
-                                    <!-- Category Filter -->
-                                    <div class="col-10 col-sm-6 col-md-3 border p-3 mx-md-3 mx-lg-2 rounded mb-4 bg-white text-black text-left">
-                                        <div class="form-group">
-                                            <label>
-                                                <h4>Category</h4>
-                                            </label>
-                                            <% filterOptions.categories.forEach((category)=> { %>
-                                                <div class="form-check">
-                                                    <input type="checkbox" id="category_<%= category %>"
-                                                        name="category[]" value="<%= category %>"
-                                                        class="form-check-input" <% if (selectedFilters.category &&
-                                                        selectedFilters.category.includes(category)) { %>checked<% } %>>
-                                                        <label for="category_<%= category %>" class="form-check-label">
-                                                            <%= category %>
-                                                        </label>
-                                                </div>
-                                                <% }); %>
-                                        </div>
-                                    </div>
 
 
                                     <!-- Brand Filter -->

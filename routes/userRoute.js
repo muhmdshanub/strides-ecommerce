@@ -24,6 +24,7 @@ userRoute.post('/login',userController.loginHandler);
 userRoute.get('/logout',auth.isLogin,userController.logoutHandler);
 userRoute.get('/products',auth.isLogin,userController.productListLoader);
 userRoute.get('/products/:productId',auth.isLogin,userController.productSingleLoader);
+userRoute.post('/add-to-cart/:productId',auth.isLogin,userController.addToCArtHandler);
 
 
 module.exports =userRoute;
