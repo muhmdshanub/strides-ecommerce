@@ -1,17 +1,26 @@
+<!-- Adjust the paths based on your project structure -->
+<link rel="stylesheet" href="/node_modules/cropperjs/dist/cropper.min.css">
+<script src="/node_modules/cropperjs/dist/cropper.min.js"></script>
+
+
 <%- include('../layouts/admin-header') -%>
 
 
-<style>
-    .tm-product-img-dummy {
-        max-width: 100%; /* Ensure the image does not exceed its container's width */
-        overflow: hidden; /* Hide any overflow beyond the container */
-    }
+    <style>
+        .tm-product-img-dummy {
+            max-width: 100%;
+            /* Ensure the image does not exceed its container's width */
+            overflow: hidden;
+            /* Hide any overflow beyond the container */
+        }
 
-    .tm-product-img-dummy img {
-        max-width: 100%; /* Ensure the image itself does not exceed its container's width */
-        height: auto; /* Maintain the aspect ratio of the image */
-    }
-</style>
+        .tm-product-img-dummy img {
+            max-width: 100%;
+            /* Ensure the image itself does not exceed its container's width */
+            height: auto;
+            /* Maintain the aspect ratio of the image */
+        }
+    </style>
 
 
     <%- include('../layouts/admin-navbar') -%>
@@ -21,223 +30,606 @@
                 <div class="col-xl-9 col-lg-10 col-md-12 col-sm-12 mx-auto">
                     <div class="tm-bg-primary-dark tm-block tm-block-h-auto">
                         <%- include('../layouts/_messages.ejs') -%>
-                        <div class="row">
-                            <div class="col-12">
-                                <h2 class="tm-block-title d-inline-block">Add Product</h2>
-                            </div>
-                        </div>
-
-                        <form action="" class="tm-edit-product-form" method="post" enctype="multipart/form-data">
-                            <div class="row tm-edit-product-row">
-                                <div class="col-xl-6 col-lg-6 col-md-12">
-
-                                    <div class="form-group mb-3">
-                                        <label for="brandName">BRAND</label>
-                                        <input id="brandName" name="brandName" type="text" class="form-control validate"
-                                            required />
-                                    </div>
-                                    <div class="form-group mb-3">
-                                        <label for="productName">Product Name</label>
-                                        <input id="productName" name="productName" type="text"
-                                            class="form-control validate" required />
-                                    </div>
-                                    <div class="form-group mb-3">
-                                        <label for="description">Description</label>
-                                        <textarea name="description" class="form-control validate" rows="3" required></textarea>
-                                    </div>
-                                    <div class="form-group mb-3">
-                                        <label for="gender">Gender</label>
-                                        <select class="custom-select tm-select-accounts" id="gender" name="gender" required>
-                                            <option value="" selected>Select gender</option>
-                                            <option value="men">MEN</option>
-                                            <option value="women">WOMEN</option>
-                                            <option value="unisex">UNISEX</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group mb-3">
-                                        <label for="colors">Colors</label>
-
-                                        <div class="border rounded">
-                                            <label for="colorBlack">Black</label>
-                                            <input type="checkbox" id="colorBlack" name="colors[]" value="black">
-
-                                            <label for="colorWhite">White</label>
-                                            <input type="checkbox" id="colorWhite" name="colors[]" value="white">
-
-                                            <label for="colorBlue">Blue</label>
-                                            <input type="checkbox" id="colorBlue" name="colors[]" value="blue">
-
-                                            <label for="colorRed">Red</label>
-                                            <input type="checkbox" id="colorRed" name="colors[]" value="red">
-
-                                            <label for="colorGreen">Green</label>
-                                            <input type="checkbox" id="colorGreen" name="colors[]" value="green">
-
-                                            <label for="colorYellow">Yellow</label>
-                                            <input type="checkbox" id="colorYellow" name="colors[]" value="yellow">
-
-                                            <label for="colorOrange">Orange</label>
-                                            <input type="checkbox" id="colorOrange" name="colors[]" value="orange">
-
-                                            <label for="colorPink">Pink</label>
-                                            <input type="checkbox" id="colorPink" name="colors[]" value="pink">
-
-                                            <label for="colorPurple">Purple</label>
-                                            <input type="checkbox" id="colorPurple" name="colors[]" value="purple">
-
-                                            <label for="colorGrey">Grey</label>
-                                            <input type="checkbox" id="colorGrey" name="colors[]" value="grey">
-
-                                            <label for="colorBrown">Brown</label>
-                                            <input type="checkbox" id="colorBrown" name="colors[]" value="brown">
-                                        </div>
-                                    </div>
-                                    <div class="form-group mb-3">
-                                        <label for="category">Category</label>
-                                        <select class="custom-select tm-select-accounts" id="category" name="category">
-                                            <option selected>Select category</option>
-                                            <option value="formals">FORMALS</option>
-                                            <option value="casuals">CASUALS</option>
-                                            <option value="sports">SPORTS</option>
-                                        </select>
-                                    </div>
-
-
-                                    <div class="row form-group mb-3 text-white">
-                                        <div class="col-xs-12">
-                                            <label for="sizeAndStock">Size wise stock</label>
-                                            <table class="table">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Size</th>
-                                                        <th>Available Stock</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr>
-                                                        <td>Small</td>
-                                                        <td><input type="text" name="available_stock_small"
-                                                                class="form-control" required /></td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Medium</td>
-                                                        <td><input type="text" name="available_stock_medium"
-                                                                class="form-control" required /></td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Large</td>
-                                                        <td><input type="text" name="available_stock_large"
-                                                                class="form-control" required /></td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Extra Large</td>
-                                                        <td><input type="text" name="available_stock_extra_large"
-                                                                class="form-control" required /></td>
-                                                    </tr>
-                                                    <!-- Add more size rows as needed -->
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                    <div class="form-group mb-3">
-                                        <label for="price">PRICE</label>
-                                        <input id="price" name="price" type="text" class="form-control validate"
-                                            required />
-                                    </div>
-                                    <div class="form-group mb-3">
-                                        <label for="discount">DISCOUNT</label>
-                                        <input id="discount" name="discount" type="text" class="form-control validate"
-                                            required />
-                                    </div>
-
-                                </div>
-                                <!-- Your existing HTML content -->
-
-                                <div class="col-xl-6 col-lg-6 col-md-12 mx-auto mb-4">
-                                    
-
-                                    <% for (let i = 1; i <= 4; i++) { %>
-                                        <!-- Image upload placeholders for <%= i %> -->
-                                        <div class="tm-product-img-dummy mx-auto">
-                                          <!-- ... existing code ... -->
-                                          <img id="selectedImage<%= i %>" src="#" alt="Selected Image" style="display: none;">
-                                          <button class="btn btn-danger btn-sm position-absolute top-0 end-0"
-                                            style="display: none;" onclick="removeSelectedImage(<%= i %>)">Remove Image</button>
-                                          <i class="fas fa-cloud-upload-alt tm-upload-icon"
-                                            onclick="document.getElementById('fileInput<%= i %>').click();"></i>
-                                        </div>
-                                      
-                                        <!-- File input and upload button for <%= i %> -->
-                                        <div class="custom-file mt-3 mb-3">
-                                          <input id="fileInput<%= i %>" type="file" style="display:none;"
-                                            onchange="displaySelectedImage(<%= i %>);" required name="images" />
-                                          <input type="hidden" name="image<%= i %>Index" value="<%= i %>">
-                                          <input type="button" class="btn btn-primary btn-block mx-auto"
-                                            value="UPLOAD PRODUCT IMAGE <%= i %>" onclick="document.getElementById('fileInput<%= i %>').click();" required />
-                                        </div>
-                                      <% } %>
-                                    
-                                    
-
-                                </div>
-
-
-
+                            <div class="row">
                                 <div class="col-12">
-                                    <button type="submit" class="btn btn-primary btn-block text-uppercase">Add Product
-                                        Now</button>
+                                    <h2 class="tm-block-title d-inline-block">Add Product</h2>
                                 </div>
-
                             </div>
-                        </form>
+
+                            <form action="" class="tm-edit-product-form" method="post" enctype="multipart/form-data"
+                                novalidate>
+                                <div class="row tm-edit-product-row">
+                                    <div class="col-xl-6 col-lg-6 col-md-12">
+
+                                        <div class="form-group mb-3">
+                                            <label for="brandName">BRAND</label>
+                                            <input id="brandName" name="brandName" type="text"
+                                                class="form-control validate" required />
+                                        </div>
+                                        <div class="form-group mb-3">
+                                            <label for="productName">Product Name</label>
+                                            <input id="productName" name="productName" type="text"
+                                                class="form-control validate" required />
+                                        </div>
+                                        <div class="form-group mb-3">
+                                            <label for="description">Description</label>
+                                            <textarea name="description" id="description" class="form-control validate"
+                                                rows="3" required></textarea>
+                                        </div>
+                                        <div class="form-group mb-3">
+                                            <label for="gender">Gender</label>
+                                            <select class="custom-select tm-select-accounts" id="gender" name="gender"
+                                                required>
+                                                <option value="" selected>Select gender</option>
+                                                <option value="men">MEN</option>
+                                                <option value="women">WOMEN</option>
+                                                <option value="unisex">UNISEX</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group mb-3">
+                                            <label for="colors">Colors</label>
+
+                                            <div class="row px-2 py-4" style="background-color: #54657d;" id="colors">
+                                                <div class="ml-4">
+                                                    <label for="colorBlack">Black</label>
+                                                    <input type="checkbox" id="colorBlack" name="colors[]"
+                                                        value="black">
+                                                </div>
+
+                                                <div class="ml-4">
+                                                    <label for="colorWhite">White</label>
+                                                    <input type="checkbox" id="colorWhite" name="colors[]"
+                                                        value="white">
+                                                </div>
+
+
+                                                <div class="ml-4">
+                                                    <label for="colorBlue">Blue</label>
+                                                    <input type="checkbox" id="colorBlue" name="colors[]" value="blue">
+                                                </div>
+
+                                                <div class="ml-4">
+                                                    <label for="colorRed">Red</label>
+                                                    <input type="checkbox" id="colorRed" name="colors[]" value="red">
+                                                </div>
+
+                                                <div class="ml-4">
+                                                    <label for="colorGreen">Green</label>
+                                                    <input type="checkbox" id="colorGreen" name="colors[]"
+                                                        value="green">
+                                                </div>
+
+                                                <div class="ml-4">
+                                                    <label for="colorYellow">Yellow</label>
+                                                    <input type="checkbox" id="colorYellow" name="colors[]"
+                                                        value="yellow">
+                                                </div>
+
+
+
+
+                                                <div class="ml-4">
+                                                    <label for="colorOrange">Orange</label>
+                                                    <input type="checkbox" id="colorOrange" name="colors[]"
+                                                        value="orange">
+                                                </div>
+
+
+
+                                                <div class="ml-4">
+                                                    <label for="colorPink">Pink</label>
+                                                    <input type="checkbox" id="colorPink" name="colors[]" value="pink">
+                                                </div>
+
+
+
+                                                <div class="ml-4">
+                                                    <label for="colorPurple">Purple</label>
+                                                    <input type="checkbox" id="colorPurple" name="colors[]"
+                                                        value="purple">
+                                                </div>
+
+
+
+                                                <div class="ml-4">
+                                                    <label for="colorGrey">Grey</label>
+                                                    <input type="checkbox" id="colorGrey" name="colors[]" value="grey">
+                                                </div>
+
+
+
+                                                <div class="ml-4">
+                                                    <label for="colorBrown">Brown</label>
+                                                    <input type="checkbox" id="colorBrown" name="colors[]"
+                                                        value="brown">
+                                                </div>
+
+
+                                            </div>
+                                        </div>
+                                        <div class="form-group mb-3">
+                                            <label for="category">Category</label>
+                                            <select class="custom-select tm-select-accounts" id="category"
+                                                name="category">
+                                                <option selected value="">Select category</option>
+                                                <option value="formals">FORMALS</option>
+                                                <option value="casuals">CASUALS</option>
+                                                <option value="sports">SPORTS</option>
+                                            </select>
+                                        </div>
+
+
+                                        <div class="row form-group mb-3 text-white">
+                                            <div class="col-xs-12">
+                                                <label for="sizeAndStock">Size wise stock</label>
+                                                <table class="table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Size</th>
+                                                            <th>Available Stock</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td>Small</td>
+                                                            <td><input type="text" name="available_stock_small"
+                                                                    class="form-control" required /></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Medium</td>
+                                                            <td><input type="text" name="available_stock_medium"
+                                                                    class="form-control" required /></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Large</td>
+                                                            <td><input type="text" name="available_stock_large"
+                                                                    class="form-control" required /></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Extra Large</td>
+                                                            <td><input type="text" name="available_stock_extra_large"
+                                                                    class="form-control" required /></td>
+                                                        </tr>
+                                                        <!-- Add more size rows as needed -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <div class="form-group mb-3">
+                                            <label for="price">PRICE</label>
+                                            <input id="price" name="price" type="text" class="form-control validate"
+                                                required />
+                                        </div>
+                                        <div class="form-group mb-3">
+                                            <label for="discount">DISCOUNT</label>
+                                            <input id="discount" name="discount" type="text"
+                                                class="form-control validate" required />
+                                        </div>
+
+                                    </div>
+
+
+                                    <!-- Your existing HTML content -->
+
+                                    <div class="col-xl-6 col-lg-6 col-md-12 mx-auto mb-4">
+                                        <% for (let i=1; i <=4; i++) { %>
+                                            <!-- Image upload placeholders for <%= i %> -->
+                                            <div class="tm-product-img-dummy mx-auto">
+                                                <!-- ... existing code ... -->
+                                                <img id="croppedImage<%= i %>" src="#" alt="Cropped Image" style="display: none;">
+                                            </div>
+                                    
+                                            <!-- File input and upload button for <%= i %> -->
+                                            <div class="custom-file mt-3 mb-3">
+                                                <input id="fileInput<%= i %>" type="file" style="display:none;" onchange="initCropper(<%= i %>);" required name="images" />
+                                                <input type="hidden" name="image<%= i %>Index" value="<%= i %>">
+                                                
+                                                <!-- New element for cropped image -->
+                                                <button id="removeButton<%= i %>" class="btn btn-danger btn-sm position-absolute top-0 start-0" style="display: none;" onclick="removeCroppedImage(<%= i %>)">Remove Cropped Image</button>
+                                                
+                                                <!-- New element for upload button -->
+                                                <input type="button" class="btn btn-primary btn-block mx-auto upload-button" value="UPLOAD PRODUCT IMAGE <%= i %>" onclick="document.getElementById('fileInput<%= i %>').click();" required id="uploadButton<%= i %>" />
+                                            </div>
+                                        <% } %>
+                                    </div>
+
+
+
+                                    <div class="col-12">
+                                        <button type="submit" class="btn btn-primary btn-block text-uppercase">Add
+                                            Product
+                                            Now</button>
+                                    </div>
+
+                                </div>
+                            </form>
                     </div>
                 </div>
             </div>
         </div>
 
-        <script>
-            // Function to display the selected image
-            function displaySelectedImage(imageNumber) {
-                var fileInput = document.getElementById('fileInput' + imageNumber);
-                var selectedImage = document.getElementById('selectedImage' + imageNumber);
-                var removeButton = document.querySelector('#selectedImage' + imageNumber + '+button');
+        <!-- Your existing HTML code -->
 
-                // Check if a file is selected
-                if (fileInput.files && fileInput.files[0]) {
-                    var reader = new FileReader();
+        <script defer>
 
-                    // Set up the reader to read the selected image
-                    reader.onload = function (e) {
-                        selectedImage.src = e.target.result;
-                        selectedImage.style.display = 'block';
-                        removeButton.style.display = 'block';
-                    };
 
-                    // Read the selected image as a data URL
-                    reader.readAsDataURL(fileInput.files[0]);
+function initCropper(imageNumber) {
+    const fileInput = document.getElementById('fileInput' + imageNumber);
+    const croppedImage = document.getElementById('croppedImage' + imageNumber);
+    const removeButton = document.getElementById('removeButton' + imageNumber);
+    const uploadButton = document.getElementById('uploadButton' + imageNumber);
+
+    uploadButton.style.display = 'none'; // Hide upload button
+
+    if (fileInput.files && fileInput.files[0]) {
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+            // Display the cropped image
+            croppedImage.src = e.target.result;
+            croppedImage.style.display = 'block';
+
+            // Initialize Cropper.js
+            const cropper = new Cropper(croppedImage, {
+                aspectRatio: NaN,
+                viewMode: 0,
+                // Add more options based on your requirements
+            });
+
+            // Save the cropper instance for later use (optional)
+            fileInput.cropper = cropper;
+
+            // Display the crop result when the crop button is clicked
+            const cropButton = document.createElement('button');
+            cropButton.innerText = 'Crop';
+            cropButton.className = 'btn btn-success btn-sm mt-2';
+            cropButton.onclick = function () {
+                const croppedCanvas = cropper.getCroppedCanvas();
+
+                // Convert the cropped canvas to a Blob
+                croppedCanvas.toBlob(function (blob) {
+                    // Create a new DataTransfer object
+                    const dataTransfer = new DataTransfer();
+
+                    // Create a new File and add it to the DataTransfer object
+                    const croppedFile = new File([blob], fileInput.files[0].name, { type: blob.type });
+                    dataTransfer.items.add(croppedFile);
+
+                    // Set the 'files' property of the existing file input
+                    fileInput.files = dataTransfer.files;
+
+                    // Display the cropped image
+                    croppedImage.src = URL.createObjectURL(blob);
+                    croppedImage.style.display = 'block';
+
+                    // Show remove button
+                    removeButton.style.display = 'block';
+
+                    // Hide upload button
+                    uploadButton.style.display = 'none';
+
+                    // Remove the crop button
+                    fileInput.parentElement.removeChild(cropButton);
+                }, fileInput.files[0].type);
+            };
+
+            fileInput.parentElement.appendChild(cropButton);
+        };
+
+        reader.readAsDataURL(fileInput.files[0]);
+    }
+
+    // Hide the upload button and icon after the image is selected
+    fileInput.style.display = 'none';
+    fileInput.nextElementSibling.style.display = 'none';
+}
+
+function removeCroppedImage(imageNumber) {
+    const fileInput = document.getElementById('fileInput' + imageNumber);
+    const croppedImage = document.getElementById('croppedImage' + imageNumber);
+    const removeButton = document.getElementById('removeButton' + imageNumber);
+    const uploadButton = document.getElementById('uploadButton' + imageNumber);
+
+    // Elements to hide
+    const elementsToHide = [croppedImage, removeButton];
+
+    // Hide the elements
+    elementsToHide.forEach(element => {
+        element.style.display = 'none';
+    });
+
+    // Show the upload button
+    uploadButton.style.display = 'block';
+
+    // Optional: Add logic to reset or remove the Cropper instance
+    if (fileInput.cropper) {
+        fileInput.cropper.destroy();
+        fileInput.cropper = null;
+    }
+}
+
+
+
+
+
+            document.addEventListener('DOMContentLoaded', function () {
+                console.log('DOM is loaded');
+
+                const form = document.querySelector('.tm-edit-product-form');
+                const brandInput = form.elements['brandName'];
+                const productNameInput = form.elements['productName'];
+                const descriptionInput = form.elements['description'];
+                const genderSelect = form.elements['gender'];
+                const colorsCheckboxes = form.querySelectorAll('input[name="colors[]"]');
+                const categorySelect = form.elements['category'];
+
+                const availableStockInputs = form.querySelectorAll('[name^="available_stock_"]');
+
+                const priceInput = form.elements['price'];
+                const discountInput = form.elements['discount'];
+
+                const imageInputs = form.querySelectorAll('[name^="images"]');
+
+
+
+
+                function validateBrand() {
+                    const brand = brandInput.value.trim();
+                    if (!brand) {
+                        showPopover('brandName', 'Brand cannot be empty.');
+                        return false;
+                    } else {
+                        hidePopover('brandName');
+                        return true;
+                    }
                 }
 
-                // Hide the upload button and icon after image is selected
-                document.querySelector('#fileInput' + imageNumber).style.display = 'none';
-                document.querySelector('#fileInput' + imageNumber).nextElementSibling.style.display = 'none';
-            }
+                function validateProductName() {
+                    const productName = productNameInput.value.trim();
+                    if (!productName) {
+                        showPopover('productName', 'Product Name cannot be empty.');
+                        return false;
+                    } else {
+                        hidePopover('productName');
+                        return true;
+                    }
+                }
 
-            // Function to remove the selected image
-            function removeSelectedImage(imageNumber) {
-                var fileInput = document.getElementById('fileInput' + imageNumber);
-                var selectedImage = document.getElementById('selectedImage' + imageNumber);
-                var removeButton = document.querySelector('#selectedImage' + imageNumber + '+button');
+                function validateDescription() {
+                    const description = descriptionInput.value.trim();
+                    if (!description) {
+                        showPopover('description', 'Description cannot be empty.');
+                        return false;
+                    } else {
+                        hidePopover('description');
+                        return true;
+                    }
+                }
 
-                // Reset the file input and hide the image and remove button
-                fileInput.value = '';
-                selectedImage.src = '#';
-                selectedImage.style.display = 'none';
-                removeButton.style.display = 'none';
+                function validateGender() {
+                    const selectedGender = genderSelect.value;
+                    if (selectedGender === '') {
+                        showPopover('gender', 'Please select a gender.');
+                        return false;
+                    } else {
+                        hidePopover('gender');
+                        return true;
+                    }
+                }
 
-                // Show the upload button and icon
-                document.querySelector('#fileInput' + imageNumber).style.display = 'block';
-                document.querySelector('#fileInput' + imageNumber).nextElementSibling.style.display = 'block';
-            }
+                function validateCategory() {
+                    const selectedCategory = categorySelect.value;
+
+
+                    if (selectedCategory === '') {
+                        showPopover('category', 'Please select a category.');
+                        return false;
+                    } else {
+                        hidePopover('category');
+                        return true;
+                    }
+                }
+
+                function validateColors() {
+                    const selectedColors = Array.from(colorsCheckboxes).some(color => color.checked);
+                    if (!selectedColors) {
+                        showPopover('colors', 'Please select at least one color.');
+                        return false;
+                    } else {
+                        hidePopover('colors');
+                        return true;
+                    }
+                }
+
+
+                function validateAvailableStock() {
+                    let isValid = true;
+
+                    availableStockInputs.forEach(input => {
+                        const stockValue = input.value.trim();
+                        const inputId = input.name;
+                        const sizeLabel = inputId.replace('available_stock_', ''); // Extract size label (small, medium, etc.)
+
+                        if (!/^\d+$/.test(stockValue)) {
+                            showPopover(inputId, `Please enter a valid numeric value for ${sizeLabel} stock.`);
+                            isValid = false;
+                        } else {
+                            hidePopover(inputId);
+                        }
+                    });
+
+                    return isValid;
+                }
+
+                function validatePrice() {
+                    const priceValue = priceInput.value.trim();
+                    if (!/^\d+(\.\d{1,2})?$/.test(priceValue)) {
+                        showPopover('price', 'Please enter a valid numeric value for price.');
+                        return false;
+                    } else {
+                        hidePopover('price');
+                        return true;
+                    }
+                }
+
+                function validateDiscount() {
+                    const discountValue = discountInput.value.trim();
+                    if (!/^\d+$/.test(discountValue)) {
+                        showPopover('discount', 'Please enter a valid numeric value for discount.');
+                        return false;
+                    } else {
+                        hidePopover('discount');
+                        return true;
+                    }
+                }
+
+                function validateImages() {
+                    let isValid = true;
+
+                    imageInputs.forEach((input, index) => {
+                        const file = input.files[0];
+                        const inputId = `fileInput${index + 1}`;
+
+                        if (!file) {
+                            showImagePopover(index + 1, 'Please select an image.');
+                            isValid = false;
+                        } else if (file.size > 5 * 1024 * 1024) {
+                            showImagePopover(index + 1, 'File size exceeds the limit of 5 MB.');
+                            isValid = false;
+                        } else {
+                            hideImagePopover(index + 1);
+                        }
+                    });
+
+                    return isValid;
+                }
+
+
+
+
+
+
+                function showPopover(inputId, message) {
+                    hidePopover(inputId); // Remove existing popover if any
+
+                    const inputField = document.getElementsByName(inputId)[0];
+                    if (!inputField) {
+                        // If the input field is not found, exit the function
+                        return;
+                    }
+
+                    const popover = document.createElement('div');
+                    popover.className = 'custom-popover';
+                    popover.textContent = message;
+
+                    // Set styles for the popover
+                    popover.style.color = 'white'; // Text color
+                    popover.style.backgroundColor = 'red'; // Background color (you can change it as needed)
+
+                    const parentElement = inputField.parentElement;
+                    if (parentElement) {
+                        parentElement.appendChild(popover);
+                    }
+                }
+
+                function hidePopover(inputId) {
+                    const inputField = document.getElementsByName(inputId)[0];
+                    if (!inputField) {
+                        // If the input field is not found, exit the function
+                        return;
+                    }
+
+                    const existingPopover = inputField.parentElement.querySelector('.custom-popover');
+                    if (existingPopover) {
+                        existingPopover.remove();
+                    }
+                }
+
+
+                function showImagePopover(imageIndex, message) {
+                    hideImagePopover(imageIndex); // Remove existing popover if any
+
+                    const uploadButtonId = 'uploadButton' + imageIndex;
+                    const uploadButton = document.getElementById(uploadButtonId);
+
+
+                    if (!uploadButton) {
+                        // If the upload button is not found, exit the function
+                        return;
+                    }
+
+                    const popover = document.createElement('div');
+                    popover.className = 'custom-popover';
+                    popover.textContent = message;
+
+                    // Set styles for the popover
+                    popover.style.color = 'white'; // Text color
+                    popover.style.backgroundColor = 'red'; // Background color (you can change it as needed)
+
+                    const parentElement = uploadButton.parentElement;
+                    if (parentElement) {
+                        parentElement.appendChild(popover);
+                    }
+                }
+
+                function hideImagePopover(imageIndex) {
+
+                    const uploadButtonId = 'uploadButton' + imageIndex;
+                    const uploadButton = document.getElementById(uploadButtonId);
+
+
+
+
+                    if (!uploadButton) {
+                        // If the upload button is not found, exit the function
+                        return;
+                    }
+
+                    const existingPopover = uploadButton.parentElement.querySelector('.custom-popover');
+                    if (existingPopover) {
+                        existingPopover.remove();
+                    }
+                }
+
+
+
+
+                form.addEventListener('submit', function (event) {
+                    if (!validateBrand() || !validateProductName() || !validateDescription() || !validateGender() || !validateColors() || !validateCategory() || !validateAvailableStock() || !validatePrice() || !validateDiscount() || !validateImages()) {
+                        event.preventDefault();
+                    }
+                    // Add other form validations as needed
+                });
+
+                brandInput.addEventListener('input', validateBrand);
+                productNameInput.addEventListener('input', validateProductName);
+                descriptionInput.addEventListener('input', validateDescription);
+                genderSelect.addEventListener('change', validateGender);
+                colorsCheckboxes.forEach(checkbox => checkbox.addEventListener('change', validateColors));
+                categorySelect.addEventListener('change', validateCategory);
+                availableStockInputs.forEach(input => {
+                    input.addEventListener('input', validateAvailableStock);
+                });
+                priceInput.addEventListener('input', validatePrice);
+                discountInput.addEventListener('input', validateDiscount);
+                imageInputs.forEach((input, index) => {
+                    input.addEventListener('input', function () {
+                        validateImages();
+                    });
+                });
+            });
+
+
+
+
+
+
         </script>
+
+        <!-- Your existing HTML code -->
+
+
+
+
 
         <%- include('../layouts/admin-footer') -%>

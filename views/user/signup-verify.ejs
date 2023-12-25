@@ -17,7 +17,7 @@
                         <a href="/signup" class="btn btn-primary d-flex justify-content-end mb-3" style="width: 100px;">Go to Signup</a>
 
                         <!-- Timer -->
-                        <div id="timer" class="text-center text-light mt-3">Calculating...</div>
+                        <div id="timer" class="text-center text-light mt-3 bg-warning">Calculating...</div>
 
                         <!-- Add this button where you want the "Resend OTP" button to be displayed -->
                         
@@ -25,7 +25,7 @@
                         <a  id="resendButton" href="/resend-otp" class="btn btn-primary  mb-3" style="width: 100px; display: none;">Resend OTP</a>
 
                         <div class="text-center">
-                            <h4 class="mb-0 pb-md-0 mb-md-5 text-danger">Verify Your Email and Phone</h3>
+                            <h4 class="mb-0 pb-md-0 mb-md-5 text-danger">Verify Your Email</h3>
                         </div>
                         <%- include('../layouts/_messages') -%>
                         <form method="POST" action="/signup-verify">
@@ -36,11 +36,6 @@
                                 <input type="text" class="form-control" id="emailOtp" placeholder="Email OTP" name="emailOtp" required>
                             </div>
 
-                            <!-- OTP from Phone -->
-                            <div class="mb-3">
-                                <label for="phoneOtp" class="form-label text-light">Enter OTP from Phone:</label>
-                                <input type="text" class="form-control" id="phoneOtp" placeholder="Phone OTP" name="phoneOtp" required>
-                            </div>
 
                             <button type="submit" class="btn btn-danger d-block mx-auto">Verify</button>
 
@@ -55,7 +50,7 @@
     </div>
 </section>
 
-<!-- Add this script block at the end of your EJS template -->
+
 <!-- Add this script block at the end of your EJS template -->
 <script>
     // Function to update the timer
@@ -95,7 +90,7 @@
 
     // Calculate the expiration time (2 minutes from otpCreatedTime)
     let expirationTime = new Date(otpCreatedTime);
-    expirationTime.setMinutes(expirationTime.getMinutes() + 2);
+    expirationTime.setSeconds(expirationTime.getSeconds() + 30);
 
     // Call the updateTimer function initially
     let timerId = setTimeout(updateTimer, 0);

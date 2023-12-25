@@ -8,6 +8,29 @@ const sendOtpPhone = require('../utils/sendSms'); // Your function to send OTP v
 
 const bcrypt = require('bcrypt');
 
+
+
+
+//logging out admin
+const logoutHandler = async (req, res) => {
+    try {
+
+        const userId = req.session.userId;
+
+        // Find the user by _id (userId) and update the isLogin property to false
+        const userUpdate = await User.findByIdAndUpdate(userId, { isLogin: false });
+
+        if(userUpdate){
+            req.session.userId = null;
+            res.redirect('/');
+        }
+        
+    } catch (error) {
+        console.log(error.message);
+    }
+}
+
+
 const signupLoader = async (req, res) => {
     try {
         res.render('./user/signup.ejs')
@@ -55,14 +78,14 @@ const signupHandler = async (req, res) => {
             req.session.userData = { name, email, phone, password, dateOfBirth };
             //craete otps
             const emailOtp = generateOtp();
-            const phoneOtp = generateOtp();
+            //const phoneOtp = generateOtp();
 
             // Store user details and OTPs in the database
             const otpData = await OTP.create({
                 intendedEmail: email,
-                intendedPhone: phone,
                 emailOtp: emailOtp,
-                phoneOtp: phoneOtp,
+                //intendedPhone: phone,
+                //phoneOtp: phoneOtp,
             });
 
             req.session.userData.otpCreatedTime = otpData.createdAt; // Get the created time
@@ -76,13 +99,13 @@ const signupHandler = async (req, res) => {
                 return res.redirect('/signup');
             }
 
-            try {
-                await sendOtpPhone(phone, phoneOtp);
-            } catch (smsError) {
-                console.error('Error sending SMS:', smsError);
-                req.flash('error', 'Error sending OTP via SMS. Please try again.');
-                return res.redirect('/signup');
-            }
+            // try {
+            //     await sendOtpPhone(phone, phoneOtp);
+            // } catch (smsError) {
+            //     console.error('Error sending SMS:', smsError);
+            //     req.flash('error', 'Error sending OTP via SMS. Please try again.');
+            //     return res.redirect('/signup');
+            // }
 
 
             // Redirect to the signup-verify page with the created time as a query parameter
@@ -114,17 +137,17 @@ const resendOtpHandler = async (req, res) => {
 
         // Generate new OTPs
         const newEmailOtp = generateOtp();
-        const newPhoneOtp = generateOtp();
+       // const newPhoneOtp = generateOtp();
 
         // Store new OTPs in the database
         await OTP.findOneAndDelete({ intendedEmail: email });
-        await OTP.findOneAndDelete({ intendedPhone: phone });
+        //await OTP.findOneAndDelete({ intendedPhone: phone });
 
         const newOtpData = await OTP.create({
             intendedEmail: email,
-            intendedPhone: phone,
             emailOtp: newEmailOtp,
-            phoneOtp: newPhoneOtp,
+            //intendedPhone: phone,
+            //phoneOtp: newPhoneOtp,
         });
 
         req.session.userData.otpCreatedTime = newOtpData.createdAt; // Get the created time
@@ -138,13 +161,13 @@ const resendOtpHandler = async (req, res) => {
             return res.redirect('/signup');
         }
 
-        try {
-            await sendOtpPhone(phone, newPhoneOtp);
-        } catch (smsError) {
-            console.error('Error sending SMS:', smsError);
-            req.flash('error', 'Error sending OTP via SMS. Please try again.');
-            return res.redirect('/signup');
-        }
+        // try {
+        //     await sendOtpPhone(phone, newPhoneOtp);
+        // } catch (smsError) {
+        //     console.error('Error sending SMS:', smsError);
+        //     req.flash('error', 'Error sending OTP via SMS. Please try again.');
+        //     return res.redirect('/signup');
+        // }
 
 
         // Redirect to the signup-verify page with the created time as a query parameter
@@ -346,7 +369,7 @@ const signupVerificationHandler = async (req, res) => {
         const { emailOtp, phoneOtp } = req.body;
 
         // Validate OTPs
-        const otpData = await OTP.findOne({ emailOtp: emailOtp, phoneOtp: phoneOtp, intendedEmail: email, intendedPhone: phone });
+        const otpData = await OTP.findOne({ emailOtp: emailOtp, intendedEmail: email });
 
         if (!otpData || !otpData.createdAt) {
             console.log(`session.userData is ${req.session.userData}`)
@@ -482,4 +505,5 @@ module.exports = {
     productSingleLoader,
     homeLoader,
     resendOtpHandler,
+    logoutHandler,
 }

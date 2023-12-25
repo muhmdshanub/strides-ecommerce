@@ -7,17 +7,7 @@ const otpSchema = new mongoose.Schema({
         required: true,
         expires: 120, // Set expiration time for 2 minutes
     },
-    phoneOtp: {
-        type: String,
-        required: true,
-        expires: 120, // Set expiration time for 2 minutes
-    },
     intendedEmail: {
-        type: String,
-        required: true,
-        expires: 120, // Set expiration time for 2 minutes
-    },
-    intendedPhone: {
         type: String,
         required: true,
         expires: 120, // Set expiration time for 2 minutes

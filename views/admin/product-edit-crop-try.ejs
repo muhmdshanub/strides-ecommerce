@@ -1,3 +1,7 @@
+<!-- Adjust the paths based on your project structure -->
+<link rel="stylesheet" href="/node_modules/cropperjs/dist/cropper.min.css">
+<script src="/node_modules/cropperjs/dist/cropper.min.js"></script>
+
 <%- include('../layouts/admin-header') -%>
 
 
@@ -248,35 +252,41 @@
                                     <!-- Your existing HTML content -->
 
                                     <div class="col-xl-6 col-lg-6 col-md-12 mx-auto mb-4">
-                                        <% for (let i=1; i <=4; i++) { %>
+                                        <% for (let i = 1; i <= 4; i++) { %>
                                             <!-- Image upload placeholders for -->
                                             <div class="tm-product-img-edit mx-auto">
                                                 <img id="selectedImage<%= i %>"
                                                     src="/images/productImages/<%= product.images['image' + i]?.name %>"
                                                     alt="Product Image <%= i %>" class="img-fluid d-block mx-auto"
                                                     style="max-height: 200px; max-width: 100%;" />
-                                                <i class="fas fa-cloud-upload-alt tm-upload-icon"
-                                                    onclick="document.getElementById('fileInput<%= i %>').click();"></i>
+                                           
+                                            <img id="croppedImage<%=i%>" src="#" alt="Cropped Image <%= i %>" style="display: none;">
+                                           
                                             </div>
 
-                                            <!-- File input and upload button for -->
+                                            
+                                    
+                                            <!-- File input, crop button, and change button for -->
                                             <div class="custom-file mt-3 mb-3">
                                                 <input id="fileInput<%= i %>" type="file" style="display:none;"
-                                                    onchange="displaySelectedImage(<%= i %>); checkImageModification(<%= i %>);"
+                                                    onchange="initCropper(<%= i %>);"
                                                     name="images" />
+                                                <input type="hidden" id="originalImage<%= i %>" name="originalImage<%= i %>"
+                                                    value="<%= product.images['image' + i]?.name %>" />
+                                                <input type="hidden" id="imageModified<%= i %>" name="imageModified<%= i %>"
+                                                    value="false" />
+                                    
+                                                <!-- Crop button -->
+                                                <button class="btn btn-success btn-sm mt-2" style="display: none;"
+                                                    onclick="cropImage(<%= i %>);" id="cropButton<%= i %>">Crop</button>
+                                    
+                                                <!-- Change button -->
                                                 <input type="button" class="btn btn-primary btn-block mx-auto"
-                                                    value="CHANGE"
-                                                    onclick="document.getElementById('fileInput<%= i %>').click();" />
+                                                    value="CHANGE IMAGE <%= i%>" onclick="document.getElementById('fileInput<%= i %>').click();" id="changeButton<%= i %>"/>
                                             </div>
-
-                                            <!-- Hidden fields for tracking modifications -->
-                                            <input type="hidden" id="originalImage<%= i %>" name="originalImage<%= i %>"
-                                                value="<%= product.images['image' + i]?.name %>" />
-                                            <input type="hidden" id="imageModified<%= i %>" name="imageModified<%= i %>"
-                                                value="false" />
-                                            <% } %>
-
+                                        <% } %>
                                     </div>
+                                    
 
 
 
@@ -294,79 +304,135 @@
         </div>
 
         <script>
-            function displaySelectedImage(imageNumber) {
-                var fileInput = document.getElementById('fileInput' + imageNumber);
-                var selectedImage = document.getElementById('selectedImage' + imageNumber);
+           
+           function initCropper(imageNumber) {
+    const fileInput = document.getElementById('fileInput' + imageNumber);
+    const croppedImage = document.getElementById('croppedImage' + imageNumber);
+    const removeButton = document.getElementById('removeButton' + imageNumber);
+    const changeButton = document.getElementById('changeButton' + imageNumber);
 
-                // Check if a file is selected
-                if (fileInput.files && fileInput.files[0]) {
-                    var reader = new FileReader();
+    console.log('fileInput:', fileInput);
+    console.log('croppedImage:', croppedImage);
+    console.log('removeButton:', removeButton);
+    console.log('changeButton:', changeButton);
 
-                    // Set up the reader to read the selected image
-                    reader.onload = function (e) {
-                        selectedImage.src = e.target.result;
-                    };
+    changeButton.style.display = 'none'; // Hide upload button
 
-                    // Read the selected image as a data URL
-                    reader.readAsDataURL(fileInput.files[0]);
+    if (fileInput.files && fileInput.files[0]) {
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+            // Display the cropped image
+            croppedImage.src = e.target.result;
+            croppedImage.style.display = 'block';
+
+            // Initialize Cropper.js
+            const cropper = new Cropper(croppedImage, {
+                aspectRatio: NaN,
+                viewMode: 0,
+                // Add more options based on your requirements
+            });
+
+            // Save the cropper instance for later use (optional)
+            fileInput.cropper = cropper;
+
+            // Display the crop result when the crop button is clicked
+            const cropButton = document.createElement('button');
+            cropButton.innerText = 'Crop';
+            cropButton.className = 'btn btn-success btn-sm mt-2';
+            cropButton.type = 'button'; // Change the type to button
+            cropButton.onclick = function () {
+                const croppedCanvas = cropper.getCroppedCanvas();
+
+                // Convert the cropped canvas to a Blob
+                croppedCanvas.toBlob(function (blob) {
+                    // Create a new DataTransfer object
+                    const dataTransfer = new DataTransfer();
+
+                    // Create a new File and add it to the DataTransfer object
+                    const croppedFile = new File([blob], fileInput.files[0].name, { type: blob.type });
+                    dataTransfer.items.add(croppedFile);
+
+                    // Set the 'files' property of the existing file input
+                    fileInput.files = dataTransfer.files;
+
+                    // Display the cropped image
+                    croppedImage.src = URL.createObjectURL(blob);
+                    croppedImage.style.display = 'block';
+
+                    // Show remove button
+                    removeButton.style.display = 'block';
+
+                    // Hide upload button
+                    changeButton.style.display = 'none';
+
+                    // Remove the crop button
+                    fileInput.parentElement.removeChild(cropButton);
+                }, fileInput.files[0].type);
+            };
+
+            // Check if the next sibling exists before accessing its style property
+            if (fileInput.nextElementSibling) {
+                fileInput.parentElement.appendChild(cropButton);
+            }
+        };
+
+        reader.readAsDataURL(fileInput.files[0]);
+    }
+
+    // Hide the upload button and icon after the image is selected
+    fileInput.style.display = 'none';
+
+    // Check if the next sibling exists before accessing its style property
+    if (fileInput.nextElementSibling) {
+        fileInput.nextElementSibling.style.display = 'none';
+    }
+}
+
+
+
+
+
+            function cropImage(imageNumber) {
+                const fileInput = document.getElementById('fileInput' + imageNumber);
+                const originalImageName = document.getElementById('originalImage' + imageNumber).value;
+                const cropButton = document.getElementById('cropButton' + imageNumber);
+                const changeButton = document.getElementById('changeButton' + imageNumber);
+                const imageModifiedInput = document.getElementById('imageModified' + imageNumber);
+
+                if (fileInput.cropper) {
+                    const croppedCanvas = fileInput.cropper.getCroppedCanvas();
+
+                    // Convert the cropped canvas to a Blob
+                    croppedCanvas.toBlob(function (blob) {
+                        // Create a new File from the Blob
+                        const croppedFile = new File([blob], originalImageName, { type: blob.type });
+
+                        // Create a new FormData object and append the cropped file
+                        const formData = new FormData();
+                        formData.append('images', croppedFile);
+
+                        // Create a DataTransfer object and add the new file
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(new File([blob], originalImageName, { type: blob.type }));
+
+                        // Set the DataTransfer object to the files property of the existing file input
+                        fileInput.files = dataTransfer.files;
+
+                        // Set imageModified to true
+                        imageModifiedInput.value = 'true';
+
+                        // Hide the crop button and show the change button
+                        cropButton.style.display = 'none';
+                        changeButton.style.display = 'block';
+
+                        // Optional: Add logic to handle the cropped image
+                    }, fileInput.files[0].type);
                 }
             }
 
-            function checkImageModification(index) {
-                var fileInput = document.getElementById('fileInput' + index);
-                var originalImageName = document.getElementById('originalImage' + index).value;
 
-                if (fileInput.files && fileInput.files[0]) {
-                    var reader = new FileReader();
 
-                    reader.onload = function (e) {
-                        var newImageContent = e.target.result;
-
-                        // Compare newImageContent with the content of the default image
-                        if (compareImagesContent(newImageContent, originalImageName)) {
-                            document.getElementById('imageModified' + index).value = 'true';
-                        } else {
-                            // Optionally, you can reset the file input or show a message to the user
-                            fileInput.value = ''; // Reset the file input
-                            alert('Please select a different image.');
-                        }
-                    };
-
-                    reader.readAsDataURL(fileInput.files[0]);
-                }
-            }
-
-            function compareImagesContent(newImageContent, originalImageName) {
-                // Assume originalImageName is the URL of the default image
-                var defaultImage = new Image();
-                defaultImage.src = originalImageName;
-
-                // Create an image from the new image content
-                var newImage = new Image();
-                newImage.src = newImageContent;
-
-                // Compare the dimensions of the images
-                if (defaultImage.width !== newImage.width || defaultImage.height !== newImage.height) {
-                    return true; // Images have different dimensions, consider them modified
-                }
-
-                // Compare the content by converting images to base64 strings
-                var defaultImageBase64 = getBase64FromImage(defaultImage);
-                var newImageBase64 = getBase64FromImage(newImage);
-
-                return defaultImageBase64 !== newImageBase64;
-            }
-
-            function getBase64FromImage(image) {
-                var canvas = document.createElement("canvas");
-                canvas.width = image.width;
-                canvas.height = image.height;
-
-                var context = canvas.getContext("2d");
-                context.drawImage(image, 0, 0);
-
-                return canvas.toDataURL("image/png");
-            }
         </script>
 
         <%- include('../layouts/admin-footer') -%>

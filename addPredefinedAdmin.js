@@ -9,7 +9,7 @@ async function createAdminUser() {
         const existingAdmin = await Admin.findOne({ email: 'admin@gmail.com' });
 
         if (!existingAdmin) {
-            const hashedPassword = await bcrypt.hash('admin', 10);
+            const hashedPassword = await bcrypt.hash('adminadmin', 10);
 
             const newAdmin = new Admin({
                 name: 'Muhammed Shanoob',

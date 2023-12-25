@@ -14,9 +14,13 @@ adminRoute.use(session({
   }));
 
 
+adminRoute.get('/',adminController.adminRootHandler);
 
 adminRoute.get('/login',auth.isLogOut,adminController.loginLoader);
 adminRoute.post('/login',adminController.loginHandler);
+
+adminRoute.get('/logout',auth.isLogin,adminController.logoutHandler);
+
 adminRoute.get('/dashboard',auth.isLogin,adminController.dashboardLoader);
 
 

@@ -5,10 +5,43 @@ const Products = require('../models/productModel');
 const Users = require('../models/userModel');
 
 
+const adminRootHandler = async (req, res) => {
+    try {
+        if (req.session.adminId) {
+            res.render('./admin/dashboard')
+        } else {
+            res.render('./admin/login');
+
+        }
+
+    } catch (error) {
+        console.log(error.message);
+    }
+}
+//logging out admin
+const logoutHandler = async (req, res) => {
+    try {
+
+        const adminId = req.session.adminId;
+
+        // Find the user by _id (userId) and update the isLogin property to false
+        const adminUpdate = await Admin.findByIdAndUpdate(adminId, { isLogin: false });
+
+        if(adminUpdate){
+            req.session.adminId = null;
+            res.redirect('/admin');
+        }
+       
+    } catch (error) {
+        console.log(error.message);
+    }
+}
+
+
 const productListLoader = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
-        const pageSize = 1; // Set the number of products to display per page
+        const pageSize = 10; // Set the number of products to display per page
 
         const options = {
             page: page,
@@ -311,7 +344,7 @@ const productEditHandler = async (req, res) => {
             return res.redirect('/admin/products-edit/' + productId);
         }
 
-        
+
 
 
 
@@ -319,7 +352,7 @@ const productEditHandler = async (req, res) => {
         const colorsArray = req.body.colors || [];
         const filenames = req.files.map(file => file.filename);
 
-        
+
 
 
         //code to insert images to collection
@@ -448,9 +481,12 @@ const singleUserBlockHandler = async (req, res) => {
         }
 
         // Update the product's status to "soft deleted" in the database
-        const result = await Users.findByIdAndUpdate(userId, { $set: { isBlocked : true } });
+        const result = await Users.findByIdAndUpdate(userId, { $set: { isBlocked: true } });
 
         if (result) {
+
+            req.session.userId = null; // Invalidate the session
+            
             req.flash('success', 'User blocked.');
             return res.redirect('/admin/users-list');
         } else {
@@ -475,7 +511,7 @@ const singleUserUnblockHandler = async (req, res) => {
         }
 
         // Update the product's status to "unblock" in the database
-        const result = await Users.findByIdAndUpdate(userId, { $set: { isBlocked : false } });
+        const result = await Users.findByIdAndUpdate(userId, { $set: { isBlocked: false } });
 
         if (result) {
             req.flash('success', 'User unblocked.');
@@ -598,4 +634,6 @@ module.exports = {
     multipleUsersBlockHandler,
     multipleUsersUnblockHandler,
     CategoryListLoader,
+    adminRootHandler,
+    logoutHandler,
 }

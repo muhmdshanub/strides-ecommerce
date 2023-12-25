@@ -21,6 +21,7 @@ userRoute.post('/signup-verify',userController.signupVerificationHandler);
 userRoute.get('/login',auth.isLogOut,userController.loginLoader);
 userRoute.get('/home',auth.isLogin,userController.homeLoader);
 userRoute.post('/login',userController.loginHandler);
+userRoute.get('/logout',auth.isLogin,userController.logoutHandler);
 userRoute.get('/products',auth.isLogin,userController.productListLoader);
 userRoute.get('/products/:productId',auth.isLogin,userController.productSingleLoader);
 

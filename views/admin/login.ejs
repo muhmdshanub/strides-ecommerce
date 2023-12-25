@@ -27,7 +27,7 @@
                                 <h4 class="mb-0 pb-md-0 mb-md-5 text-danger">ADMIN LOGIN</h3>
                             </div>
                             <%- include('../layouts/_messages') -%>
-                            <form method="POST" action="/admin/login">
+                            <form method="POST" action="/admin/login" id="loginForm" novalidate>
     
                                 <div class="mt-5 mb-3">
                                     <input type="text" class="form-control" id="exampleInputEmail1"
@@ -47,5 +47,80 @@
             </div>
         </div>
     </section>
+
+    <script defer>
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('DOM is loaded');
+    
+            const form = document.getElementById('loginForm');
+    
+            function validateForm() {
+                const emailOrPhone = form.elements['emailOrPhone'].value.trim();
+                const password = form.elements['password'].value.trim();
+    
+                // Custom validation logic
+                const errors = [];
+    
+                if (!emailOrPhone) {
+                    errors.push('Email or Phone cannot be empty.');
+                    showPopover('exampleInputEmail1', 'Email or Phone cannot be empty.');
+                } else {
+                    // Check for email or phone format
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    const phoneRegex = /^\+\d{12}$/;
+    
+                    if (!emailRegex.test(emailOrPhone) && !phoneRegex.test(emailOrPhone)) {
+                        errors.push('Invalid email or phone format.');
+                        showPopover('exampleInputEmail1', 'Invalid email or phone format.');
+                    } else {
+                        hidePopover('exampleInputEmail1');
+                    }
+                }
+    
+                if (!password) {
+                    errors.push('Password cannot be empty.');
+                    showPopover('exampleInputPassword1', 'Password cannot be empty.');
+                } else if (password.length < 8) {
+                    errors.push('Password must be at least 8 characters long.');
+                    showPopover('exampleInputPassword1', 'Password must be at least 8 characters long.');
+                } else {
+                    hidePopover('exampleInputPassword1');
+                }
+    
+                return errors;
+            }
+    
+            function showPopover(inputId, message) {
+                hidePopover(inputId); // Remove existing popover if any
+    
+                const inputField = document.getElementById(inputId);
+                const popover = document.createElement('div');
+                popover.className = 'custom-popover';
+                popover.textContent = message;
+    
+                // Set styles for the popover
+                popover.style.color = 'white'; // Text color
+                popover.style.backgroundColor = 'red'; // Background color (you can change it as needed)
+    
+                inputField.parentElement.appendChild(popover);
+            }
+    
+            function hidePopover(inputId) {
+                const inputField = document.getElementById(inputId);
+                const existingPopover = inputField.parentElement.querySelector('.custom-popover');
+                if (existingPopover) {
+                    existingPopover.remove();
+                }
+            }
+    
+            form.addEventListener('submit', function (event) {
+                const errors = validateForm();
+    
+                if (errors.length > 0) {
+                    event.preventDefault();
+                }
+            });
+        });
+    </script>
 
     <%- include('../layouts/footer') -%>

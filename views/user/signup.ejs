@@ -2,7 +2,7 @@
 
     <link rel="stylesheet" href="/styles/signup.css">
 
-    <script>
+    <!-- <script>
         document.addEventListener('DOMContentLoaded', function () {
             const passwordInput = document.getElementById('exampleInputPassword1');
             const confirmPasswordInput = document.getElementById('exampleInputPassword2');
@@ -26,7 +26,9 @@
             passwordInput.addEventListener('input', updatePasswordMessage);
             confirmPasswordInput.addEventListener('input', updatePasswordMessage);
         });
-    </script>
+    </script> -->
+
+
 
 
     <section class="bg-dark">
@@ -37,49 +39,196 @@
             </div>
             <div class="row justify-content-center align-items-center h-100">
                 <div class="col-12 col-lg-9 col-xl-7">
-                    <div class="card shadow-2-strong card-registration bg-transparent gradient-custom" style="border-radius: 15px;">
+                    <div class="card shadow-2-strong card-registration bg-transparent gradient-custom"
+                        style="border-radius: 15px;">
                         <div class="card-body p-4 p-md-5">
                             <div class="text-center">
                                 <p class="mb-1 pb-0 pb-md-0 mb-md-1 text-danger">Let's get you started on strides</p>
                                 <h4 class="mb-0 pb-md-0 mb-md-5 text-danger">Register Yourself</h3>
                             </div>
                             <%- include('../layouts/_messages') -%>
-                            <form method="POST" action="/signup">
-                                <div class="mb-3">
-                                    <input type="text" name="name" class="form-control" id="exampleInputName" placeholder="Name" required>
-                                </div>
-                                <div class="mb-3">
-                                    <input type="email" class="form-control" id="exampleInputEmail1"
-                                        aria-describedby="emailHelp" placeholder="Email" name="email" required>
-                                    <div id="emailHelp" class="form-text Secondary text-light"> We'll never share your email with anyone else.
+                                <form method="POST" action="/signup" novalidate>
+                                    <div class="mb-3">
+                                        <input type="text" name="name" class="form-control" id="exampleInputName"
+                                            placeholder="Name" required>
                                     </div>
-                                </div>
-                                <div class="mb-3">
-                                    <input type="password" class="form-control" id="exampleInputPassword1" placeholder="Password" name="password" required>
-                                </div>
-                                <div class="mb-3">
-                                    <input type="password" class="form-control" id="exampleInputPassword2" placeholder="Confirm Password" name="confirmPassword" required>
-                                </div>
-                                <small id="confirmPasswordMessage"></small>
-                                <div class="mb-3">
-                                    <input type="tel" class="form-control" id="exampleInputMobile" pattern="\+\d{12}" placeholder="Phone" name="phone" required>
-                                </div>
-                                <div class="mb-3">
-                                    <input type="date" class="form-control" id="exampleInputDOB" placeholder="Date of Birth" name="dateOfBirth" required>
-                                    <small class="Secondary text-light"> Date of Birth</small>
-                                </div>
+                                    <div class="mb-3">
+                                        <input type="email" class="form-control" id="exampleInputEmail1"
+                                            aria-describedby="emailHelp" placeholder="Email" name="email" required>
+                                        <div id="emailHelp" class="form-text Secondary text-light"> We'll never share
+                                            your email with anyone else.
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <input type="password" class="form-control" id="exampleInputPassword1"
+                                            placeholder="Password" name="password" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <input type="password" class="form-control" id="exampleInputPassword2"
+                                            placeholder="Confirm Password" name="confirmPassword" required>
+                                    </div>
+                                    <small id="confirmPasswordMessage"></small>
+                                    <div class="mb-3">
+                                        <input type="tel" class="form-control" id="exampleInputMobile"
+                                            pattern="\+\d{12}" placeholder="Phone" name="phone" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <input type="date" class="form-control" id="exampleInputDOB"
+                                            placeholder="Date of Birth" name="dateOfBirth" required>
+                                        <small class="Secondary text-light"> Date of Birth</small>
+                                    </div>
 
-                                <button type="submit" class="  btn btn-danger d-block mx-auto">Signup</button>
+                                    <button type="submit" id="submitButton"
+                                        class="  btn btn-danger d-block mx-auto">Signup</button>
 
-                                <p class="text-center mt-5 mb-0 text-light">Have already an account? <a href="/login"
-                                        class="fw-bold text-body"><u class="text-primary">Login here</u></a></p>
+                                    <p class="text-center mt-5 mb-0 text-light">Have already an account? <a
+                                            href="/login" class="fw-bold text-body"><u class="text-primary">Login
+                                                here</u></a></p>
 
-                            </form>
+                                </form>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
+
+    <script defer>
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('DOM is loaded');
+    
+            const form = document.querySelector('form');
+            const passwordInput = document.getElementById('exampleInputPassword1');
+            const confirmPasswordInput = document.getElementById('exampleInputPassword2');
+            const confirmPasswordMessage = document.getElementById('confirmPasswordMessage');
+            const submitButton = document.getElementById('submitButton');
+    
+            function updatePasswordMessage() {
+                const password1 = passwordInput.value.trim();
+                const password2 = confirmPasswordInput.value.trim();
+    
+                if ((password1 || password2) && password1 !== password2) {
+                    confirmPasswordMessage.textContent = 'Passwords do not match';
+                    confirmPasswordMessage.style.color = 'red';
+                    submitButton.disabled = true;
+                } else {
+                    confirmPasswordMessage.textContent = '';
+                    submitButton.disabled = false;
+                }
+            }
+    
+            function validateForm() {
+                const name = form.elements['name'].value.trim();
+                const email = form.elements['email'].value.trim();
+                const phone = form.elements['phone'].value.trim();
+                const dob = form.elements['dateOfBirth'].value.trim();
+                const password = form.elements['password'].value.trim();
+                const confirmPassword = form.elements['confirmPassword'].value.trim();
+    
+                // Custom validation logic
+                const errors = [];
+    
+                clearAllPopovers(); // Clear existing popovers
+    
+                if (!name) {
+                    errors.push('Name cannot be empty.');
+                    showPopover('exampleInputName', 'Name cannot be empty.');
+                } else {
+                    hidePopover('exampleInputName');
+                }
+    
+                if (!email) {
+                    errors.push('Email cannot be empty.');
+                    showPopover('exampleInputEmail1', 'Email cannot be empty.');
+                } else {
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(email)) {
+                        errors.push('Invalid email format.');
+                        showPopover('exampleInputEmail1', 'Invalid email format.');
+                    } else {
+                        hidePopover('exampleInputEmail1');
+                    }
+                }
+    
+                if (!phone) {
+                    errors.push('Phone number cannot be empty.');
+                    showPopover('exampleInputMobile', 'Phone number cannot be empty.');
+                } else {
+                    const phoneRegex = /^\+\d{12}$/;
+                    if (!phoneRegex.test(phone)) {
+                        errors.push('Invalid phone number format.');
+                        showPopover('exampleInputMobile', 'Invalid phone number format.');
+                    } else {
+                        hidePopover('exampleInputMobile');
+                    }
+                }
+    
+                if (!dob) {
+                    errors.push('Date of Birth cannot be empty.');
+                    showPopover('exampleInputDOB', 'Date of Birth cannot be empty.');
+                } else {
+                    hidePopover('exampleInputDOB');
+                }
+    
+                if (password.length < 8) {
+                    errors.push('Password should be at least 8 characters long.');
+                    showPopover('exampleInputPassword1', 'Password should be at least 8 characters long.');
+                } else {
+                    hidePopover('exampleInputPassword1');
+                }
+    
+                if (password !== confirmPassword) {
+                    errors.push('Passwords do not match.');
+                    showPopover('exampleInputPassword2', 'Passwords do not match.');
+                } else {
+                    hidePopover('exampleInputPassword2');
+                }
+    
+                return errors;
+            }
+    
+            function showPopover(inputId, message) {
+                const inputField = document.getElementById(inputId);
+                const popover = document.createElement('div');
+                popover.className = 'custom-popover';
+                popover.textContent = message;
+    
+                // Set styles for the popover
+                popover.style.color = 'white'; // Text color
+                popover.style.backgroundColor = 'red'; // Background color
+    
+                inputField.parentElement.appendChild(popover);
+            }
+    
+            function hidePopover(inputId) {
+                const inputField = document.getElementById(inputId);
+                const existingPopover = inputField.parentElement.querySelector('.custom-popover');
+                if (existingPopover) {
+                    existingPopover.remove();
+                }
+            }
+    
+            function clearAllPopovers() {
+                const popovers = document.querySelectorAll('.custom-popover');
+                popovers.forEach(popover => popover.remove());
+            }
+    
+            passwordInput.addEventListener('input', updatePasswordMessage);
+            confirmPasswordInput.addEventListener('input', updatePasswordMessage);
+    
+            form.addEventListener('submit', function (event) {
+                const errors = validateForm();
+    
+                if (errors.length > 0) {
+                    event.preventDefault();
+                } else {
+                    // Continue with the existing password validation logic
+                    updatePasswordMessage();
+                }
+            });
+        });
+    </script>
+    
+    
 
     <%- include('../layouts/footer') -%>
