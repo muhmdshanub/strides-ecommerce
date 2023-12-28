@@ -248,7 +248,7 @@
 
                                 <div class="my-md-5 my-sm-1 my-1">
                                     <label class="btn btn-outline-danger rounded-pill">
-                                        <input type="radio" name="size" value="size"> S
+                                        <input type="radio" name="size" value="small"> S
                                     </label>
                                     <label class="btn btn-outline-danger rounded-pill">
                                         <input type="radio" name="size" value="medium"> M
@@ -299,6 +299,23 @@
     </div>
 </div>
 
+<!-- Add this div somewhere in your HTML -->
+<div id="popupMessage" class="modal fade" tabindex="-1" role="dialog" style="z-index: 2050;">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Server Message</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="popupMessageContent"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 
 <script>
@@ -349,37 +366,41 @@ function getSelectedSize() {
     }
 
     async function addToCart(productId) {
+    const size = getSelectedSize();
+    const quantity = getQuantity();
 
-        const size = getSelectedSize();
-        const quantity = getQuantity();
-        
-
-        if (!size || isNaN(quantity) || quantity < 1) {
-            console.error('Invalid size or quantity.');
-            return;
-        }
-
-        try {
-            // Use fetch to send an HTTP request to your server's API endpoint for adding to cart
-            const response = await fetch(`/add-to-cart/${productId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ size, quantity }),
-            });
-
-            if (response.ok) {
-                // Cart item added successfully
-                console.log('Added to Cart!');
-            } else {
-                console.error('Failed to add to Cart.');
-            }
-        } catch (error) {
-            console.error('Error adding to Cart:', error.message);
-        }
+    if (!size || isNaN(quantity) || quantity < 1) {
+        console.error('Invalid size or quantity.');
+        return;
     }
 
+    try {
+        const response = await fetch(`/add-to-cart/${productId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ size, quantity }),
+        });
+
+        if (response.ok) {
+            const jsonResponse = await response.json();
+
+            // Assuming the server response has a "message" property
+            const popupMessageContent = document.getElementById('popupMessageContent');
+            popupMessageContent.innerHTML = jsonResponse.message;
+
+            // Show the popup
+            $('#popupMessage').modal('show');
+
+            console.log('Added to Cart!');
+        } else {
+            console.error('Failed to add to Cart.');
+        }
+    } catch (error) {
+        console.error('Error adding to Cart:', error.message);
+    }
+}
 
 
 

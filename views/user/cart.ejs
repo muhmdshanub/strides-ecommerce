@@ -1,0 +1,344 @@
+<%- include('../layouts/user-header') -%>
+
+
+
+
+
+<div class="container-fluid">
+    <div class="row mt-4 col-12">
+      <%- include('../layouts/user-navbar') -%>
+        <!-- First Section (7/12 width on medium screens) -->
+        <div class="col-7 border rounded mx-3 p-0 text-black">
+            
+          
+              <section style="background-color: #eee;" class="mx-0 px-1 my-2">
+                <div class="container-fluid py-3 mx-0 px-1">
+                    <% cart.items.forEach(item => { %>
+                        <div id="item-<%=item._id %>" class="row justify-content-center mb-1">
+                          
+                            <div class="col-md-12">
+                                <div class="card shadow-0 border rounded-3 position-relative">
+                                    <div class="card-body pr-0">
+                                        <div class="row pr-0 mr-0">
+                                            <div class="col-md-12 col-lg-6 col-xl-4 mb-4 mb-lg-0">
+                                                <div class="bg-image hover-zoom ripple border rounded ripple-surface">
+                                                    <img src="/images/productImages/<%= item.product.images.image1.name %>" class="w-100 rounded" />
+                                                    <a href="#!">
+                                                        <div class="hover-overlay">
+                                                            <div class="mask" style="background-color: rgba(253, 253, 253, 0.15);"></div>
+                                                        </div>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6 col-lg-6 col-xl-8">
+                                                <div>
+                                                    <h3><%= item.product.brandName %></h3>
+                                                    <p class="text-muted"><%= item.product.productName %></p>
+                                                </div>
+                                                <div class="d-flex flex-row">
+                                                    <h3 class="mx-2"><%= item.product.finalPrice %></h3>
+                                                    <h3 class="muted mx-2"><del><%= item.product.initialPrice %></del></h3>
+                                                    <p class="badge badge-success mx-2 p-3" style="font-size: medium;"><%= item.product.discountPercentage %>%</p>
+                                                </div>
+                                               
+                                                <div class="row d-flex flex-row">
+                                                  <div class="mx-2">
+                                                    <label class="btn btn-outline-danger rounded-pill">
+                                                        <input type="radio" name="size<%= item._id %>" value="small" <%= item.size == "small" ? 'checked' : '' %> onchange="updateSize('<%= item._id %>', 'small')"> S
+                                                    </label>
+                                                </div>
+                                                  
+                                                  <div class="mx-2">
+                                                    <label class="btn btn-outline-danger rounded-pill">
+                                                        <input type="radio" name="size<%= item._id %>" value="medium" <%= item.size == "medium" ? 'checked' : '' %> onchange="updateSize('<%= item._id %>', 'medium')"> M
+                                                    </label>
+                                                </div>
+                                                  <div class="mx-2">
+                                                    <label class="btn btn-outline-danger rounded-pill">
+                                                        <input type="radio" name="size<%= item._id %>" value="large" <%= item.size == "large" ? 'checked' : '' %> onchange="updateSize('<%= item._id %>', 'large')"> L
+                                                    </label>
+                                                </div>
+                                                  <div class="mx-2">
+                                                      <label class="btn btn-outline-danger rounded-pill">
+                                                          <input type="radio" name="size<%= item._id %>" value="extraLarge" <%= item.size == "extraLarge" ? 'checked' : '' %> onchange="updateSize('<%= item._id %>', 'extraLarge')"> XL
+                                                      </label>
+                                                  </div>
+                                                </div>
+
+                                               
+
+                                                <div class="mt-5 ml-0 pl-0">
+                                                    <!-- Quantity selection with input group -->
+                                                    <div class="input-group mt-2 ml-0 pl-0" style="width:105px;">
+                                                      <div class="input-group-prepend ml-0 pl-0">
+                                                          <button  onclick="updateQuantity('<%= JSON.stringify(item._id) %>','minus')"
+                                                             class="btn btn-outline-danger rounded-pill" type="button"
+                                                              id="minusBtn<%=item._id%>">-</button>
+                                                      </div>
+                                                      <input type="text" class="form-control text-center rounded-pill quantity-input"
+                                                          value="<%= item.quantity  %>" min="1" max="10" id="quantityInput<%=item.id  %>" readonly>
+                                                      <div class="input-group-append">
+                                                          <button  onclick="updateQuantity( '<%= JSON.stringify(item._id) %>' ,'add')"
+                                                          class="btn btn-outline-danger rounded-pill" type="button"
+                                                              id="plusBtn<%=item._id%>">+</button>
+                                                      </div>
+                                                  </div>
+                                                </div>
+                                                <div class="delete-icon" style="position: absolute; top: 5px; right: 20px;">
+                                                  
+                                                  <button
+                                                  
+                                                  onclick="deleteCartItem('<%= item._id %>', <%= JSON.stringify({ totalAmount: cart.totalAmount, totalInitialAmount: cart.totalInitialAmount }) %>, <%= JSON.stringify({ deletedItemTotalAmount: item.totalAmount, deletedItemTotalInitialAmount: item.totalInitialAmount }) %>)"
+                                                      type="button"
+                                                      style="text-decoration: none; border: none; background: none;"
+                                                      onmouseover="this.style.width='35px'; this.style.height='35px';"
+                                                      onmouseout="this.style.width='30px'; this.style.height='30px';"
+                                                  >
+                                                      <svg
+                                                          onclick="this.style.width='25px'; this.style.height='25px';"
+                                                          xmlns="http://www.w3.org/2000/svg"
+                                                          style="text-decoration: none;"
+                                                          onmouseover="this.style.width='35px'; this.style.height='35px';"
+                                                          onmouseout="this.style.width='30px'; this.style.height='30px';"
+                                                          color="red"
+                                                          width="30"
+                                                          height="30"
+                                                          fill="currentColor"
+                                                          viewBox="0 0 16 16"
+                                                      >
+                                                      <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                                                      <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+                                                      </svg>
+                                                  </button>
+                                              </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <% }); %>
+                </div>
+            </section>
+            
+              
+              
+        </div>
+
+        <!-- Second Section (4/12 width on medium screens with margins) -->
+        <div class="col-4 mx-3 text-black">
+          <div class="container-fluid mt-4 border rounded p-5">
+            <div class="row">
+                <div class="col-md-10 offset-md-1">
+                    <div class="total-amount-section">
+                        <h2>Total Amount</h2>
+        
+                        <!-- MRP Section -->
+                        <div class="amount-row d-flex justify-content-between mt-5 mb-1">
+                            <span>Total MRP</span>
+                            <span id="totalMRP"><%= cart.totalInitialAmount  %>Rs.</span>
+                        </div>
+        
+                        <!-- Discount Section -->
+                        <div class="amount-row d-flex justify-content-between my-1">
+                            <span>Discount</span>
+                            <span id="discount"><%= parseFloat(cart.totalInitialAmount - cart.totalAmount).toFixed(2)   %>Rs.</span>
+                        </div>
+        
+                        <!-- Amount To Pay Section -->
+                        <div class="amount-row d-flex justify-content-between mt-3 mb-5">
+                            <span>Amount To Pay</span>
+                            <span id="amountToPay"><%= cart.totalAmount  %>Rs.</span>
+                          </div></span>
+                        </div>
+        
+                        <!-- Separator Line -->
+                        <hr>
+                        <div class="mt-5">
+                          <!-- Place Order Button -->
+                          <button id="placeOrderBtn" class="btn btn-primary btn-block mt-2" onclick="validateAndRedirect()">Place Order</button>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+            
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="invalidItemsModal" tabindex="-1" role="dialog" aria-labelledby="invalidItemsModalLabel" aria-hidden="true" style="z-index: 2050;">
+  <div class="modal-dialog" role="document">
+      <div class="modal-content">
+          <div class="modal-header">
+              <h5 class="modal-title" id="invalidItemsModalLabel">Invalid Items</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+              </button>
+          </div>
+          <div class="modal-body" id="invalidItemsModalBody">
+              <!-- Invalid items details will be displayed here -->
+          </div>
+          <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+      </div>
+  </div>
+</div>
+
+<script>
+
+function validateAndRedirect() {
+    // Send a GET request to the server endpoint
+    fetch('/cart-to-address', {
+        method: 'GET',
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Check if there are invalid items in the response
+        if (data.invalidItems && data.invalidItems.length > 0) {
+            // If there are invalid items, show the custom popup
+            showInvalidItemsPopup(data.invalidItems);
+        } else {
+            // If no invalid items, redirect to the address page
+            window.location.href = '/address';
+        }
+    })
+    .catch(error => {
+        console.error('Error validating cart:', error.message);
+        // Handle the error if needed
+    });
+}
+
+  function showInvalidItemsPopup(invalidItems) {
+    // Get the modal and its body
+    const modal = document.getElementById('invalidItemsModal');
+    const modalBody = document.getElementById('invalidItemsModalBody');
+
+    // Clear previous content
+    modalBody.innerHTML = '';
+
+    // Add details of invalid items to the modal body
+    invalidItems.forEach(item => {
+        const itemDetails = document.createElement('p');
+        itemDetails.textContent = `Brand: ${item.brandName}, Product: ${item.productName}, Size: ${item.size}, Quantity: ${item.selectedQuantity}, Reason: ${item.reason}`;
+        modalBody.appendChild(itemDetails);
+    });
+
+    // Show the modal
+    $(modal).modal('show');
+}
+
+
+  function deleteCartItem(itemId, cartDetails, deletedItemDetails) {
+
+const { totalAmount, totalInitialAmount } = cartDetails;
+const { deletedItemTotalAmount, deletedItemTotalInitialAmount } = deletedItemDetails;
+
+// Send DELETE request to server
+fetch(`/cart-item-delete/${itemId}`, {
+  method: 'DELETE',
+})
+.then(response => {
+  if (!response.ok) {
+    throw new Error(`HTTP error! Status: ${response.status}`);
+  }
+  return response.json();
+})
+.then(data => {
+  // Assuming the server response contains only the deleted item's ID
+  
+  // Remove the deleted item from the page
+  const deletedItemElement = document.getElementById(`item-${itemId}`);
+  if (deletedItemElement) {
+    deletedItemElement.remove();
+  }
+  
+  // Update total amount, total discount, and amount to pay based on the current page values
+  const currentFinalTotalAmount = parseFloat(totalAmount - deletedItemTotalAmount).toFixed(2);
+  const currentInitialAmountToPay = parseFloat(totalInitialAmount - deletedItemTotalInitialAmount).toFixed(2);
+
+  // Update total amount, total discount, and amount to pay
+  document.getElementById('totalMRP').textContent = `${currentInitialAmountToPay} Rs.`;
+  document.getElementById('discount').textContent = `${currentInitialAmountToPay - currentFinalTotalAmount} Rs.`;
+  document.getElementById('amountToPay').textContent = `${currentFinalTotalAmount} Rs.`;
+})
+.catch(error => {
+  console.error('Error deleting item:', error);
+  // Handle error, show a message to the user, etc.
+});
+}
+
+
+function updateQuantity(itemId, operation) {
+  const parsedItemId = JSON.parse(itemId);
+  const displayInput = document.getElementById(`quantityInput${parsedItemId}`);
+
+  if (operation === "add" && displayInput.value >= 10 || operation === "minus" && displayInput.value <= 1) {
+    return console.log("Maximum or minimum quantity reached");
+  }
+
+  const updater = (operation === "add") ? 1 : -1;
+  displayInput.value = parseInt(displayInput.value) + updater;
+
+  const URL = `/cart-item-quantity-update?itemId=${parsedItemId}&operation=${updater}`;
+
+  console.log('Sending request to:', URL);
+
+  fetch(URL, {
+    method: 'GET',
+  })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      // Reload the page upon a successful update
+      location.reload();
+    })
+    .catch(error => {
+      console.error('Error updating quantity:', error.message);
+    });
+}
+
+
+function updateSize(itemId, newSize) {
+    // Get the current size before the change
+    const previousSize = document.querySelector(`[name="size${itemId}"]:checked`).value;
+
+    // Update the size on the client side
+    const sizeLabel = document.querySelector(`[name="size${itemId}"][value="${newSize}"]`);
+    sizeLabel.checked = true;
+
+    // Send a request to the server to update the size
+    const URL = `/cart-item-size-update?itemId=${itemId}&newSize=${newSize}&previousSize=${previousSize}`;
+
+    fetch(URL, {
+        method: 'GET', // You can use 'POST' or 'PUT' depending on your server route
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        // Handle the success response if needed
+        location.reload();
+    })
+    .catch(error => {
+        console.error('Error updating size:', error.message);
+        // Handle the error if needed
+    });
+}
+
+
+
+
+
+</script>
+
+<%- include('../layouts/user-footer') -%>

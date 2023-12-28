@@ -4,6 +4,8 @@ const mongoosePaginate = require('mongoose-paginate-v2');
 
 const Cart = require('./cartModel');
 
+const Address = require('./addressModel');
+
 const userSchema = new mongoose.Schema({
 
     name: {
@@ -28,7 +30,7 @@ const userSchema = new mongoose.Schema({
     },
     addresses: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Address'
+        ref: 'Address',
     }],
     wishlist: [{
         type: mongoose.Schema.Types.ObjectId,

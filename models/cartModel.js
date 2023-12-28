@@ -15,6 +15,10 @@ const cartSchema = new mongoose.Schema({
     ],
     totalItems: { type: Number, default: 0 },
     totalAmount: { type: Number, default: 0 },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    },
 });
 
 // Create a compound unique index for items.product and items.size within each item
