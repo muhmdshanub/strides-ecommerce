@@ -4,6 +4,7 @@ const Admin = require('../models/adminModel');
 const Products = require('../models/productModel');
 const Users = require('../models/userModel');
 const Category = require('../models/categoryModel');
+const Order = require('../models/orderModel');
 
 
 const adminRootHandler = async (req, res) => {
@@ -28,11 +29,11 @@ const logoutHandler = async (req, res) => {
         // Find the user by _id (userId) and update the isLogin property to false
         const adminUpdate = await Admin.findByIdAndUpdate(adminId, { isLogin: false });
 
-        if(adminUpdate){
+        if (adminUpdate) {
             req.session.adminId = null;
             res.redirect('/admin');
         }
-       
+
     } catch (error) {
         console.log(error.message);
     }
@@ -179,13 +180,13 @@ const productAddHandler = async (req, res) => {
             return res.redirect('/admin/products-add');
         }
 
-         // Fetch category information
-         const categoryInfo = await Category.findById(category);
+        // Fetch category information
+        const categoryInfo = await Category.findById(category);
 
-         if (!categoryInfo) {
-             req.flash('error', 'Invalid category.');
-             return res.redirect('/admin/products-add');
-         }
+        if (!categoryInfo) {
+            req.flash('error', 'Invalid category.');
+            return res.redirect('/admin/products-add');
+        }
 
         const colorsArray = req.body.colors || [];
         const filenames = req.files.map((file) => file.filename);
@@ -509,7 +510,7 @@ const singleUserBlockHandler = async (req, res) => {
         if (result) {
 
             req.session.userId = null; // Invalidate the session
-            
+
             req.flash('success', 'User blocked.');
             return res.redirect('/admin/users-list');
         } else {
@@ -651,13 +652,13 @@ const categoryAddLoader = async (req, res) => {
 
 const categoryAddHandler = async (req, res) => {
     try {
-        const {name,description,} = req.body;
+        const { name, description, } = req.body;
 
 
-        
+
 
         // Check if required fields are present
-        if ( !name || !description ) {
+        if (!name || !description) {
 
             req.flash('error', 'All fields are required.');
             return res.redirect('/admin/category-add');
@@ -719,16 +720,16 @@ const categoryEditHandler = async (req, res) => {
     try {
         const categoryId = req.params.categoryId;
         const product = await Category.findById(categoryId);
-        const {name, description} = req.body;
+        const { name, description } = req.body;
 
         // Check if required fields are present
-        if (!name ||!description ) {
+        if (!name || !description) {
             req.flash('error', 'All fields are required.');
             return res.redirect('/admin/category-edit/' + categoryId);
         }
 
         const categoryUpdate = {
-            name,description
+            name, description
         };
 
         // Update the product in the database
@@ -748,6 +749,77 @@ const categoryEditHandler = async (req, res) => {
         res.redirect('/admin/category-list/');
     }
 };
+
+const ordersListLoader = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const pageSize = parseInt(req.query.pageSize) || 10;
+
+        const options = {
+            page: page,
+            limit: pageSize,
+            populate: {
+                path: 'product',
+                select: '_id images.image1.name', // Specify the fields to populate
+            },
+        };
+
+        const ordersData = await Order.paginate({}, options);
+
+        res.render('./admin/orderList.ejs', {
+            orders: ordersData.docs,
+            currentPage: ordersData.page,
+            totalPages: ordersData.totalPages,
+        });
+    } catch {
+        console.error('Error loading order list:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+}
+      
+const orderStatusUpdateHandler = async (req, res) => {
+    try {
+        // Extract values from the request body
+        const { orderId, newStatus } = req.body;
+
+        // Check if orderId and newStatus are present in the request body
+        if (!orderId || !newStatus) {
+            return res.status(400).json({ message: 'Missing orderId or newStatus in the request body' });
+        }
+
+        // Find the corresponding order
+        const order = await Order.findById(orderId);
+
+        // If no order found, send a response
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
+        // Update the status field and save
+        order.status = newStatus;
+
+        // If the new status is 'Placed', update the orderDate with the current date
+        if (newStatus === 'Placed') {
+            order.orderDate = Date.now();
+        }
+
+        // If the new status is 'Delivered', update the deliveredDate with the current date
+        if (newStatus === 'Delivered') {
+            order.deliveredDate = Date.now();
+        }
+
+        // Save the changes
+        await order.save();
+
+        // Send back a success response with the updated order details
+        res.status(200).json({ message: 'Order status updated successfully', order: order });
+    } catch (error) {
+        console.error('Error updating order status:', error.message);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+
 
 module.exports = {
     productListLoader,
@@ -772,4 +844,6 @@ module.exports = {
     categoryAddHandler,
     categoryEditLoader,
     categoryEditHandler,
+    ordersListLoader,
+    orderStatusUpdateHandler,
 }

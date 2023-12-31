@@ -1,35 +1,44 @@
 
 
 
-<%- include('../layouts/user-header') -%>
+<%- include('../../layouts/user-header') -%>
 
-<%- include('../layouts/user-navbar') -%>
+<%- include('../../layouts/user-navbar') -%>
 
-<%- include('../layouts/_messages') -%>
+<%- include('../../layouts/_messages') -%>
 <script src="/js/jquery-3.3.1.min.js"></script>
 <style>
   /* Custom styles */
   .address-container {
-    height: 400px; /* Fixed height for the container */
+    height: 700px; /* Fixed height for the container */
     overflow-y: auto; /* Enable vertical scrolling */
+    background-color: rgba(216, 217, 218, 0.858);
   }
 </style>
 
 <div class="container-fluid mb-5 pb-5">
   <div class="row mt-4">
     <!-- Left Part (7/12) -->
-    <div class="col-md-7 border rounded pt-3">
-      <div class="address-container">
-        <!-- Add Address Button -->
-        <div class="text-right mb-2">
+    <div class="col-md-8 offset-md-2 border rounded pt-3" style="background-color: rgba(216, 217, 218, 0.858);">
+      <div class="address-container mb-5 pb-5">
+
+        <div class="d-flex justify-content-between mb-2">
+          <a href="/profile" class="btn btn-success ml-2">Back to Profile</a>
           <button class="btn btn-primary" id="addAddressButton" data-toggle="modal" data-target="#addressModal" onclick="showAddAddressModal()">Add Address</button>
+          
         </div>
 
         
         <!-- Dynamic Addresses (Use EJS to iterate through addresses) -->
         <% user.addresses.forEach((address, index)=> { %>
+
+          <% if(address._id.toString() === firstAddress._id.toString()) {%>
+            <div class="card mb-2" onclick="handleCardClick(event, '<%= address._id %>')" style="background-color: black;color: bwhitelack;" >
+            <% }else{ %>
+              <div class="card mb-2" onclick="handleCardClick(event, '<%= address._id %>')" style="background-color: white;color: black;" >
+              <% } %>
+
           
-          <div class="card mb-2" onclick="selectAddress('<%= address._id %>')"  >
 
             <div class="card-body">
               <div class="form-check">
@@ -49,7 +58,7 @@
               <div class="text-right mt-2">
                 <button class="btn btn-warning btn-sm editAddressButton" data-toggle="modal" data-target="#addressModal"
                 onclick="showEditAddressModal({addressId: '<%= address._id %>', name: '<%= address.name %>', street: '<%= address.street %>', city: '<%= address.city %>', state: '<%= address.state %>', zipCode: '<%= address.zipCode %>', phoneNumber: '<%= address.phoneNumber %>'})">Edit</button>
-                <button class="btn btn-danger btn-sm" onclick="deleteAddress('<%=address._id %>')">Remove</button>
+                <button class="btn btn-danger btn-sm deleteAddressButton" onclick="deleteAddress('<%=address._id %>')">Remove</button>
               </div>
             </div>
           </div>
@@ -59,47 +68,6 @@
 
           <%}%>
 
-      </div>
-    </div>
-
-    <!-- Right Part (5/12) -->
-    <div class="col-md-5">
-      <div class="container-fluid mt-4 border rounded p-5">
-        <div class="row">
-            <div class="col-md-10 offset-md-1">
-                <div class="total-amount-section">
-                    <h2>Total Amount</h2>
-    
-                    <!-- MRP Section -->
-                    <div class="amount-row d-flex justify-content-between mt-5 mb-1">
-                        <span>Total MRP</span>
-                        <span id="totalMRP"><%= cart.totalInitialAmount  %>Rs.</span>
-                    </div>
-    
-                    <!-- Discount Section -->
-                    <div class="amount-row d-flex justify-content-between my-1">
-                        <span>Discount</span>
-                        <span id="discount"><%= cart.totalDiscountAmount  %>Rs.</span>
-                    </div>
-    
-                    <!-- Amount To Pay Section -->
-                    <div class="amount-row d-flex justify-content-between mt-3 mb-5">
-                        <span>Amount To Pay</span>
-                        <span id="amountToPay"><%= cart.totalAmount  %>Rs.</span>
-                      </div></span>
-                    </div>
-    
-                    <!-- Separator Line -->
-                    <hr>
-                    <div class="mt-5">
-                      <!-- Place Order Button -->
-                      <button id="placeOrderBtn" class="btn btn-primary btn-block mt-2">Continue To Payment</button>
-                    </div>
-                    
-                </div>
-            </div>
-        </div>
-        </div>
       </div>
     </div>
   </div>
@@ -165,12 +133,38 @@
 
 <script>
 
-function selectAddress(index) {
-    // Get the radio button corresponding to the clicked card
-    const radioButton = document.getElementById(`address_${index}`);
+function handleCardClick(event, addressId) {
+    // Check if the clicked element is not the edit or remove button
+    if (!event.target.classList.contains('editAddressButton') && !event.target.classList.contains('btn-danger')) {
+      // Check the radio button
+      document.getElementById(`address_${addressId}`).checked = true;
 
-    // Check the radio button
-    radioButton.checked = true;
+      // Add your logic for sending a request to update the primary address
+      updatePrimaryAddress(addressId);
+
+      
+    }
+  }
+
+  // Function to update the primary address on the server
+  function updatePrimaryAddress(addressId) {
+    // Perform an AJAX request to update the primary address
+    $.ajax({
+      type: 'POST',
+      url: `/profile-primary-address-update/${addressId}`,
+      success: function (response) {
+        // Handle success response from the server
+        console.log('Update successful:', response);
+        // Reload the page or perform other actions as needed
+        location.reload();
+      },
+      error: function (error) {
+        // Handle error response from the server
+        console.error('Update failed:', error);
+        // Optionally display an error message to the user
+        alert('Update failed. Please try again.');
+      }
+    });
   }
 
 function showAddAddressModal() {
@@ -324,13 +318,12 @@ function deleteAddress(addressId){
     // Extract the addressId from the selected radio button
     const addressId = selectedAddressRadioButton.id.split('_')[1];
 
-  // Update the window location directly without making a fetch request
-  window.location.href = `/address-to-payment/${addressId}`;
+  
   
   });
 </script>
 
-<%- include('../layouts/user-footer') -%>
+<%- include('../../layouts/user-footer') -%>
 
 
 

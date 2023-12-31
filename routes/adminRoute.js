@@ -46,4 +46,8 @@ adminRoute.post('/category-add',auth.isLogin,adminController.categoryAddHandler)
 adminRoute.get('/category-edit/:categoryId',auth.isLogin,adminController.categoryEditLoader);
 adminRoute.post('/category-edit/:categoryId',auth.isLogin,adminController.categoryEditHandler);
 
+
+adminRoute.get('/orders-list',auth.isLogin,adminController.ordersListLoader);
+adminRoute.post('/order-status-update',auth.isLogin,adminController.orderStatusUpdateHandler);
+
   module.exports =adminRoute;

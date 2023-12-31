@@ -6,8 +6,6 @@ const User = require('./userModel');
 const Address = require('./addressModel');
 const Product = require('./productModel');
 
-
-
 const orderSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
@@ -19,52 +17,43 @@ const orderSchema = new mongoose.Schema({
     required: true,
   },
   address: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Address', // Reference to the Address model
+    type: Address.schema, // Use the imported Address model
     required: true,
   },
   orderDate: {
     type: Date,
     default: Date.now,
   },
+  deliveredDate: {
+    type: Date,
+  },
   status: {
     type: String,
-    default: 'Pending',
+    enum: ['Placed', 'Cancelled', 'Delivered', 'Returned', 'Return Received'],
+    default: 'Placed',
   },
-  products: [
-    {
-      product: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Product',
-        required: true,
-      },
-      productName: {
-        type: String,
-        required: true,
-      },
-      brandName: {
-        type: String,
-        required: true,
-      },
-      size: {
-        type: String,
-        required: true,
-      },
-      quantity: {
-        type: Number,
-        required: true,
-      },
-      itemTotalAmount: {
-        type: Number,
-        required: true,
-      },
-      totalInitialMrp: {
-        type: Number,
-        required: true,
-      },
-    },
-  ],
-  totalAmount: {
+  product: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Product',
+    required: true,
+  },
+  productName: {
+    type: String,
+    required: true,
+  },
+  brandName: {
+    type: String,
+    required: true,
+  },
+  size: {
+    type: String,
+    required: true,
+  },
+  quantity: {
+    type: Number,
+    required: true,
+  },
+  totalFinalAmount: {
     type: Number,
     required: true,
   },
@@ -74,7 +63,7 @@ const orderSchema = new mongoose.Schema({
   },
 });
 
-orderSchema.plugin(require('mongoose-paginate-v2'));
+orderSchema.plugin(mongoosePaginate);
 
 const Order = mongoose.model('Order', orderSchema);
 

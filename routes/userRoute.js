@@ -1,6 +1,7 @@
 const express = require('express');
 const session = require('express-session');
 const userController = require('../controllers/userController')
+const userProfileController = require('../controllers/user/profileController.js')
 const auth = require('../middlewares/loginAuth')
 
 const userRoute = express();
@@ -37,12 +38,26 @@ userRoute.get('/address',auth.isLogin,userController.addressLoader);
 
 userRoute.post('/address-add',auth.isLogin,userController.addressAddLoader);
 
+userRoute.put('/address-edit/:addressId',auth.isLogin,userController.addressEditLoader);
 userRoute.delete('/address-delete/:addressId',auth.isLogin,userController.addressDeleteHandler);
 userRoute.get('/address-to-payment/:addressId',auth.isLogin,userController.addressToPaymentHandler);
 
 userRoute.get('/payment-selection',auth.isLogin,userController.paymentSelectionLoader);
 
 userRoute.get('/cod-place-order/:addressId',auth.isLogin,userController.codPlaceOrderHandler);
+
+
+
+userRoute.get('/profile',auth.isLogin,userProfileController.profileLoader);
+userRoute.post('/profile-user-edit',auth.isLogin,userProfileController.profileUserEditHandler);
+userRoute.get('/list-profile-addresses',auth.isLogin,userProfileController.profileaddressesLoader);
+
+userRoute.post('/profile-primary-address-update/:addressId',auth.isLogin,userProfileController.updateUserPrimaryAddress);
+userRoute.post('/profile-user-password-change',auth.isLogin,userProfileController.passwordChangeHandler);
+
+userRoute.get('/list-profile-orders',auth.isLogin,userProfileController.profileOrdersLoader);
+userRoute.post('/profile-orders-cancel/:orderId',auth.isLogin,userProfileController.profileOrdersCancelHandler);
+userRoute.post('/profile-orders-return/:orderId',auth.isLogin,userProfileController.profileOrdersReturnHandler);
 
 
 module.exports =userRoute;

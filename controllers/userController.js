@@ -6,6 +6,7 @@ const Address = require('../models/addressModel');
 const Category = require('../models/categoryModel');
 const Products = require('../models/productModel');
 const Cart = require('../models/cartModel');
+const Order = require('../models/orderModel');
 const sendOtpEmail = require('../utils/sendEmail'); // Your function to send OTP via email
 
 
@@ -388,13 +389,19 @@ const signupVerificationHandler = async (req, res) => {
             return res.redirect('/signup-verify');
         }
 
+        // Assuming dateOfBirth is a string in the format 'dd-mm-yyyy'
+        const [day, month, year] = dateOfBirth.split('-').map(Number);
+
+        // Create a new Date object using the parsed values
+        const formattedDateOfBirth = new Date(day, month - 1, year);
+
         // Create the user in the User schema
         const user = new User({
             name,
             email,
             phone,
             password,
-            dateOfBirth,
+            dateOfBirth: formattedDateOfBirth,
         });
 
         const userData = await user.save();
@@ -546,6 +553,12 @@ const addToCartHandler = async (req, res) => {
 
         // Get the available stock for the selected size
         const availableStock = product.sizes[0][size].availableStock;
+
+        if (availableStock < 1) {
+            return res.json({
+                message: `Item is Out of stock. not added to the cart.`,
+            });
+        }
 
         // Check if the product with the selected size already exists in the cart
         const existingItemIndex = cart.items.findIndex(
@@ -1149,6 +1162,10 @@ const cartToAddressHandler = async (req, res) => {
         // Iterate through cart items and check quantity conditions
         const invalidItems = [];
 
+        if (cart.length === 0) {
+            return res.status(404).json({ error: 'User\'s cart is empty' });
+        }
+
         for (const item of cart.items) {
             const product = await Products.findById(item.product);
 
@@ -1340,8 +1357,9 @@ const codPlaceOrderHandler = async (req, res) => {
             user.addresses[selectedAddressIndex] = temp;
 
             // Save the updated user document
-            const userUpdate = await user.save();
+            userUpdate = await user.save();
         }
+
 
         // Fetch user's cart details
         let cart = await Cart.findOne({ user: userId }).populate({
@@ -1408,26 +1426,31 @@ const codPlaceOrderHandler = async (req, res) => {
         // Populate the shipping address details
         const populatedAddress = await Address.findById(user.addresses[0]);
 
-        // Create an order document based on the cart details
-        const order = new Order({
-            user: userId,
-            userName: user.username, // Change this based on your user model
-            address: populatedAddress, // Use the populated address details
-            products: cart.items.map(item => ({
+        // Create an array to store the promises of saving each order
+        const orderPromises = [];
+
+        // Iterate through each item in the cart
+        cart.items.forEach(item => {
+            // Create an order document for the current item
+            const order = new Order({
+                user: userId,
+                userName: user.name,
+                address: populatedAddress,
                 product: item.product._id,
                 productName: item.product.productName,
                 brandName: item.product.brandName,
                 size: item.size,
                 quantity: item.quantity,
-                itemTotalAmount: item.totalAmount,
+                totalFinalAmount: item.totalAmount,
                 totalInitialMrp: item.totalInitialAmount,
-            })),
-            totalAmount: cart.totalAmount,
-            totalInitialMrp: cart.totalInitialAmount,
+            });
+
+            // Save the order document and push the promise to the array
+            orderPromises.push(order.save());
         });
 
-        // Save the order document to the database
-        const orderUpdate = await order.save();
+        // Use Promise.all to wait for all order promises to resolve
+        const orderUpdates = await Promise.all(orderPromises);
 
 
         // update product collection
@@ -1462,18 +1485,18 @@ const codPlaceOrderHandler = async (req, res) => {
         })
         ));
 
-        if (userUpdate && orderUpdate && productUpdate) {
+        if (orderUpdates && productUpdate) {
             // If all updates are successful, remove the cart items
             cart.items = [];
             cart.totalItems = 0;
             cart.totalAmount = 0;
 
-            const cartUpdate = await cart.save();
+            cartUpdate = await cart.save();
         }
 
-        if(cartUpdate){
-            
-            res.redirect('/order-confirmation',{})
+        if (cartUpdate) {
+
+            res.render('./user/order-confirmed.ejs',{ orders: orderUpdates });
         }
 
 
@@ -1482,6 +1505,8 @@ const codPlaceOrderHandler = async (req, res) => {
         return res.redirect('/address')
     }
 }
+
+
 
 
 module.exports = {

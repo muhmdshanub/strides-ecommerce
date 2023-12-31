@@ -1,0 +1,184 @@
+<%- include('../layouts/admin-header') -%>
+
+
+    <body id="reportsPage">
+
+        <%- include('../layouts/admin-navbar') -%>
+
+            <div class="container-fluid mt-5">
+                <div class="row tm-content-row">
+                    <div class="col-12 tm-block-col">
+                        <div class="tm-bg-primary-dark tm-block tm-block-products">
+
+                            <%- include('../layouts/_messages') -%>
+
+                                
+
+                                <div class="tm-product-table-container">
+                                    <table class="table table-hover tm-table-small tm-product-table">
+                                        <thead>
+                                            <tr style="background-color: rgb(255, 172, 64);color: rgb(255, 255, 255);">
+                                                <th scope="col" >IMAGE</th>
+                                                <th scope="col">Order ID</th>
+                                                <th scope="col">User Name</th>
+                                                <th scope="col">BRAND</th>
+                                                <th scope="col">PRODUCT</th>
+                                                <th scope="col">SIZE</th>
+                                                <th scope="col">QUANTITY</th>
+                                                <th scope="col">TOTAL INITIAL AMOUNT</th>
+                                                <th scope="col">TOTAL FINAL AMOUNT</th>
+                                                <th scope="col">ADDRESS</th>
+                                                <th scope="col">PLACED DATE</th>
+                                                <th scope="col">DELIVERED DATE</th>
+                                                <th scope="col">ORDER STATUS</th>
+                    
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+
+
+                                            <% if(orders.length>0){
+                                                for(let i=0; i<orders.length; i++){ %>
+
+                                                    <tr style="background-color: rgb(255, 255, 255);color: black;">
+
+                                                        <td class="tm-order-thumbnail">
+                                                            <img src="/images/productImages/<%= orders[i].product.images.image1.name %>"
+                                                                alt="Thumbnail Image"
+                                                                style="width: 50px; height: 50px;">
+                                                        </td>
+                                                        <td class="tm-order-id">
+                                                            <%= orders[i]._id %>
+                                                        </td>
+                                                        <td class="tm-order-userName">
+                                                            <%= orders[i].userName %>
+                                                        </td>
+                                                        <td class="tm-order-brandName">
+                                                            <%= orders[i].brandName %>
+                                                        </td>
+                                                        <td class="tm-order-productName">
+                                                            <%= orders[i].productName %>
+                                                        </td>
+                                                        <td class="tm-order-size">
+                                                            <%= orders[i].size %>
+                                                        </td>
+                                                        <td class="tm-order-quantity">
+                                                            <%= orders[i].quantity%>
+                                                        </td>
+                                                        <td class="tm-order-initialAmount">
+                                                            <%= orders[i].totalInitialMrp%>
+                                                        </td>
+                                                        <td class="tm-order-finalAmount">
+                                                            <%= orders[i].totalFinalAmount%>
+                                                        </td>
+                                                        <td class="tm-order-address">
+                                                            <p class="py-0 my-0"> <%= orders[i].address.name %> | <%= orders[i].address.phoneNumber %> </p>
+                                                            <p class="py-0 my-0"> <%= orders[i].address?.addressLine1 %>, <%= orders[i].address.city %>, <%= orders[i].address.state %>,<%= orders[i].address.zipCode %> </p>
+                                                        </td>
+                                                        
+                                                        <% 
+                                                            const yearPlaced = orders[i].orderDate.getFullYear();
+                                                            const monthPlaced = (orders[i].orderDate.getMonth() + 1).toString().padStart(2, '0');
+                                                            const dayPlaced = orders[i].orderDate.getDate().toString().padStart(2, '0');
+                                                
+                                                            stringDatePlaced = `${dayPlaced}-${monthPlaced}-${yearPlaced}`; 
+                                                        %>
+
+                                                        <td class="tm-order-orderPlacedDate">
+                                                            <%= stringDatePlaced%>
+                                                        </td>
+                                            
+                                                        <% if(orders[i].deliveredDate){
+                                                                const yearDelivered = orders[i].deliveredDate.getFullYear();
+                                                                const monthDelivered = (orders[i].deliveredDate.getMonth() + 1).toString().padStart(2, '0');
+                                                                const dayDelivered = orders[i].deliveredDate.getDate().toString().padStart(2, '0');
+                                                                stringDateDelivered = `${dayDelivered}-${monthDelivered}-${yearDelivered}`; 
+                                                            }else{
+                                                                stringDateDelivered ="-"
+                                                            } 
+                                                        %>
+                                            
+                                                        <td class="tm-order-orderDeliveredDate">
+                                                            <%= stringDateDelivered%>
+                                                        </td>
+                                                        <td class="tm-order-orderStatus">
+                                                            <select name="status" id="status<%= i %>" class="form-control" style="width: fit-content;height: fit-content;background-color: rgba(255, 2, 2, 0.607);" onchange="updateStatus('<%= orders[i]._id %>', this.value)">
+                                                                <% const availableStatuses = ['Placed', 'Cancelled', 'Delivered', 'Returned', 'Return Received']; %>
+                                                                <% for (const status of availableStatuses) { %>
+                                                                    <option value="<%= status %>" <%= status === orders[i].status ? 'selected' : '' %>> <%= status %>  </option>
+                                                                <% } %>
+                                                            </select>
+                                                        </td>
+
+                                                    </tr>
+
+                                            <% } } else { %>
+                                                        <tr>
+                                                            <td colspan="5">No Orders found.</td>
+                                                        </tr>
+                                            <% } %>
+
+                                        </tbody>
+
+                                        
+                                    </table>
+
+                                    
+                                </div>
+                                <!-- Pagination -->
+                                        <div>
+                                            <% if (currentPage> 1) { %>
+                                                <a href="?page=<%= currentPage - 1 %>" class="border rounded p-2 m-1 bg-white" style="color: rgb(255, 157, 0);">Previous</a>
+                                                <% } %>
+
+                                                    <% for (let i=1; i <=totalPages; i++) { %>
+                                                        <a href="?page=<%= i %>" <%= i === currentPage ? 'class="active text-black"' : '' %> class=" border rounded p-2 m-1 bg-white" style="color: rgb(255, 157, 0);"><%= i %></a>
+
+                                                        <% } %>
+
+                                                            <% if (currentPage < totalPages) { %>
+                                                                <a href="?page=<%= currentPage + 1 %>" class="border rounded p-2 m-1 bg-white" style="color: rgb(255, 157, 0);">Next</a>
+                                                                <% } %>
+                                        </div>
+                                <!-- table container -->
+
+                                
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <script>
+                // JavaScript function to handle the change event and update the status on the server
+    async function updateStatus(orderId, newStatus) {
+        try {
+            // Make a fetch request to your server API endpoint to update the status
+            const response = await fetch('/admin/order-status-update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    orderId: orderId,
+                    newStatus: newStatus,
+                }),
+            });
+
+            if (response.ok) {
+                // Optionally, handle the response or perform additional actions
+                console.log('Status updated successfully');
+            } else {
+                console.error('Failed to update status:', response.statusText);
+            }
+        } catch (error) {
+            console.error('Error updating status:', error.message);
+        }
+    }
+            </script>
+
+
+
+
+            <%- include('../layouts/admin-footer') -%>

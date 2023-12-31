@@ -1,0 +1,463 @@
+<%- include('../../layouts/user-header') -%>
+<%- include('../../layouts/user-navbar') -%>
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+
+<!-- Bootstrap JS with Popper.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+
+<div class="container-fluid">
+    <%- include('../../layouts/_messages') -%>
+    <div class="row">
+        <!-- Left Section (7/12 width) -->
+        <div class="col-md-7 ">
+            <div class="text-black p-3 my-3 ml-2 border rounded">
+                <!-- User Details Box -->
+                <div class="border rounded p-3 mt-3 position-relative pt-4" style="background-color: rgb(229, 251, 251);">
+                    <button type="button" class="btn btn-danger m-3" style="position:absolute;top:0;right:0" onclick="openEditModal()" id="editUserButton">Edit</button>
+                    <h3 id="nameDetail"><%= user.name %></h3>
+                    <!-- User Details Table -->
+                    <table class="table table-borderless">
+                        <tbody>
+                            <tr>
+                                <th scope="row"><strong>Email</strong></th>
+                                <td id="emailDetail"><%= user.email %></td>
+                            </tr>
+                            <tr>
+                                <th scope="row" ><strong>Phone Number</strong></th>
+                                <td id="phoneDetail"><%= user.phone %></td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><strong>Date of Birth</strong></th>
+                                <td id="dateOfBirthDetail"><%= user.stringDateOfBirth %></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Second Horizontal Section (12/12 width) -->
+            <div class=" p-3 border rounded text-black ml-2">
+            
+            
+                <!-- Content for the second horizontal section goes here -->
+                <h2>Primary Address</h2>
+            
+                <% if (user.addresses && user.addresses.length> 0) { %>
+                    <!-- Display the primary address -->
+            
+                    <section class="border rounded p-3" style="background-color: rgb(229, 251, 251);">
+            
+                        <!-- Placeholder for address details content -->
+                        <address>
+                            <div class="content mt-4 p-2">
+                                <p class="py-0 my-0">
+                                    <%= user.addresses[0].name %> | <%= user.addresses[0].phoneNumber %>
+                                </p>
+                                <p class="py-0 my-0">
+                                    <%= user.addresses[0].city %>, <%= user.addresses[0].state %>
+                                            , <%= user.addresses[0].zipCode %>
+                                </p>
+                                <!-- Add more address details as needed -->
+                            </div>
+                        </address>
+            
+                    </section>
+            
+                    <% } else { %>
+                        <p>No primary address found.</p>
+                        <% } %>
+
+                    <!-- Button to navigate to /profile-address -->
+                    <a href="/list-profile-addresses" class="btn btn-primary mt-3 w-100">View/Update All Addresses</a>
+            </div>
+        </div>
+
+        <div class="col-md-4 p-2 ">
+            
+            <!-- Password Reset Button -->
+            <div class="row mb-5">
+                <div class="col-12 border rounded py-4 mt-4" style="background-color: rgb(227, 249, 250);">
+                    <!-- Content for the first full-width div goes here -->
+                    <div class="border rounded text-center mb-4" style="background-color: rgb(251, 221, 207);">
+                        <p class="py-4 text-black">Do you want to reset your PASSWORD ?</p>
+
+                    </div>
+
+                    <!-- Change Password Button -->
+                    <button class="btn btn-danger col-8 offset-2" data-toggle="modal" data-target="#changePasswordModal" id="changePasswordButton">Change Password</button>
+                    
+                </div>
+            </div>
+            <!-- Second Full-width Div -->
+            <div class="row mt-5">
+                <div class="col-12 border rounded py-4 mt-4" style="background-color: rgb(227, 249, 250);">
+                    <!-- Content for the first full-width div goes here -->
+                    <div class="border rounded text-center mb-4" style="background-color: rgb(251, 221, 207);">
+                        <p class="py-4 text-black">You can viw and edit your orders here. Click on the button below.</p>
+
+                    </div>
+
+                    <!-- Button to navigate to Orders -->
+                    <a href="/list-profile-orders" class="btn btn-primary mt-3 w-100">Orders</a>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Modal for Edit -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true" style="z-index: 2050;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">Edit User Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Include your form here with input fields for editing user details -->
+                <!-- Example: -->
+                <form>
+                    <!-- Your form fields go here -->
+                    <div class="mb-3">
+                        <label for="editName" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="editName" value="<%= user.name %>">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editEmail" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="editEmail" value="<%= user.email %>">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editPhone" class="form-label">Phone Number</label>
+                        <input type="text" class="form-control" id="editPhone" value="<%= user.phone %>">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editDOB" class="form-label">Date of Birth</label>
+                        <input type="text" class="form-control" id="editDOB" value="<%= user.stringDateOfBirth %>">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary">Update</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="closeEditModal()">Close</button>
+            </div>
+        </div>
+    </div>
+  </div>
+
+
+  <!-- Modal for Change Password -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true" style="z-index: 2050;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="changePasswordModalLabel">Change Password</h5>
+                <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Change Password Form -->
+                <form id="changePasswordForm" novalidate>
+                    <div class="mb-3">
+                        <label for="currentPassword" class="form-label">Current Password</label>
+                        <input type="password" class="form-control" id="oldPassword" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="newPassword" class="form-label">New Password</label>
+                        <input type="password" class="form-control" id="newPassword" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirmNewPassword" class="form-label">Confirm New Password</label>
+                        <input type="password" class="form-control" id="confirmNewPassword" required>
+                    </div>
+                    <div class="text-center">
+                        <button type="button" class="btn btn-primary" onclick="submitChangePasswordForm()">Confirm</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+
+//popover initialization
+$(function () {
+    $('[data-toggle="popover"]').popover();
+  });
+
+
+    // Function to open the change password modal
+    function openChangePasswordModal() {
+        $('#changePasswordModal').modal('show');
+    }
+
+    // Function to close the change password modal
+    function closeChangePasswordModal() {
+        $('#changePasswordModal').modal('hide');
+    }
+
+    // Attach the functions to the buttons
+    $(document).ready(function () {
+        // Trigger the openChangePasswordModal function on "Change Password" button click
+        $('#changePasswordButton').on('click', function () {
+            openChangePasswordModal();
+        });
+
+        // Trigger the closeChangePasswordModal function on "Cancel" button click within the modal
+        $('#changePasswordModal .btn-secondary').on('click', function () {
+            closeChangePasswordModal();
+        });
+    });
+
+    // Function to handle form submission
+    function submitChangePasswordForm() {
+        
+        // Validate the form
+        if (validateChangePasswordForm()) {
+            // Perform AJAX request to send data to the server
+            $.ajax({
+                type: 'POST',
+                url: '/profile-user-password-change',  // Replace with your server endpoint
+                data: {
+                    // Collect data from form fields
+                    oldPassword: $('#oldPassword').val(),
+                    newPassword: $('#newPassword').val(),
+                    confirmNewPassword: $('#confirmNewPassword').val()
+                },
+                success: function (response) {
+                    // Handle success response from the server
+                    console.log('Password change successful:', response);
+
+                    confirm("Password changed successfully");
+                    
+                    
+                },
+                error: function (error) {
+                    // Handle error response from the server
+                    console.error('Password change failed:', error);
+                    // Optionally, display an error message to the user
+                    alert('Password change failed. Please try again.');
+                }
+            });
+
+            closeChangePasswordModal();
+        }
+        
+        
+    }
+
+
+    // Function to validate the Change Password form
+    function validateChangePasswordForm() {
+        // Get form fields
+        var oldPassword = $('#oldPassword').val();
+        var newPassword = $('#newPassword').val();
+        var confirmNewPassword = $('#confirmNewPassword').val();
+
+        // Your custom validation logic
+        if (!oldPassword || oldPassword.length < 8  ) {
+            console.log("oldPassword is invalid")
+
+            showPopover('changePasswordModal', 'oldPassword', 'Password must be at least 8 characters.');
+            
+            return false;
+        }
+
+        if (!newPassword || newPassword.length < 8  ) {
+            showPopover('changePasswordModal', 'newPassword', 'Password must be at least 8 characters.');
+            return false;
+        }
+
+        if (!confirmNewPassword || confirmNewPassword.length < 8 ) {
+            showPopover('changePasswordModal', 'confirmNewPassword', 'Password must be at least 8 characters.');
+            return false;
+        }
+
+        if (oldPassword === newPassword) {
+            showPopover('changePasswordModal', 'newPassword', 'Old password and new password cannot be the same.');
+            return false;
+        }
+
+        if (newPassword !== confirmNewPassword) {
+            showPopover('changePasswordModal', 'confirmNewPassword', 'New password and confirm new password must match.');
+            showPopover('changePasswordModal', 'newPassword', 'New password and confirm new password must match.');
+            return false;
+        }
+
+    
+
+        
+
+        return true;
+    }
+
+
+    
+
+    function showPopover(modalId, inputId, message) {
+    
+    hidePopover(modalId, inputId); // Remove existing popover if any
+
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        console.log("modal reached")
+        console.log("inputId is " + inputId)
+        const inputField = modal.querySelector(`#${inputId}`);
+
+        console.log("inputField is " + inputField)
+
+        if (inputField) {
+            console.log("inputField reached")
+            const popover = document.createElement('div');
+            popover.className = 'custom-popover';
+            popover.textContent = message;
+
+            // Set styles for the popover
+            popover.style.color = 'white'; // Text color
+            popover.style.backgroundColor = 'red'; // Background color (you can change it as needed)
+
+            inputField.parentElement.appendChild(popover);
+            
+        }
+    }
+
+     
+    
+}
+
+function hidePopover(modalId, inputId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        const inputField = modal.querySelector(`#${inputId}`);
+        if (inputField) {
+            const existingPopover = inputField.parentElement.querySelector('.custom-popover');
+            if (existingPopover) {
+                existingPopover.remove();
+            }
+        }
+    }
+}
+
+    
+
+
+    // Function to open the edit modal
+    function openEditModal() {
+        $('#editModal').modal('show');
+    }
+
+    // Function to close the edit modal
+    function closeEditModal() {
+        $('#editModal').modal('hide');
+    }
+
+    // Attach the functions to the buttons
+    $(document).ready(function () {
+        // Trigger the openEditModal function on "Edit" button click
+        $('#editUserButton').on('click', function () {
+            openEditModal();
+        });
+
+        // Trigger the closeEditModal function on "Close" button click within the modal
+        $('#editModal .btn-secondary').on('click', function () {
+            closeEditModal();
+        });
+        // Handle the form submission
+        $('#editModal .btn-primary').on('click', function () {
+            if (validateForm()) {
+                // Perform AJAX request to send data to the server
+                $.ajax({
+                    type: 'POST',
+                    url: '/profile-user-edit',
+                    data: {
+                        // Collect data from form fields
+                        name: $('#editName').val(),
+                        email: $('#editEmail').val(),
+                        phone: $('#editPhone').val(),
+                        dateOfBirth: $('#editDOB').val()
+                    },
+                    success: function (response) {
+                        // Handle success response from the server
+                        console.log('Update successful:', response);
+
+                        // Close the modal after successful update
+                        closeEditModal();
+                        location.reload();
+
+
+                        
+                    },
+                    error: function (error) {
+                        // Handle error response from the server
+                        console.error('Update failed:', error);
+                        // Optionally display an error message to the user
+                        alert('Update failed. Please try again.');
+                    }
+            });
+    }
+});
+    });
+
+    function validateForm() {
+    // Validate Name
+    var name = $('#editName').val();
+    if (!name || name.trim() === '') {
+        alert('Please enter a valid name.');
+        return false;
+    }
+
+    // Validate Email
+    var email = $('#editEmail').val();
+    if (!email || !isValidEmail(email)) {
+        alert('Please enter a valid email address.');
+        return false;
+    }
+
+    // Validate Phone
+    var phone = $('#editPhone').val();
+    if (!phone || !isValidPhone(phone)) {
+        alert('Please enter a valid phone number.');
+        return false;
+    }
+
+    // Validate Date of Birth
+    var dob = $('#editDOB').val();
+    if (!dob || !isValidDate(dob)) {
+        alert('Please enter a valid date of birth.');
+        return false;
+    }
+
+    // You can add similar validation for other fields as needed
+
+    return true;
+}
+
+// Function to check if a string is a valid email address
+function isValidEmail(email) {
+    var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+function isValidPhone(phone) {
+    // Implement your phone number validation logic here
+    // Check if it contains at least 10 digits (with or without the country code)
+    var phoneRegex = /^(\+\d{1,})?\d{10}$/;
+    return phoneRegex.test(phone);
+}
+
+// Function to check if a string is a valid date in dd-mm-yyyy format
+function isValidDate(date) {
+    var dateRegex = /^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-\d{4}$/;
+    return dateRegex.test(date);
+}
+</script>
+
+
+<%- include('../../layouts/user-footer') -%>

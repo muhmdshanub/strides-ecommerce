@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmation</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        main {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        section {
+            text-align: left;
+            padding-left: 2rem;
+            margin-bottom: 1rem;
+            width: 100%;
+            /* Take full width */
+        }
+
+        .content {
+            padding-left: 5rem;
+        }
+
+        .tick-icon {
+            color: green;
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="container">
+        <div class="row col-12">
+            <div class="col-md-8 offset-md-2 p-3">
+                <!-- Congratulations Section -->
+                <section class="border rounded">
+                    <div class="d-flex justify-content-center">
+                        <div class="tick-icon">&#10004;</div>
+                    </div>
+                    <div>
+                        <h3>Congratulations! Order Confirmed</h3>
+                        <p style="background-color: rgb(229, 251, 251); padding: 5px;margin-top: 50px;">You will receive the items as
+                            soon as possible. Thanks for doing business with us.</p>
+                    </div>
+                </section>
+
+                <!-- Order Details Section -->
+                <section class="row border rounded p-3 ml-1">
+                    <h5 class="col-md-12 pl-2 mb-3">Order Details : </h5>
+                    <!-- Placeholder for order details content -->
+                    <div class="col-md-5 mb-1 pb-1">
+                        <p>Order ID: 123456</p>
+                        <p>Total Items: 3</p>
+                    </div>
+                    <div class="col-md-5 mb-1 pb-1">
+                        <p>Total Amount: $150.00</p>
+                        <p>Discount Amount: $50.00</p>
+                    </div>
+                    <div class="col-md-5 mb-2 pb-1 mt-3">
+                        <p style="font-size: larger; font-weight: 600;">Total MRP: $200.00</p>
+                    </div>
+                </section>
+
+                <!-- Shipping Address Section -->
+                <section class="border rounded p-3">
+                    <h5>Shipping Address : </h5>
+                    <!-- Placeholder for address details content -->
+                    <div class="content mt-4 p-2" style="background-color: rgb(229, 251, 251);">
+                        <p class="py-0 my-0">John Doe | 123-456-7890</p>
+                        <p class="py-0 my-0">123 Main Street, Sample City, Sample State, 12345</p>
+                        <!-- Add more address details as needed -->
+                    </div>
+                </section>
+
+                <!-- Home Button Section -->
+                <section class="border rounded p-3 ">
+                    <div class="row d-flex justify-content-center my-3 py-2">
+                        <a href="/home" class="btn btn-primary">Home</a>
+                    </div>
+                    
+                    <p style="background-color: rgb(229, 251, 251);padding:5px">Please redirect to HOME page and shop
+                        more.</p>
+                    
+                </section>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+
+</html>

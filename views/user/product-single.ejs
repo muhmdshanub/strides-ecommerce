@@ -247,17 +247,17 @@
                                 </p>
 
                                 <div class="my-md-5 my-sm-1 my-1">
-                                    <label class="btn btn-outline-danger rounded-pill">
-                                        <input type="radio" name="size" value="small"> S
+                                    <label class="btn btn-outline-danger rounded-pill" data-bs-toggle="popover" title="small">
+                                        <input type="radio" name="size" value="small" <% if (product.sizes[0].small.availableStock <= 0) { %>disabled data-bs-content="Out of Stock"<% } %>> S
                                     </label>
-                                    <label class="btn btn-outline-danger rounded-pill">
-                                        <input type="radio" name="size" value="medium"> M
+                                    <label class="btn btn-outline-danger rounded-pill" data-bs-toggle="popover" title="medium">
+                                        <input type="radio" name="size" value="medium" <% if (product.sizes[0].medium.availableStock <= 0) { %>disabled data-bs-content="Out of Stock"<% } %>> M
                                     </label>
-                                    <label class="btn btn-outline-danger rounded-pill">
-                                        <input type="radio" name="size" value="large"> L
+                                    <label class="btn btn-outline-danger rounded-pill" data-bs-toggle="popover" title="large">
+                                        <input type="radio" name="size" value="large" <% if (product.sizes[0].large.availableStock <= 0) { %>disabled data-bs-content="Out of Stock"<% } %>> L
                                     </label>
-                                    <label class="btn btn-outline-danger rounded-pill">
-                                        <input type="radio" name="size" value="extraLarge"> XL
+                                    <label class="btn btn-outline-danger rounded-pill" data-bs-toggle="popover" title="extraLarge">
+                                        <input type="radio" name="size" value="extraLarge" <% if (product.sizes[0].extraLarge.availableStock <= 0) { %>disabled data-bs-content="Out of Stock"<% } %>> XL
                                     </label>
                                 </div>
                                 <!-- Quantity selection with input group -->
@@ -321,6 +321,12 @@
 <script>
 
 
+$(document).ready(function(){
+        $('[data-bs-toggle="popover"]').popover();
+    });
+
+
+
 function getSelectedSize() {
         // Logic to get the selected size, you might need to adjust based on your HTML structure
         const sizeInput = document.querySelector('input[name="size"]:checked');
@@ -345,7 +351,7 @@ function getSelectedSize() {
 
         try {
             // Use fetch to send an HTTP request to your server's API endpoint for adding to wishlist
-            const response = await fetch(`/api/add-to-wishlist/${productId}`, {
+            const response = await fetch(`/add-to-wishlist/${productId}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

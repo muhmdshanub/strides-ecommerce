@@ -1,12 +1,12 @@
 <%- include('../layouts/user-header') -%>
 
 
-
+<%- include('../layouts/user-navbar') -%>
 
 
 <div class="container-fluid">
     <div class="row mt-4 col-12">
-      <%- include('../layouts/user-navbar') -%>
+      
         <!-- First Section (7/12 width on medium screens) -->
         <div class="col-7 border rounded mx-3 p-0 text-black">
             
@@ -44,23 +44,23 @@
                                                 <div class="row d-flex flex-row">
                                                   <div class="mx-2">
                                                     <label class="btn btn-outline-danger rounded-pill">
-                                                        <input type="radio" name="size<%= item._id %>" value="small" <%= item.size == "small" ? 'checked' : '' %> onchange="updateSize('<%= item._id %>', 'small')"> S
+                                                        <input type="radio" name="size<%= item._id %>" value="small" <%= item.size == "small" ? 'checked' : '' %> onchange="updateSize('<%= item._id %>', 'small')" <% if (item.product.sizes[0].small.availableStock <= 0) { %>disabled data-bs-content="Out of Stock"<% } %>> S
                                                     </label>
                                                 </div>
                                                   
                                                   <div class="mx-2">
                                                     <label class="btn btn-outline-danger rounded-pill">
-                                                        <input type="radio" name="size<%= item._id %>" value="medium" <%= item.size == "medium" ? 'checked' : '' %> onchange="updateSize('<%= item._id %>', 'medium')"> M
+                                                        <input type="radio" name="size<%= item._id %>" value="medium" <%= item.size == "medium" ? 'checked' : '' %> onchange="updateSize('<%= item._id %>', 'medium')" <% if (item.product.sizes[0].medium.availableStock <= 0) { %>disabled data-bs-content="Out of Stock"<% } %>> M
                                                     </label>
                                                 </div>
                                                   <div class="mx-2">
                                                     <label class="btn btn-outline-danger rounded-pill">
-                                                        <input type="radio" name="size<%= item._id %>" value="large" <%= item.size == "large" ? 'checked' : '' %> onchange="updateSize('<%= item._id %>', 'large')"> L
+                                                        <input type="radio" name="size<%= item._id %>" value="large" <%= item.size == "large" ? 'checked' : '' %> onchange="updateSize('<%= item._id %>', 'large')" <% if (item.product.sizes[0].large.availableStock <= 0) { %>disabled data-bs-content="Out of Stock"<% } %>> L
                                                     </label>
                                                 </div>
                                                   <div class="mx-2">
                                                       <label class="btn btn-outline-danger rounded-pill">
-                                                          <input type="radio" name="size<%= item._id %>" value="extraLarge" <%= item.size == "extraLarge" ? 'checked' : '' %> onchange="updateSize('<%= item._id %>', 'extraLarge')"> XL
+                                                          <input type="radio" name="size<%= item._id %>" value="extraLarge" <%= item.size == "extraLarge" ? 'checked' : '' %> onchange="updateSize('<%= item._id %>', 'extraLarge')" <% if (item.product.sizes[0].extraLarge.availableStock <= 0) { %>disabled data-bs-content="Out of Stock"<% } %>> XL
                                                       </label>
                                                   </div>
                                                 </div>
@@ -118,6 +118,13 @@
                             </div>
                         </div>
                     <% }); %>
+                    <% if(cart.items.length < 1 ){ %>
+                        <div style="margin:0;">
+                            <p>Your cart is empty. Please add some product.</p>
+                            <a href="/products" class="btn btn-success ml-2">Shop Now</a>
+                        </div>
+                        
+                    <% } %>
                 </div>
             </section>
             
@@ -156,7 +163,14 @@
                         <hr>
                         <div class="mt-5">
                           <!-- Place Order Button -->
-                          <button id="placeOrderBtn" class="btn btn-primary btn-block mt-2" onclick="validateAndRedirect()">Place Order</button>
+                            <!-- Assuming cart is passed as a variable to your template -->
+                            
+                            <% if (cart && cart.items.length >= 1) { %>
+                                <button id="placeOrderBtn" class="btn btn-primary btn-block mt-2" onclick="validateAndRedirect()">Place Order</button>
+                            <% } else { %>
+                                <button id="placeOrderBtn" class="btn btn-primary btn-block mt-2" >Place Order</button>
+                            <% } %>
+                          
                         </div>
                         
                     </div>
@@ -169,7 +183,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="invalidItemsModal" tabindex="-1" role="dialog" aria-labelledby="invalidItemsModalLabel" aria-hidden="true" style="z-index: 2050;">
+<div class="modal fade" id="invalidItemsModal" tabindex="-1" role="dialog" aria-labelledby="invalidItemsModalLabel" aria-hidden="true"  style="z-index: 2050;">
   <div class="modal-dialog" role="document">
       <div class="modal-content">
           <div class="modal-header">
