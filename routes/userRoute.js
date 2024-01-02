@@ -1,6 +1,7 @@
 const express = require('express');
 const session = require('express-session');
 const userController = require('../controllers/userController')
+const wishlistController = require('../controllers/wishlistController')
 const userProfileController = require('../controllers/user/profileController.js')
 const auth = require('../middlewares/loginAuth')
 
@@ -58,6 +59,11 @@ userRoute.post('/profile-user-password-change',auth.isLogin,userProfileControlle
 userRoute.get('/list-profile-orders',auth.isLogin,userProfileController.profileOrdersLoader);
 userRoute.post('/profile-orders-cancel/:orderId',auth.isLogin,userProfileController.profileOrdersCancelHandler);
 userRoute.post('/profile-orders-return/:orderId',auth.isLogin,userProfileController.profileOrdersReturnHandler);
+
+userRoute.get('/wishlist',auth.isLogin,wishlistController.wishlistLoader);
+userRoute.post('/add-to-wishlist/:productId',auth.isLogin,wishlistController.addToWishlistHandler);
+userRoute.post('/remove-from-wishlist/:productId',auth.isLogin,wishlistController.removeFromWishlistHandler);
+userRoute.post('/move-from-wishlist-to-cart/:productId',auth.isLogin,wishlistController.moveFromWishlistToCartHandler);
 
 
 module.exports =userRoute;

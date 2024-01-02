@@ -1,0 +1,272 @@
+<style>
+    body {
+        font-family: 'Lato', sans-serif;
+    }
+
+    .overlay {
+        height: 100%;
+        width: 0;
+        position: fixed;
+        z-index: 2050;
+        top: 0;
+        left: 0;
+        background-color: rgb(0, 0, 0);
+        background-color: rgba(0, 0, 0, 0.9);
+        overflow-x: hidden;
+        transition: 0.5s;
+    }
+
+    .overlay-content {
+        position: relative;
+        top: 25%;
+        width: 100%;
+        text-align: center;
+        margin-top: 30px;
+    }
+
+    .overlay a {
+        padding: 8px;
+        text-decoration: none;
+        font-size: 36px;
+        color: #818181;
+        display: block;
+        transition: 0.3s;
+    }
+
+    .overlay a:hover,
+    .overlay a:focus {
+        color: #f1f1f1;
+    }
+
+    .overlay .closebtn {
+        position: absolute;
+        top: 20px;
+        right: 45px;
+        font-size: 60px;
+    }
+
+    .block-4-image img {
+        width: 100%;
+        height: 400px;
+    }
+
+    .heart-icon:hover {
+    transform: scale(1.2); /* Adjust the scale factor as needed */
+    transition: transform 0.3s ease; /* Adjust the transition duration and timing function as needed */
+}
+
+    @media screen and (max-height: 450px) {
+        .overlay a {
+            font-size: 20px
+        }
+
+        .overlay .closebtn {
+            font-size: 40px;
+            top: 15px;
+            right: 35px;
+        }
+    }
+
+    @media (min-width: 992px) and (max-width: 1199.98px) {
+        .block-4-image img {
+            height: 340px;
+        }
+    }
+    @media (min-width: 768px) and (max-width: 991.98px) {
+        .block-4-image img {
+            height: 290px;
+        }
+    }
+    @media (min-width: 576px) and (max-width: 767.98px) {
+        .block-4-image img {
+            height: 260px;
+        }
+    }
+</style>
+
+<%- include('../layouts/user-header') -%>
+
+
+    <%- include('../layouts/user-navbar') -%>
+
+
+
+        <div class="container-fluid">
+            <%- include('../layouts/_messages') -%>
+                <div class="row">
+                    <div class="col-md-10 offset-md-1 offset-sm-0 border rounded mt-3 p-2">
+                        <div class=" bg-primary text-light py-3 px-0 border rounded">
+                            <h3 class="d-inline">My Wishlist</h3>
+                            <p class="d-inline ml-3" style="font-size: larger;" id="productsCount">
+                                <%=wishlist.products.length %>
+                            </p>
+                            <p class="d-inline ml-1" style="font-size: larger;"> items</p>
+                        </div>
+                        <div class="row col-12  text-black  mt-md-4 mt-3 ">
+
+                            <% wishlist.products.forEach((product) => { %>
+
+                                <div class="col-10 offset-1 offset-sm-0 col-sm-6 col-md-4 col-lg-4 col-xl-3 mb-4" data-aos="fade-up" id="product-<%=product.product._id %>">
+                                    <div class="block-4 text-center border">
+                                        <figure class="block-4-image">
+                                            <a href="/products/<%= product.product._id %>">
+                                                <img src="/images/productImages/<%= product.product.images.image1.name %>"
+                                                    alt="Image placeholder" class="img-fluid">
+                                            </a>
+                                        </figure>
+                                        <div style="position: relative;">
+                                            <div class="block-4-text p-2">
+                                                <!-- Name and Wishlist Icon in the same row -->
+                                                <div class="row align-items-center text-left m-0">
+                                                    <div class="col-8 p-0">
+                                                        <!-- Name -->
+                                                        <a href="shop-single.html" class="text-left">
+                                                            <h3 class="font-weight-bold mb-2">
+                                                                <%= product.product.brandName %>
+                                                            </h3>
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                                <div class="col-4 pr-0" style="position: absolute;right: 0;top:0">
+                                                    <button
+                                                      
+                                                      onclick="removeFromWishlist('<%= product.product._id %>')"
+                                                          type="button"
+                                                          style="text-decoration: none; border: none; background: none;"
+                                                          onmouseover="this.style.width='35px'; this.style.height='35px';"
+                                                          onmouseout="this.style.width='30px'; this.style.height='30px';"
+                                                      >
+                                                          <svg
+                                                              onclick="this.style.width='25px'; this.style.height='25px';"
+                                                              xmlns="http://www.w3.org/2000/svg"
+                                                              style="text-decoration: none;"
+                                                              onmouseover="this.style.width='35px'; this.style.height='35px';"
+                                                              onmouseout="this.style.width='30px'; this.style.height='30px';"
+                                                              color="red"
+                                                              width="30"
+                                                              height="30"
+                                                              fill="currentColor"
+                                                              viewBox="0 0 16 16"
+                                                          >
+                                                          <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                                                          <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+                                                          </svg>
+                                                      </button>
+                                                </div>
+                                
+                                                <!-- Description -->
+                                                <p class="mb-2 text-left">
+                                                    <%= product.product.productName %>
+                                                </p>
+                                
+                                                <!-- Prices and Offer -->
+                                                <div class="row align-items-center text-left m-0">
+                                                    <div class="col-4 p-0">
+                                                        <!-- Final Price -->
+                                                        <p class="text-primary font-weight-bold m-0">
+                                                            <%= product.product.finalPrice %>
+                                                        </p>
+                                                    </div>
+                                                    <div class="col-4 p-0">
+                                                        <!-- Original Price -->
+                                                        <p class="text-muted m-0">
+                                                            <del>
+                                                                <%= product.product.initialPrice %>
+                                                            </del>
+                                                        </p>
+                                                    </div>
+                                                    <div class="col-4 pl-0">
+                                                        <!-- Offer Badge -->
+                                                        <span class="badge badge-success">-
+                                                            <%= product.product.discountPercentage %>%
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div class="my-2 text-center">
+                                                    <button class="btn btn-dark" onclick="moveToCart('<%= product.product._id %>')">Add to Cart </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                    </div>
+                                </div>
+                            <% }); %>
+
+
+                        </div>
+                    </div>
+                </div>
+        </div>
+
+
+        <script>
+            async function removeFromWishlist(productId) {
+        
+        try {
+            // Use fetch to send an HTTP request to your server's API endpoint for adding to wishlist
+            const response = await fetch(`/remove-from-wishlist/${productId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (response.ok) {
+                // Wishlist item added successfully
+                const jsonResponse = await response.json();
+                console.log('removed from Wishlist!');
+                
+
+                // Remove the deleted item from the page
+                const deletedItemElement = document.getElementById(`product-${productId}`);
+
+                if (deletedItemElement) {
+                    deletedItemElement.remove();
+                }
+                document.getElementById('productsCount').innerHTML = `${jsonResponse.productsLength}`;
+
+                
+            } else {
+                console.error('Failed to remove from Wishlist.');
+            }
+        } catch (error) {
+            console.error('Error removing from Wishlist:', error.message);
+        }
+    }
+
+    async function moveToCart(productId) {
+        
+        try {
+            // Use fetch to send an HTTP request to your server's API endpoint for adding to wishlist
+            const response = await fetch(`/move-from-wishlist-to-cart/${productId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (response.ok) {
+                // Wishlist item added successfully
+                const jsonResponse = await response.json();
+                console.log('Added to cart');
+                
+
+                // Remove the deleted item from the page
+                const deletedItemElement = document.getElementById(`product-${productId}`);
+
+                if (deletedItemElement) {
+                    deletedItemElement.remove();
+                }
+                document.getElementById('productsCount').innerHTML = `${jsonResponse.productsLength}`;
+
+                
+            } else {
+                console.error('Failed to remove from Wishlist.');
+            }
+        } catch (error) {
+            console.error('Error removing from Wishlist:', error.message);
+        }
+    }
+        </script>
+
+        <%- include('../layouts/user-footer') -%>

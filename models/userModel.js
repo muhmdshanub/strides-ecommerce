@@ -5,6 +5,7 @@ const mongoosePaginate = require('mongoose-paginate-v2');
 const Cart = require('./cartModel');
 
 const Address = require('./addressModel');
+const Wishlist = require('./wishlistModel');
 
 const userSchema = new mongoose.Schema({
 
@@ -32,15 +33,15 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Address',
     }],
-    wishlist: [{
+    wishlist: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Wishlist'
-    }],
-    cart: [{
+    },
+    cart: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Cart',
         unique: true,
-    }],
+    },
     orders: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Order',

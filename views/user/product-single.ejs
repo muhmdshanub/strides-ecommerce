@@ -342,13 +342,7 @@ function getSelectedSize() {
 
 
     async function addToWishlist(productId) {
-        const selectedSize = getSelectedSize();
-
-        if (!selectedSize) {
-            console.error('Please select a size.');
-            return;
-        }
-
+        
         try {
             // Use fetch to send an HTTP request to your server's API endpoint for adding to wishlist
             const response = await fetch(`/add-to-wishlist/${productId}`, {
@@ -356,12 +350,17 @@ function getSelectedSize() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ size: selectedSize }),
             });
 
             if (response.ok) {
                 // Wishlist item added successfully
+                const jsonResponse = await response.json();
                 console.log('Added to Wishlist!');
+                const popupMessageContent = document.getElementById('popupMessageContent');
+                popupMessageContent.innerHTML = jsonResponse.message;
+
+                // Show the popup
+                $('#popupMessage').modal('show');
                 
             } else {
                 console.error('Failed to add to Wishlist.');

@@ -6,6 +6,7 @@ const Address = require('../models/addressModel');
 const Category = require('../models/categoryModel');
 const Products = require('../models/productModel');
 const Cart = require('../models/cartModel');
+const Wishlist = require('../models/wishlistModel');
 const Order = require('../models/orderModel');
 const sendOtpEmail = require('../utils/sendEmail'); // Your function to send OTP via email
 
@@ -227,8 +228,9 @@ const getFilterOptions = async () => {
 
 const productListLoader = async (req, res) => {
     try {
+        const userId = req.session.userId;
         const page = parseInt(req.query.page) || 1;
-        const pageSize = 5; // Set the number of products to display per page
+        const pageSize = 10; // Set the number of products to display per page
 
 
         // Extracting filter parameters from the query
@@ -357,7 +359,8 @@ const productListLoader = async (req, res) => {
         Object.keys(selectedFilters).forEach((key) => selectedFilters[key] == null && delete selectedFilters[key]);
 
 
-
+        //getting wishlist document
+        const userWishlist = await Wishlist.findOne({ user: userId });
 
         res.render('./user/productList.ejs', {
             products: result.docs,
@@ -365,6 +368,7 @@ const productListLoader = async (req, res) => {
             totalPages: result.totalPages,
             filterOptions: filterOptions,
             selectedFilters: selectedFilters,
+            userWishlist: userWishlist,
         });
     } catch (error) {
         console.log(error.message);
@@ -411,9 +415,13 @@ const signupVerificationHandler = async (req, res) => {
             const cart = new Cart({ user: userData._id });
             const cartData = await cart.save();
 
-            if (cartData) {
+            const wishlist = new Wishlist({ user: userData._id });
+            const wishlistData = await wishlist.save();
+
+            if (cartData && wishlistData) {
                 // Update the user's cart field with the new cart's _id
                 userData.cart = cartData._id;
+                userData.wishlist = wishlistData._id;
                 const updatedUserData = await userData.save();
             }
 
@@ -539,17 +547,12 @@ const addToCartHandler = async (req, res) => {
         }
 
         // Find the product in the database
-        const product = await Products.findById(productId);
+        const product = await Products.findOne({ _id: productId, isDeleted: false });
 
         if (!product) {
             return res.status(404).json({ error: 'Product not found' });
 
         }
-
-
-
-
-
 
         // Get the available stock for the selected size
         const availableStock = product.sizes[0][size].availableStock;

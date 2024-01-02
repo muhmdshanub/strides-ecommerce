@@ -50,6 +50,11 @@
         height: 400px;
     }
 
+    .heart-icon:hover {
+    transform: scale(1.2); /* Adjust the scale factor as needed */
+    transition: transform 0.3s ease; /* Adjust the transition duration and timing function as needed */
+}
+
     @media screen and (max-height: 450px) {
         .overlay a {
             font-size: 20px
@@ -82,9 +87,9 @@
 
 <%- include('../layouts/user-header') -%>
 
-
+<%- include('../layouts/user-navbar') -%>
     <div class="site-wrap">
-        <%- include('../layouts/user-navbar') -%>
+        
             <%- include('../layouts/_messages') -%>
 
                 <!-- overlay body -->
@@ -329,7 +334,9 @@
                                 </div>
 
                                 <div class="row mb-5 col-12">
-                                    <% for(let i=0; i<products.length;i++){ %>
+                                    <%
+                                        for(let i=0; i<products.length;i++) {
+                                    %>
                                         <div class="col-10 offset-1 offset-sm-0 col-sm-6 col-md-4 col-lg-4 col-xl-3 mb-4" data-aos="fade-up">
                                             <div class="block-4 text-center border">
                                                 <figure class="block-4-image">
@@ -352,8 +359,19 @@
                                                         </div>
                                                         <div class="col-4 pr-0">
                                                             <!-- Wishlist Icon -->
-                                                            <a href="#" class="float-right pr-0"><span
-                                                                    class="icon icon-heart-o"></span></a>
+                                                            <%
+                                                                 const productId = products[i]._id;
+                                                                 const isInWishlist = userWishlist && userWishlist.products.some(wishlistProduct => wishlistProduct.product.equals(productId));
+                                                             %>
+                                                             <% if (isInWishlist) { %>
+                                                                    <button class="btn float-right " onclick="removeFromWishlist('<%= productId %>')" id="wishlistButton<%= productId %>">
+                                                                        <span class="icon icon-heart" style="color: red; font-size: 25px; font-weight: 500;" id="wishlistIcon<%= productId %>"></span>
+                                                                    </button>
+                                                            <% } else { %>
+                                                                    <button class="btn float-right " onclick="addToWishlist('<%= productId %>')" id="wishlistButton<%= productId %>">
+                                                                            <span class="icon icon-heart-o" style="color: red; font-size: 25px; font-weight: 500;" id="wishlistIcon<%= productId %>"></span>
+                                                                </button>
+                                                            <% } %>
                                                         </div>
                                                     </div>
 
@@ -454,6 +472,80 @@
         function closeNav() {
             document.getElementById("myNav").style.width = "0%";
         }
+
+
+        async function addToWishlist(productId) {
+        
+        try {
+            // Use fetch to send an HTTP request to your server's API endpoint for adding to wishlist
+            const response = await fetch(`/add-to-wishlist/${productId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (response.ok) {
+                // Wishlist item added successfully
+                
+                console.log('Added to Wishlist!');
+                
+
+                const iconElement = document.getElementById(`wishlistIcon${productId}`);
+            if (iconElement) {
+                // Change the class to 'icon-heart' for a filled heart
+                iconElement.classList.replace('icon-heart-o', 'icon-heart');
+            }
+            
+            // Update the onclick attribute to call 'addToWishlist' function
+            document.getElementById(`wishlistButton${productId}`).onclick = function() {
+                removeFromWishlist(productId);
+            };
+
+                
+            } else {
+                console.error('Failed to add to Wishlist.');
+            }
+        } catch (error) {
+            console.error('Error adding to Wishlist:', error.message);
+        }
+    }
+
+    async function removeFromWishlist(productId) {
+        
+        try {
+            // Use fetch to send an HTTP request to your server's API endpoint for adding to wishlist
+            const response = await fetch(`/remove-from-wishlist/${productId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (response.ok) {
+                // Wishlist item added successfully
+                
+                console.log('removed from Wishlist!');
+                
+
+                const iconElement = document.getElementById(`wishlistIcon${productId}`);
+            if (iconElement) {
+                // Change the class to 'icon-heart' for a filled heart
+                iconElement.classList.replace('icon-heart', 'icon-heart-o');
+            }
+             // Update the onclick attribute to call 'addToWishlist' function
+            document.getElementById(`wishlistButton${productId}`).onclick = function() {
+                addToWishlist(productId);
+            };
+
+                
+            } else {
+                console.error('Failed to remove from Wishlist.');
+            }
+        } catch (error) {
+            console.error('Error removing from Wishlist:', error.message);
+        }
+    }
     </script>
 
     <%- include('../layouts/user-footer') -%>
