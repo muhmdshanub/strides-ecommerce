@@ -183,6 +183,7 @@
 
 
     </style>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 
     <div class="site-wrap">
         <%- include('../layouts/user-navbar') -%>
@@ -209,7 +210,7 @@
                                             alt="Thumbnail 4" onclick="changeImage(this.src)">
                                         <!-- Add more thumbnails as needed -->
                                     </div>
-                                    <div class="col-11 col-sm-10 col-md-11">
+                                    <div class="col-10 col-sm-11 col-md-10 mx-3 px-0">
                                         <img id="main-image"
                                             src="/images/productImages/<%= product.images.image1.name %>" alt="Image"
                                             class="img-fluid">
@@ -221,7 +222,7 @@
 
                                 </div>
                             </div>
-                            <div id="img-zoom-result" class="img-zoom-result" class=" col-12 col-sm-8 col-md-10 offset-md-1 offset-sm-2 col-lg-4 col-xl-5 pl-3 ml-lg-0 pt-5 mt-5 mt-sm-5 mt-lg-0 border border-danger rounded">
+                            <div id="img-zoom-result" class="img-zoom-result" class=" col-12 col-sm-8 col-md-10 offset-md-1 offset-sm-2 col-lg-4 col-xl-5 pl-3 ml-lg-0 pt-5 mt-5 mt-sm-5 mt-lg-0 border border-danger rounded" >
 
                             </div>
                             <div class=" col-10 offset-1 col-md-6 offset-md-3 pl-3  pt-5 mt-5 pb-2  border border-danger rounded" id="details-box" >
@@ -289,7 +290,7 @@
                                 <h4 class="mb-5">Details</h4>
                                 <p> <%= product.description %> </p>
                                 <h6>Colors : <%= product.colors.join(', ') %></h6>
-                                <h6>Suitable Gender : <%= product.genders %></h6>
+                                <h6>Suitable Gender : <%= product.gender %></h6>
                                 <h6>Category : <%= product.category?.name %></h6>
                                 
                                 
@@ -411,8 +412,14 @@ function getSelectedSize() {
 
 // Call imageZoom function for your main image
 document.addEventListener("DOMContentLoaded", function () {
+    console.log("domcontentLoaded")
     imageZoom("main-image", "img-zoom-result", 100, 100);
+    
+
+    
   });
+
+
 
 
 
@@ -438,15 +445,18 @@ function imageZoom(imgID, resultID) {
     lens.addEventListener("touchmove", moveLens);
     img.addEventListener("touchmove", moveLens);
 
+    
     function moveLens(e) {
       var pos, x, y;
       /* prevent any other actions that may occur when moving over the image: */
       e.preventDefault();
       /* get the cursor's x and y positions: */
       pos = getCursorPos(e);
+
       /* calculate the position of the lens: */
-      x = pos.x - (lens.offsetWidth / 2);
-      y = pos.y - (lens.offsetHeight / 2);
+      x = pos.x - (lens.offsetWidth / 2.0);
+      y = pos.y - (lens.offsetHeight / 2.0);
+
       /* prevent the lens from being positioned outside the image: */
       if (x > img.width - lens.offsetWidth) {
         x = img.width - lens.offsetWidth;
@@ -480,6 +490,7 @@ function imageZoom(imgID, resultID) {
       y = y - window.pageYOffset;
       return { x: x, y: y };
     }
+    
   }
 
 
@@ -487,6 +498,12 @@ function imageZoom(imgID, resultID) {
     
     function changeImage(newSrc) {
         document.getElementById('main-image').src = newSrc;
+
+        // Remove the existing lens before calling imageZoom again
+        var existingLens = document.querySelector(".img-zoom-lens");
+        if (existingLens) {
+            existingLens.parentNode.removeChild(existingLens);
+        }
         imageZoom("main-image", "img-zoom-result", 100, 100);
     }
 

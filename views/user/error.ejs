@@ -1,0 +1,15 @@
+<%- include('../layouts/user-header') -%>
+<%- include('../layouts/user-navbar') -%>
+
+<div class="container mt-5">
+    <div class="alert alert-danger" role="alert">
+        <h4 class="alert-heading">Error <%= status %></h4>
+        <p><%= message %></p>
+        <hr>
+        <p class="mb-0">Sorry for the inconvenience. Please try again later.</p>
+        <a href="/" class="btn btn-primary mt-3">Go to Home Page</a>
+    </div>
+</div>
+
+
+<%- include('../layouts/user-footer') -%>

@@ -14,10 +14,17 @@ const sendOtpEmail = require('../utils/sendEmail');
 const bcrypt = require('bcrypt');
 
 
-const addToWishlistHandler = async (req, res) => {
+const addToWishlistHandler = async (req, res, next) => {
     try {
         const userId = req.session.userId;
         const productId = req.params.productId;
+
+        if (!mongoose.Types.ObjectId.isValid(productId)) {
+            const genericErrorMessage = 'Invalid product ID: ';
+            const genericError = new Error(genericErrorMessage);
+            genericError.status = 500;
+            throw genericError;
+        }
 
         // Check if there is a wishlist document with the same userId
         let wishlist = await Wishlist.findOne({ user: userId });
@@ -25,14 +32,20 @@ const addToWishlistHandler = async (req, res) => {
         // If there is no wishlist document, create a new one
         if (!wishlist) {
             console.log("no wishlist document find for the user");
-            return res.status(404).json({ error: 'User\'s wishlist not found' });
+            const genericErrorMessage = 'Wishlist not found: ' + error.message;
+            const genericError = new Error(genericErrorMessage);
+            genericError.status = 404;
+            throw genericError;
         }
         // Find the product in the database
         const product = await Products.findOne({ _id: productId, isDeleted: false });
 
         if (!product) {
             console.log("no corresponding product is available on product ");
-            return res.status(404).json({ error: 'Product not found' });
+            const genericErrorMessage = 'product Not found: ' + error.message;
+            const genericError = new Error(genericErrorMessage);
+            genericError.status = 404;
+            throw genericError;
 
         }
 
@@ -43,9 +56,10 @@ const addToWishlistHandler = async (req, res) => {
 
         if (!isAnySizeAvailable) {
             console.log("every size is out of stock");
-            return res.json({
-                message: 'All sizes are Out of stock. Item not added to the cart.',
-            });
+            const genericErrorMessage = 'All size of this item gone out of stock : ' + error.message;
+            const genericError = new Error(genericErrorMessage);
+            genericError.status = 404;
+            throw genericError;
         }
 
 
@@ -73,32 +87,47 @@ const addToWishlistHandler = async (req, res) => {
 
     } catch (error) {
         console.error('Error adding to wishlist:', error.message);
-        // Handle error scenarios and send an appropriate response
-        return res.status(500).json({ error: 'Internal Server Error' });
+        next(error)
     }
 };
 
-const removeFromWishlistHandler = async (req, res) => {
+const removeFromWishlistHandler = async (req, res, next) => {
     try {
         const productId = req.params.productId;
         const userId = req.session.userId;
 
+        if (!mongoose.Types.ObjectId.isValid(productId)) {
+            const genericErrorMessage = 'Invalid product ID: ';
+            const genericError = new Error(genericErrorMessage);
+            genericError.status = 500;
+            throw genericError;
+        }
+
         if (!userId) {
-            return res.status(403).json({ message: 'User not authenticated' });
+            const genericErrorMessage = 'user not authenticated for this action : ' + error.message;
+            const genericError = new Error(genericErrorMessage);
+            genericError.status = 403;
+            throw genericError;
         }
 
         // Check if the user has a wishlist
         const wishlist = await Wishlist.findOne({ user: userId });
 
         if (!wishlist) {
-            return res.status(404).json({ message: 'Wishlist not found for the user' });
+            const genericErrorMessage = 'Wishlist not found : ' + error.message;
+            const genericError = new Error(genericErrorMessage);
+            genericError.status = 404;
+            throw genericError;
         }
 
         // Check if the product is in the wishlist
         const productIndex = wishlist.products.findIndex(product => product.product.equals(productId));
 
         if (productIndex === -1) {
-            return res.status(404).json({ message: 'Product not found in the wishlist' });
+            const genericErrorMessage = 'product is not available on the wishlist : ' + error.message;
+            const genericError = new Error(genericErrorMessage);
+            genericError.status = 404 ;
+            throw genericError;
         }
 
         // Remove the product from the products array
@@ -110,11 +139,11 @@ const removeFromWishlistHandler = async (req, res) => {
         return res.status(200).json({ message: 'Product removed from wishlist successfully', productsLength: wishlist.products.length });
     } catch (error) {
         console.error('Error removing product from wishlist:', error);
-        return res.status(500).json({ message: 'Internal Server Error' });
+        next(error)
     }
 };
 
-const wishlistLoader = async (req, res) => {
+const wishlistLoader = async (req, res, next) => {
     try {
         // Ensure the user is authenticated
         if (!req.session.userId) {
@@ -149,31 +178,43 @@ const wishlistLoader = async (req, res) => {
 
     } catch (error) {
         console.error('Error loading wishlist:', error);
-        return res.status(500).json({ message: 'Internal Server Error' });
+        next(error)
     }
 };
 
 
-const moveFromWishlistToCartHandler = async (req, res) => {
+const moveFromWishlistToCartHandler = async (req, res, next) => {
     try {
 
         const productId = req.params.productId;
         // Get user ID from the session or authentication token
         const userId = req.session.userId;
 
+        if (!mongoose.Types.ObjectId.isValid(productId)) {
+            const genericErrorMessage = 'Invalid product ID: ';
+            const genericError = new Error(genericErrorMessage);
+            genericError.status = 500;
+            throw genericError;
+        }
+
         // Find the user's cart in the Cart collection
         const cart = await Cart.findOne({ user: userId });
 
         if (!cart) {
-            return res.status(404).json({ error: 'User\'s cart not found' });
+            const genericErrorMessage = 'Cart not found : ' + error.message;
+            const genericError = new Error(genericErrorMessage);
+            genericError.status = 404;
+            throw genericError;
         }
 
         // Find the product in the database
         product = await Products.findOne({ _id: productId, isDeleted: false });
 
         if (!product) {
-            return res.status(404).json({ error: 'Product not found' });
-
+            const genericErrorMessage = 'product not found : ' + error.message;
+            const genericError = new Error(genericErrorMessage);
+            genericError.status = 404;
+            throw genericError;
         }
         
 
@@ -183,9 +224,10 @@ const moveFromWishlistToCartHandler = async (req, res) => {
         
         if (selectedSize === null) {
             // Handle out of stock case
-            return res.json({
-                message: 'Item is Out of stock. Not added to the cart.',
-            });
+            const genericErrorMessage = 'Item out of stock : ' + error.message;
+            const genericError = new Error(genericErrorMessage);
+            genericError.status = 404;
+            throw genericError;
         }
 
 
@@ -341,7 +383,7 @@ const moveFromWishlistToCartHandler = async (req, res) => {
 
     } catch (error) {
         console.error('Error adding product to cart:', error.message);
-        res.status(500).json({ error: 'Internal server error' });
+        next(error)
     }
 };
 

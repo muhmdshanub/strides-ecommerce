@@ -5,9 +5,10 @@ const Products = require('../models/productModel');
 const Users = require('../models/userModel');
 const Category = require('../models/categoryModel');
 const Order = require('../models/orderModel');
+const { NetworkContextImpl } = require('twilio/lib/rest/supersim/v1/network');
 
 
-const adminRootHandler = async (req, res) => {
+const adminRootHandler = async (req, res, next) => {
     try {
         if (req.session.adminId) {
             res.render('./admin/dashboard')
@@ -18,10 +19,11 @@ const adminRootHandler = async (req, res) => {
 
     } catch (error) {
         console.log(error.message);
+        next(error)
     }
 }
 //logging out admin
-const logoutHandler = async (req, res) => {
+const logoutHandler = async (req, res, next) => {
     try {
 
         const adminId = req.session.adminId;
@@ -36,59 +38,23 @@ const logoutHandler = async (req, res) => {
 
     } catch (error) {
         console.log(error.message);
+        next(error)
     }
 }
 
 
-const productListLoader = async (req, res) => {
-    try {
-        const page = parseInt(req.query.page) || 1;
-        const pageSize = 10; // Set the number of products to display per page
-
-        const options = {
-            page: page,
-            limit: pageSize,
-            populate: {
-                path: 'category',
-                select: 'name', // Specify the fields to populate (only 'name' in this case)
-            },
-        };
-
-        const productsData = await Products.paginate({ isDeleted: false }, options);
-
-        res.render('./admin/productList.ejs', {
-            products: productsData.docs,
-            currentPage: productsData.page,
-            totalPages: productsData.totalPages,
-        });
-    } catch (error) {
-        console.log(error.message);
-    }
-};
 
 
-
-
-const productAddLoader = async (req, res) => {
-    try {
-        // Fetch _id and name fields from all categories in the Category collection
-        const categories = await Category.find({}, '_id name');
-
-        res.render('./admin/product-add.ejs', { categories });
-    } catch (error) {
-        console.log(error.message);
-    }
-}
-
-const loginLoader = async (req, res) => {
+const loginLoader = async (req, res, next) => {
     try {
         res.render('./admin/login.ejs');
     } catch (error) {
         console.log(error.message);
+        next(error)
     }
 }
 
-const loginHandler = async (req, res) => {
+const loginHandler = async (req, res, next) => {
     try {
         const emailOrPhone = req.body.emailOrPhone;
         const password = req.body.password;
@@ -113,8 +79,11 @@ const loginHandler = async (req, res) => {
                     req.session.adminId = adminData._id;
                     res.redirect('/admin/dashboard');
                 } else {
-                    req.flash('error', "Something Happened while trying to log you in. Please try again");
-                    res.redirect('/admin/login');
+                    
+                    const genericErrorMessage = 'Something Happened while trying to log you in. Please try again : ';
+                    const genericError = new Error(genericErrorMessage);
+                    genericError.status = 404;
+                    throw genericError;
                 }
 
             } else {
@@ -127,332 +96,24 @@ const loginHandler = async (req, res) => {
         }
     } catch (error) {
         console.log(error.message);
-        req.flash('error', "Something Happened while trying to log you in. Please try again");
-        res.redirect('/admin/login');
+        next(error)
     }
 }
 
-const dashboardLoader = async (req, res) => {
+const dashboardLoader = async (req, res, next) => {
     try {
         res.render('./admin/dashboard.ejs');
     } catch (error) {
         console.log(error.message);
+        next(error)
     }
 }
 
 
 
-const productAddHandler = async (req, res) => {
-    try {
-        const {
-            brandName,
-            productName,
-            gender,
-            colors,
-            category,
-            description,
-            price,
-            discount,
-            available_stock_small,
-            available_stock_medium,
-            available_stock_large,
-            available_stock_extra_large,
-        } = req.body;
-
-        // Check if required fields are present
-        if (
-            !brandName ||
-            !productName ||
-            !gender ||
-            !colors ||
-            !category ||
-            !description ||
-            !price ||
-            !discount ||
-            !available_stock_small ||
-            !available_stock_medium ||
-            !available_stock_large ||
-            !available_stock_extra_large ||
-            !req.files ||
-            req.files.length !== 4
-        ) {
-            req.flash('error', 'All fields are required, including 4 images.');
-            return res.redirect('/admin/products-add');
-        }
-
-        // Fetch category information
-        const categoryInfo = await Category.findById(category);
-
-        if (!categoryInfo) {
-            req.flash('error', 'Invalid category.');
-            return res.redirect('/admin/products-add');
-        }
-
-        const colorsArray = req.body.colors || [];
-        const filenames = req.files.map((file) => file.filename);
-
-        const product = new Products({
-            brandName,
-            productName,
-            gender,
-            colors: colorsArray,
-            category: categoryInfo._id,
-            description,
-            initialPrice: parseFloat(price),
-            discountPercentage: parseFloat(discount),
-            sizes: {
-                small: {
-                    availableStock: parseInt(available_stock_small),
-                },
-                medium: {
-                    availableStock: parseInt(available_stock_medium),
-                },
-                large: {
-                    availableStock: parseInt(available_stock_large),
-                },
-                extraLarge: {
-                    availableStock: parseInt(available_stock_extra_large),
-                },
-            },
-            images: {
-                image1: { name: filenames[0] },
-                image2: { name: filenames[1] },
-                image3: { name: filenames[2] },
-                image4: { name: filenames[3] },
-            },
-        });
-
-        // Save the new product to the database
-        const productData = await product.save();
-
-        if (productData) {
-            req.flash('success', 'You have successfully added a new product.');
-            return res.redirect('/admin/products-add');
-        }
-    } catch (error) {
-        console.log(error.message)
-        req.flash('error', 'An error occurred. Please try again.');
-        res.redirect('/admin/products-add');
-    }
-};
 
 
-
-
-
-const singleProductDeletionHandler = async (req, res) => {
-    try {
-        const productId = req.params.productId;
-
-        // Check if the provided productId is a valid ObjectId
-        if (!mongoose.Types.ObjectId.isValid(productId)) {
-            req.flash('error', 'Invalid product ID.');
-            return res.redirect('/admin/products-list');
-        }
-
-        // Update the product's status to "soft deleted" in the database
-        const result = await Products.findByIdAndUpdate(productId, { $set: { isDeleted: true } });
-
-        if (result) {
-            req.flash('success', 'Product removed.');
-            return res.redirect('/admin/products-list');
-        } else {
-            req.flash('error', 'An error occurred while trying to remove the product');
-            return res.redirect('/admin/products-list');
-        }
-    } catch (error) {
-        console.error(error.message);
-        req.flash('error', 'An error occurred while trying to remove the product');
-        res.redirect('/admin/products-list');
-    }
-};
-
-const multipleProductDeletionHandler = async (req, res) => {
-    try {
-        const productIds = req.body.productIds;
-
-        // Update the status of selected products to "soft deleted" in the database
-        const result = await Products.updateMany({ _id: { $in: productIds } }, { $set: { isDeleted: true } });
-
-        if (result.modifiedCount > 0) {
-            req.flash('success', 'Selected products removed successfully');
-            res.redirect('/admin/products-list'); // Redirect to the product list page
-        } else {
-            req.flash('error', 'No products found for bulk delete');
-            res.redirect('/admin/products-list');
-        }
-    } catch (error) {
-        console.error('Error bulk deleting products:', error);
-        req.flash('error', 'Internal Server Error');
-        res.redirect('/admin/products-list');
-    }
-};
-
-
-const productEditLoader = async (req, res) => {
-    try {
-        const productId = req.params.productId;
-
-        if (!mongoose.Types.ObjectId.isValid(productId)) {
-            req.flash('error', 'Invalid product ID');
-            res.redirect('/admin/products-list');
-            return;
-        }
-
-        const productData = await Products.findById(productId);
-        const categories = await Category.find({}, '_id name'); // Fetch categories
-
-        if (productData) {
-            res.render('./admin/product-edit.ejs', { product: productData, categories });
-        } else {
-            req.flash('error', 'Invalid product details');
-            res.redirect('/admin/products-list');
-        }
-    } catch (error) {
-        console.log(error.message);
-        req.flash('error', 'An error occurred');
-        res.redirect('/admin/products-list');
-    }
-};
-
-
-const productEditHandler = async (req, res) => {
-    try {
-        const productId = req.params.productId;
-        const product = await Products.findById(productId, { images: 1 });
-        const {
-            brandName,
-            productName,
-            gender,
-            colors,
-            category,
-            description,
-            price,
-            discount,
-            available_stock_small,
-            available_stock_medium,
-            available_stock_large,
-            available_stock_extra_large,
-            sold_stock_small,
-            sold_stock_medium,
-            sold_stock_large,
-            sold_stock_extra_large,
-        } = req.body;
-
-        // Check if required fields are present
-        if (
-            !brandName ||
-            !productName ||
-            !gender ||
-            !colors ||
-            !category ||
-            !description ||
-            !price ||
-            !discount ||
-            !available_stock_small ||
-            !available_stock_medium ||
-            !available_stock_large ||
-            !available_stock_extra_large ||
-            !sold_stock_small ||
-            !sold_stock_medium ||
-            !sold_stock_large ||
-            !sold_stock_extra_large
-        ) {
-            req.flash('error', 'All fields are required.');
-            return res.redirect('/admin/products-edit/' + productId);
-        }
-
-
-        // Fetch category information
-        const categoryInfo = await Category.findById(category);
-
-        if (!categoryInfo) {
-            req.flash('error', 'Invalid category.');
-            return res.redirect('/admin/products-add');
-        }
-
-
-
-        const colorsArray = req.body.colors || [];
-        const filenames = req.files.map(file => file.filename);
-
-
-
-
-        //code to insert images to collection
-        const images = {};
-
-        for (let i = 1; i <= 4; i++) {
-            // Check if there are filenames left
-            if (filenames.length > 0) {
-                // Check if the current image is modified
-                const isModified = req.body[`imageModified${i}`] === 'true';
-
-                if (isModified) {
-                    // Use the first filename for the modified image
-                    images[`image${i}`] = { name: filenames.shift() };
-                } else {
-                    // If not modified, use the original image name
-                    images[`image${i}`] = { name: product.images[`image${i}`].name };
-                }
-            } else {
-                // If no filenames left, use the original image name
-                images[`image${i}`] = { name: product.images[`image${i}`].name };
-            }
-        }
-
-
-
-        const productUpdate = {
-            brandName,
-            productName,
-            gender,
-            colors: colorsArray,
-            category: categoryInfo._id,
-            description,
-            initialPrice: parseFloat(price),
-            discountPercentage: parseFloat(discount),
-            finalPrice: parseFloat(price) * (1 - parseFloat(discount) / 100),
-            sizes: {
-                small: {
-                    availableStock: parseInt(available_stock_small),
-                    soldStock: parseInt(sold_stock_small),
-                },
-                medium: {
-                    availableStock: parseInt(available_stock_medium),
-                    soldStock: parseInt(sold_stock_medium),
-                },
-                large: {
-                    availableStock: parseInt(available_stock_large),
-                    soldStock: parseInt(sold_stock_large),
-                },
-                extraLarge: {
-                    availableStock: parseInt(available_stock_extra_large),
-                    soldStock: parseInt(sold_stock_extra_large),
-                },
-            },
-            images: images,
-        };
-
-        // Update the product in the database
-        const updatedProduct = await Products.findByIdAndUpdate(
-            productId,
-            productUpdate,
-            { new: true }
-        );
-
-        if (updatedProduct) {
-            req.flash('success', 'Product updated successfully.');
-            return res.redirect('/admin/products-list/');
-        }
-    } catch (error) {
-        console.error(error);
-        req.flash('error', 'An error occurred. Please try again.');
-        res.redirect('/admin/products-list/');
-    }
-};
-
-const userListLoader = async (req, res) => {
+const userListLoader = async (req, res, next) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const pageSize = 5; // Set the number of users to display per page
@@ -491,17 +152,19 @@ const userListLoader = async (req, res) => {
         });
     } catch (error) {
         console.log(error.message);
+        next(error)
     }
 };
 
-const singleUserBlockHandler = async (req, res) => {
+const singleUserBlockHandler = async (req, res, next) => {
     try {
         const userId = req.params.userId;
 
-        // Check if the provided productId is a valid ObjectId
         if (!mongoose.Types.ObjectId.isValid(userId)) {
-            req.flash('error', 'Invalid user ID.');
-            return res.redirect('/admin/user-list');
+            const genericErrorMessage = 'Invalid user ID: ';
+            const genericError = new Error(genericErrorMessage);
+            genericError.status = 500;
+            throw genericError;
         }
 
         // Update the product's status to "soft deleted" in the database
@@ -519,19 +182,20 @@ const singleUserBlockHandler = async (req, res) => {
         }
     } catch (error) {
         console.error(error.message);
-        req.flash('error', 'An error occurred while trying to block the user');
-        return res.redirect('/admin/users-list');
+        next(error)
     }
 };
 
-const singleUserUnblockHandler = async (req, res) => {
+const singleUserUnblockHandler = async (req, res, next) => {
     try {
         const userId = req.params.userId;
 
         // Check if the provided productId is a valid ObjectId
         if (!mongoose.Types.ObjectId.isValid(userId)) {
-            req.flash('error', 'Invalid user ID.');
-            return res.redirect('/admin/user-list');
+            const genericErrorMessage = 'Invalid user ID: ';
+            const genericError = new Error(genericErrorMessage);
+            genericError.status = 500;
+            throw genericError;
         }
 
         // Update the product's status to "unblock" in the database
@@ -546,12 +210,11 @@ const singleUserUnblockHandler = async (req, res) => {
         }
     } catch (error) {
         console.error(error.message);
-        req.flash('error', 'An error occurred while trying to unblock the user');
-        return res.redirect('/admin/users-list');
+        next(error);
     }
 };
 
-const multipleUsersBlockHandler = async (req, res) => {
+const multipleUsersBlockHandler = async (req, res, next) => {
     try {
         const userIds = req.body.userIds;
 
@@ -567,12 +230,11 @@ const multipleUsersBlockHandler = async (req, res) => {
         }
     } catch (error) {
         console.error('Error bulk blocking users:', error);
-        req.flash('error', 'Internal Server Error');
-        res.redirect('/admin/users-list');
+        next(error)
     }
 };
 
-const multipleUsersUnblockHandler = async (req, res) => {
+const multipleUsersUnblockHandler = async (req, res, next) => {
     try {
         const userIds = req.body.userIds;
 
@@ -588,262 +250,30 @@ const multipleUsersUnblockHandler = async (req, res) => {
         }
     } catch (error) {
         console.error('Error bulk unblocking users:', error);
-        req.flash('error', 'Internal Server Error');
-        res.redirect('/admin/users-list');
+        next(error)
     }
 };
 
-const CategoryListLoader = async (req, res) => {
-    try {
-        const page = parseInt(req.query.page) || 1;
-        const pageSize = 10; // Set the number of categories to display per page
-
-        const aggregationPipeline = [
-            {
-                $lookup: {
-                    from: 'products', // Use the actual collection name for products
-                    localField: '_id',
-                    foreignField: 'category',
-                    as: 'products',
-                },
-            },
-            {
-                $project: {
-                    _id: 1,
-                    name: 1,
-                    description: 1,
-                    addedDate: 1,
-                    productsCount: { $size: '$products' }, // Count the number of products
-                    ordersCount: 'To be calculated after order model is created',
-                    ordersCountIn30Days: 'To be calculated after order model is created',
-                },
-            },
-        ];
-
-        const categoriesData = await Category.aggregate(aggregationPipeline);
-
-        // Manually handle pagination
-        const startIdx = (page - 1) * pageSize;
-        const endIdx = startIdx + pageSize;
-        const paginatedCategories = categoriesData.slice(startIdx, endIdx);
-
-        res.render('./admin/categoryList.ejs', {
-            categories: paginatedCategories,
-            currentPage: page,
-            totalPages: Math.ceil(categoriesData.length / pageSize),
-        });
-    } catch (error) {
-        console.error(error.message);
-        req.flash('error', 'Internal Server Error');
-        res.redirect('/admin/dashboard');
-    }
-};
-
-const categoryAddLoader = async (req, res) => {
-    try {
-
-
-        res.render('./admin/category-add.ejs');
-    } catch (error) {
-        console.log(error.message);
-    }
-}
-
-
-const categoryAddHandler = async (req, res) => {
-    try {
-        const { name, description, } = req.body;
 
 
 
-
-        // Check if required fields are present
-        if (!name || !description) {
-
-            req.flash('error', 'All fields are required.');
-            return res.redirect('/admin/category-add');
-        }
-
-        const isCategoryExist = await Category.findOne({ name: name });
-
-        if (isCategoryExist) {
-            req.flash('error', 'Category already exists.');
-            return res.redirect('/admin/category-add');
-        }
-
-
-
-        const category = new Category({
-            name,
-            description,
-        });
-
-        // Save the new product to the database
-        const categoryData = await category.save();
-
-        if (categoryData) {
-            req.flash('success', 'You have successfully added a new category.');
-            return res.redirect('/admin/category-list');
-        }
-    } catch (error) {
-        console.log(error.message)
-        req.flash('error', 'An error occurred. Please try again.');
-        res.redirect('/admin/category-add');
-    }
-};
-
-const categoryEditLoader = async (req, res) => {
-    try {
-
-        const categoryId = req.params.categoryId;
-
-        if (!mongoose.Types.ObjectId.isValid(categoryId)) {
-            req.flash('error', 'Invalid category ID');
-            res.redirect('/admin/category-list');
-            return;
-        }
-        const categoryData = await Category.findById(categoryId);
-        if (categoryData) {
-            res.render('./admin/category-edit.ejs', { category: categoryData });
-        } else {
-            req.flash('error', 'Invalid category details');
-            res.redirect('/admin/category-list');
-        }
-    } catch (error) {
-        console.log(error.message);
-        req.flash('error', 'An error occured');
-        res.redirect('/admin/category-list');
-    }
-}
-
-const categoryEditHandler = async (req, res) => {
-    try {
-        const categoryId = req.params.categoryId;
-        const product = await Category.findById(categoryId);
-        const { name, description } = req.body;
-
-        // Check if required fields are present
-        if (!name || !description) {
-            req.flash('error', 'All fields are required.');
-            return res.redirect('/admin/category-edit/' + categoryId);
-        }
-
-        const categoryUpdate = {
-            name, description
-        };
-
-        // Update the product in the database
-        const updatedCategory = await Category.findByIdAndUpdate(
-            categoryId,
-            categoryUpdate,
-            { new: true }
-        );
-
-        if (updatedCategory) {
-            req.flash('success', 'Category updated successfully.');
-            return res.redirect('/admin/category-list/');
-        }
-    } catch (error) {
-        console.error(error);
-        req.flash('error', 'An error occurred. Please try again.');
-        res.redirect('/admin/category-list/');
-    }
-};
-
-const ordersListLoader = async (req, res) => {
-    try {
-        const page = parseInt(req.query.page) || 1;
-        const pageSize = parseInt(req.query.pageSize) || 10;
-
-        const options = {
-            page: page,
-            limit: pageSize,
-            populate: {
-                path: 'product',
-                select: '_id images.image1.name', // Specify the fields to populate
-            },
-        };
-
-        const ordersData = await Order.paginate({}, options);
-
-        res.render('./admin/orderList.ejs', {
-            orders: ordersData.docs,
-            currentPage: ordersData.page,
-            totalPages: ordersData.totalPages,
-        });
-    } catch {
-        console.error('Error loading order list:', error);
-        res.status(500).json({ message: 'Internal server error' });
-    }
-}
-      
-const orderStatusUpdateHandler = async (req, res) => {
-    try {
-        // Extract values from the request body
-        const { orderId, newStatus } = req.body;
-
-        // Check if orderId and newStatus are present in the request body
-        if (!orderId || !newStatus) {
-            return res.status(400).json({ message: 'Missing orderId or newStatus in the request body' });
-        }
-
-        // Find the corresponding order
-        const order = await Order.findById(orderId);
-
-        // If no order found, send a response
-        if (!order) {
-            return res.status(404).json({ message: 'Order not found' });
-        }
-
-        // Update the status field and save
-        order.status = newStatus;
-
-        // If the new status is 'Placed', update the orderDate with the current date
-        if (newStatus === 'Placed') {
-            order.orderDate = Date.now();
-        }
-
-        // If the new status is 'Delivered', update the deliveredDate with the current date
-        if (newStatus === 'Delivered') {
-            order.deliveredDate = Date.now();
-        }
-
-        // Save the changes
-        await order.save();
-
-        // Send back a success response with the updated order details
-        res.status(200).json({ message: 'Order status updated successfully', order: order });
-    } catch (error) {
-        console.error('Error updating order status:', error.message);
-        res.status(500).json({ message: 'Internal server error' });
-    }
-};
 
 
 
 module.exports = {
-    productListLoader,
-    productAddLoader,
+    
     loginLoader,
     loginHandler,
     dashboardLoader,
-    productAddHandler,
-    singleProductDeletionHandler,
-    multipleProductDeletionHandler,
-    productEditLoader,
-    productEditHandler,
+    
     userListLoader,
     singleUserBlockHandler,
     singleUserUnblockHandler,
     multipleUsersBlockHandler,
     multipleUsersUnblockHandler,
-    CategoryListLoader,
+    
     adminRootHandler,
     logoutHandler,
-    categoryAddLoader,
-    categoryAddHandler,
-    categoryEditLoader,
-    categoryEditHandler,
-    ordersListLoader,
-    orderStatusUpdateHandler,
+    
+    
 }

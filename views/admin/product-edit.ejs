@@ -1,5 +1,7 @@
 <%- include('../layouts/admin-header') -%>
-
+<!-- Adjust the paths based on your project structure -->
+<link rel="stylesheet" href="/node_modules/cropperjs/dist/cropper.min.css">
+<script src="/node_modules/cropperjs/dist/cropper.min.js"></script>
 
     <style>
         .tm-product-img-dummy {
@@ -31,7 +33,7 @@
                                 </div>
                             </div>
 
-                            <form action="" class="tm-edit-product-form" method="post" enctype="multipart/form-data">
+                            <form action="" class="tm-edit-product-form" method="post" enctype="multipart/form-data" novalidate>
                                 <div class="row tm-edit-product-row">
                                     <div class="col-xl-6 col-lg-6 col-md-12">
 
@@ -256,18 +258,19 @@
                                                     src="/images/productImages/<%= product.images['image' + i]?.name %>"
                                                     alt="Product Image <%= i %>" class="img-fluid d-block mx-auto"
                                                     style="max-height: 200px; max-width: 100%;" />
-                                                <i class="fas fa-cloud-upload-alt tm-upload-icon"
-                                                    onclick="document.getElementById('fileInput<%= i %>').click();"></i>
+                                                <i class="fas fa-cloud-upload-alt tm-upload-icon"></i>
                                             </div>
 
                                             <!-- File input and upload button for -->
                                             <div class="custom-file mt-3 mb-3">
                                                 <input id="fileInput<%= i %>" type="file" style="display:none;"
-                                                    onchange="displaySelectedImage(<%= i %>); checkImageModification(<%= i %>);"
+                                                onchange="initCropper(<%= i %>);"
                                                     name="images" />
-                                                <input type="button" class="btn btn-primary btn-block mx-auto"
+                                                <input id="changeButton<%= i  %>" type="button" class="btn btn-primary btn-block mx-auto"
                                                     value="CHANGE"
                                                     onclick="document.getElementById('fileInput<%= i %>').click();" />
+                                                    <!-- New element for cropped image -->
+                                                <button id="removeButton<%= i %>" class="btn btn-danger btn-sm position-absolute top-0 start-0" style="display: none;" onclick="removeCroppedImage(<%= i %>, event); return false;">Remove Cropped Image</button>
                                             </div>
 
                                             <!-- Hidden fields for tracking modifications -->
@@ -295,79 +298,320 @@
         </div>
 
         <script>
-            function displaySelectedImage(imageNumber) {
-                var fileInput = document.getElementById('fileInput' + imageNumber);
-                var selectedImage = document.getElementById('selectedImage' + imageNumber);
+function initCropper(imageNumber) {
+    const fileInput = document.getElementById('fileInput' + imageNumber);
+    const selectedImage = document.getElementById('selectedImage' + imageNumber);
+    const removeButton = document.getElementById('removeButton' + imageNumber);
+    const changeButton = document.getElementById('changeButton' + imageNumber);
+    const imageModifiedField = document.getElementById('imageModified' + imageNumber);
+    
 
-                // Check if a file is selected
-                if (fileInput.files && fileInput.files[0]) {
-                    var reader = new FileReader();
+    changeButton.style.display = 'none'; // Hide upload button
 
-                    // Set up the reader to read the selected image
-                    reader.onload = function (e) {
-                        selectedImage.src = e.target.result;
-                    };
+    if (fileInput.files && fileInput.files[0]) {
+        const reader = new FileReader();
 
-                    // Read the selected image as a data URL
-                    reader.readAsDataURL(fileInput.files[0]);
+        reader.onload = function (e) {
+            // Display the cropped image
+            selectedImage.src = e.target.result;
+            selectedImage.style.display = 'block';
+
+            // Set imageModified to true
+            imageModifiedField.value = 'true';
+
+            // Initialize Cropper.js
+            const cropper = new Cropper(selectedImage, {
+                aspectRatio: NaN,
+                viewMode: 0,
+                // Add more options based on your requirements
+            });
+
+            // Save the cropper instance for later use (optional)
+            fileInput.cropper = cropper;
+
+            // Display the crop result when the crop button is clicked
+            const cropButton = document.createElement('button');
+            cropButton.innerText = 'Crop';
+            cropButton.className = 'btn btn-success btn-sm mt-2';
+            cropButton.onclick = function () {
+                event.preventDefault(); // Prevent form submission
+
+                const croppedCanvas = cropper.getCroppedCanvas();
+
+                // Convert the cropped canvas to a Blob
+                croppedCanvas.toBlob(function (blob) {
+                    // Create a new DataTransfer object
+                    const dataTransfer = new DataTransfer();
+
+                    // Create a new File and add it to the DataTransfer object
+                    const croppedFile = new File([blob], fileInput.files[0].name, { type: blob.type });
+                    dataTransfer.items.add(croppedFile);
+
+                    // Set the 'files' property of the existing file input
+                    fileInput.files = dataTransfer.files;
+
+                    // Display the cropped image
+                    selectedImage.src = URL.createObjectURL(blob);
+                    selectedImage.style.display = 'block';
+
+                    // Show remove button
+                    removeButton.style.display = 'block';
+
+                    // Hide upload button
+                    changeButton.style.display = 'none';
+
+                    // Remove the crop button
+                    fileInput.parentElement.removeChild(cropButton);
+                }, fileInput.files[0].type);
+            };
+
+            fileInput.parentElement.appendChild(cropButton);
+        };
+
+        reader.readAsDataURL(fileInput.files[0]);
+    }
+
+    // Hide the upload button and icon after the image is selected
+    fileInput.style.display = 'none';
+    fileInput.nextElementSibling.style.display = 'none';
+}
+
+function removeCroppedImage(imageNumber,event) {
+    const fileInput = document.getElementById('fileInput' + imageNumber);
+    const croppedImage = document.getElementById('selectedImage' + imageNumber);
+    const removeButton = document.getElementById('removeButton' + imageNumber);
+    const uploadButton = document.getElementById('changeButton' + imageNumber);
+    const imageModifiedField = document.getElementById('imageModified' + imageNumber);
+
+    // Elements to hide
+    const elementsToHide = [croppedImage, removeButton];
+
+    // Hide the elements
+    elementsToHide.forEach(element => {
+        element.style.display = 'none';
+    });
+
+    // Show the upload button
+    uploadButton.style.display = 'block';
+
+    // Set the selected image back to the original image
+    const originalImagePath = "/images/productImages/" + document.getElementById('originalImage' + imageNumber).value;
+    croppedImage.src = originalImagePath;
+
+    // Set imageModified to false
+    imageModifiedField.value = 'false';
+
+    // Optional: Add logic to reset or remove the Cropper instance
+    if (fileInput.cropper) {
+        fileInput.cropper.destroy();
+        fileInput.cropper = null;
+    }
+    
+
+    // Prevent the default behavior of the remove button (e.g., form submission)
+    event.preventDefault();
+}            
+    
+
+document.addEventListener('DOMContentLoaded', function () {
+                console.log('DOM is loaded');
+
+                const form = document.querySelector('.tm-edit-product-form');
+                const brandInput = form.elements['brandName'];
+                const productNameInput = form.elements['productName'];
+                const descriptionInput = form.elements['description'];
+                const genderSelect = form.elements['gender'];
+                const colorsCheckboxes = form.querySelectorAll('input[name="colors[]"]');
+                const categorySelect = form.elements['category'];
+
+                const availableStockInputs = form.querySelectorAll('[name^="available_stock_"]');
+
+                const priceInput = form.elements['price'];
+                const discountInput = form.elements['discount'];
+
+                
+
+
+
+
+                function validateBrand() {
+                    const brand = brandInput.value.trim();
+                    if (!brand) {
+                        showPopover('brandName', 'Brand cannot be empty.');
+                        return false;
+                    } else {
+                        hidePopover('brandName');
+                        return true;
+                    }
                 }
-            }
 
-            function checkImageModification(index) {
-                var fileInput = document.getElementById('fileInput' + index);
-                var originalImageName = document.getElementById('originalImage' + index).value;
+                function validateProductName() {
+                    const productName = productNameInput.value.trim();
+                    if (!productName) {
+                        showPopover('productName', 'Product Name cannot be empty.');
+                        return false;
+                    } else {
+                        hidePopover('productName');
+                        return true;
+                    }
+                }
 
-                if (fileInput.files && fileInput.files[0]) {
-                    var reader = new FileReader();
+                function validateDescription() {
+                    const description = descriptionInput.value.trim();
+                    if (!description) {
+                        showPopover('description', 'Description cannot be empty.');
+                        return false;
+                    } else {
+                        hidePopover('description');
+                        return true;
+                    }
+                }
 
-                    reader.onload = function (e) {
-                        var newImageContent = e.target.result;
+                function validateGender() {
+                    const selectedGender = genderSelect.value;
+                    if (selectedGender === '') {
+                        showPopover('gender', 'Please select a gender.');
+                        return false;
+                    } else {
+                        hidePopover('gender');
+                        return true;
+                    }
+                }
 
-                        // Compare newImageContent with the content of the default image
-                        if (compareImagesContent(newImageContent, originalImageName)) {
-                            document.getElementById('imageModified' + index).value = 'true';
+                function validateCategory() {
+                    const selectedCategory = categorySelect.value;
+
+
+                    if (selectedCategory === '') {
+                        showPopover('category', 'Please select a category.');
+                        return false;
+                    } else {
+                        hidePopover('category');
+                        return true;
+                    }
+                }
+
+                function validateColors() {
+                    const selectedColors = Array.from(colorsCheckboxes).some(color => color.checked);
+                    if (!selectedColors) {
+                        showPopover('colors', 'Please select at least one color.');
+                        return false;
+                    } else {
+                        hidePopover('colors');
+                        return true;
+                    }
+                }
+
+
+                function validateAvailableStock() {
+                    let isValid = true;
+
+                    availableStockInputs.forEach(input => {
+                        const stockValue = input.value.trim();
+                        const inputId = input.name;
+                        const sizeLabel = inputId.replace('available_stock_', ''); // Extract size label (small, medium, etc.)
+
+                        if (!/^\d+$/.test(stockValue)) {
+                            showPopover(inputId, `Please enter a valid numeric value for ${sizeLabel} stock.`);
+                            isValid = false;
                         } else {
-                            // Optionally, you can reset the file input or show a message to the user
-                            fileInput.value = ''; // Reset the file input
-                            alert('Please select a different image.');
+                            hidePopover(inputId);
                         }
-                    };
+                    });
 
-                    reader.readAsDataURL(fileInput.files[0]);
-                }
-            }
-
-            function compareImagesContent(newImageContent, originalImageName) {
-                // Assume originalImageName is the URL of the default image
-                var defaultImage = new Image();
-                defaultImage.src = originalImageName;
-
-                // Create an image from the new image content
-                var newImage = new Image();
-                newImage.src = newImageContent;
-
-                // Compare the dimensions of the images
-                if (defaultImage.width !== newImage.width || defaultImage.height !== newImage.height) {
-                    return true; // Images have different dimensions, consider them modified
+                    return isValid;
                 }
 
-                // Compare the content by converting images to base64 strings
-                var defaultImageBase64 = getBase64FromImage(defaultImage);
-                var newImageBase64 = getBase64FromImage(newImage);
+                function validatePrice() {
+                    const priceValue = priceInput.value.trim();
+                    if (!/^\d+(\.\d{1,2})?$/.test(priceValue)) {
+                        showPopover('price', 'Please enter a valid numeric value for price.');
+                        return false;
+                    } else {
+                        hidePopover('price');
+                        return true;
+                    }
+                }
 
-                return defaultImageBase64 !== newImageBase64;
-            }
+                function validateDiscount() {
+                    const discountValue = discountInput.value.trim();
+                    if (!/^\d+$/.test(discountValue)) {
+                        showPopover('discount', 'Please enter a valid numeric value for discount.');
+                        return false;
+                    } else {
+                        hidePopover('discount');
+                        return true;
+                    }
+                }
 
-            function getBase64FromImage(image) {
-                var canvas = document.createElement("canvas");
-                canvas.width = image.width;
-                canvas.height = image.height;
+                
 
-                var context = canvas.getContext("2d");
-                context.drawImage(image, 0, 0);
 
-                return canvas.toDataURL("image/png");
-            }
+
+
+
+
+                function showPopover(inputId, message) {
+                    hidePopover(inputId); // Remove existing popover if any
+
+                    const inputField = document.getElementsByName(inputId)[0];
+                    if (!inputField) {
+                        // If the input field is not found, exit the function
+                        return;
+                    }
+
+                    const popover = document.createElement('div');
+                    popover.className = 'custom-popover';
+                    popover.textContent = message;
+
+                    // Set styles for the popover
+                    popover.style.color = 'white'; // Text color
+                    popover.style.backgroundColor = 'red'; // Background color (you can change it as needed)
+
+                    const parentElement = inputField.parentElement;
+                    if (parentElement) {
+                        parentElement.appendChild(popover);
+                    }
+                }
+
+                function hidePopover(inputId) {
+                    const inputField = document.getElementsByName(inputId)[0];
+                    if (!inputField) {
+                        // If the input field is not found, exit the function
+                        return;
+                    }
+
+                    const existingPopover = inputField.parentElement.querySelector('.custom-popover');
+                    if (existingPopover) {
+                        existingPopover.remove();
+                    }
+                }
+
+
+
+
+
+                form.addEventListener('submit', function (event) {
+                    if (!validateBrand() || !validateProductName() || !validateDescription() || !validateGender() || !validateColors() || !validateCategory() || !validateAvailableStock() || !validatePrice() || !validateDiscount() ) {
+                        event.preventDefault();
+                    }
+                    // Add other form validations as needed
+                });
+
+                brandInput.addEventListener('input', validateBrand);
+                productNameInput.addEventListener('input', validateProductName);
+                descriptionInput.addEventListener('input', validateDescription);
+                genderSelect.addEventListener('change', validateGender);
+                colorsCheckboxes.forEach(checkbox => checkbox.addEventListener('change', validateColors));
+                categorySelect.addEventListener('change', validateCategory);
+                availableStockInputs.forEach(input => {
+                    input.addEventListener('input', validateAvailableStock);
+                });
+                priceInput.addEventListener('input', validatePrice);
+                discountInput.addEventListener('input', validateDiscount);
+                
+            });
+
         </script>
 
         <%- include('../layouts/admin-footer') -%>

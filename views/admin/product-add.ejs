@@ -285,6 +285,9 @@ function initCropper(imageNumber) {
             cropButton.innerText = 'Crop';
             cropButton.className = 'btn btn-success btn-sm mt-2';
             cropButton.onclick = function () {
+
+                event.preventDefault(); // Prevent form submission
+                
                 const croppedCanvas = cropper.getCroppedCanvas();
 
                 // Convert the cropped canvas to a Blob
@@ -325,7 +328,7 @@ function initCropper(imageNumber) {
     fileInput.nextElementSibling.style.display = 'none';
 }
 
-function removeCroppedImage(imageNumber) {
+function removeCroppedImage(imageNumber, event) {
     const fileInput = document.getElementById('fileInput' + imageNumber);
     const croppedImage = document.getElementById('croppedImage' + imageNumber);
     const removeButton = document.getElementById('removeButton' + imageNumber);
@@ -347,6 +350,9 @@ function removeCroppedImage(imageNumber) {
         fileInput.cropper.destroy();
         fileInput.cropper = null;
     }
+
+    // Prevent the default behavior of the remove button (e.g., form submission)
+    event.preventDefault();
 }
 
 

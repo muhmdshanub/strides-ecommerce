@@ -1,5 +1,7 @@
 <%- include('../layouts/admin-header') -%>
 
+
+</style>
     <body id="reportsPage">
 
         <%- include('../layouts/admin-navbar') -%>
@@ -186,31 +188,103 @@
             </div>
 
 
+            
+
+
+            <div id="customModal" class="modal" tabindex="-1" role="dialog">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Delete Product</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Are you sure you want to to delete this product ?</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="closeModal()">No</button>
+                            <button type="button" class="btn btn-primary" id="productIdInput" onclick="deleteProduct()" >Yes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="customModalBulk" class="modal" tabindex="-1" role="dialog">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Delete Products</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Are you sure you want to to delete these selected products ?</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="closeModalBulk()">No</button>
+                            <button type="button" class="btn btn-primary" id="bulkDeleteConfirmButton"   >Yes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <script>
-                function confirmDelete(productId) {
-                    const isConfirmed = confirm('Are you sure you want to delete this product?');
 
-                    if (isConfirmed) {
-                        window.location.href = '/admin/products-delete/' + productId;
-                    }
+                
+                
+                function confirmDelete(productId) {
+                    // Show the custom modal
+                    document.getElementById('customModal').style.display = 'flex';
+
+                    // Add productId to a hidden input if needed
+                    document.getElementById('productIdInput').value = productId;
+                }
+
+                function deleteProduct() {
+                        // Get the productId from the hidden input
+                        const productId = document.getElementById('productIdInput').value;
+
+                        // Redirect to delete endpoint
+                         window.location.href = '/admin/products-delete/' + productId;
+
+                        // Close the modal
+                        closeModal();
+                }
+
+                function closeModal() {
+                    // Hide the custom modal
+                    document.getElementById('customModal').style.display = 'none';
+                }
+
+                function closeModalBulk() {
+                    // Hide the custom modal
+                    document.getElementById('customModalBulk').style.display = 'none';
                 }
 
 
+
                 document.addEventListener('DOMContentLoaded', function () {
+
+                    
                     const bulkDeleteButton = document.getElementById('btnBulkDelete');
                     const checkboxes = document.querySelectorAll('.tm-product-checkbox');
 
                     // Bulk delete
                     bulkDeleteButton.addEventListener('click', async function () {
-                        const selectedProductIds = Array.from(checkboxes)
+
+                        // Show the custom modal
+                        document.getElementById('customModalBulk').style.display = 'flex';
+
+                        const bulkDeleteConfirmButton  = document.getElementById('bulkDeleteConfirmButton');
+
+                        bulkDeleteConfirmButton.addEventListener('click', async function () {
+                            
+                            const selectedProductIds = Array.from(checkboxes)
                             .filter(checkbox => checkbox.checked)
                             .map(checkbox => checkbox.getAttribute('data-product-id'));
-
-                        const isConfirmed = confirm('Are you sure you want to delete the selected products?');
-
-                        if (isConfirmed) {
-
 
                             try {
                                 const response = await fetch('/admin/products-bulk-delete', {
@@ -222,18 +296,20 @@
                                 });
 
                                 if (response.ok) {
+                                    closeModalBulk();
                                     // Redirect to the product list page after successful bulk delete
                                     window.location.href = '/admin/products-list';
                                 } else {
                                     console.error('Bulk delete failed');
                                 }
                             } catch (error) {
+                                closeModalBulk();
                                 console.error('Error bulk deleting products:', error);
                             }
-                        }
-
-
+                        });
                     });
+
+                    
                 });
             </script>
 

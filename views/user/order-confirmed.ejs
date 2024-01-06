@@ -6,7 +6,8 @@
         <main class="container">
             <div class="row col-12">
                 <div class="col-md-8 offset-md-2 p-3">
-
+                    <!-- Button to navigate to Orders -->
+                    <a href="/list-profile-orders" class="btn btn-primary mt-3 w-100 mb-5">VBiew details about all orders</a>
                     <!-- Congratulations Section -->
                     <section class="border rounded">
                         <div class="d-flex justify-content-center">
@@ -22,7 +23,7 @@
 
                     <!-- Order Details Section -->
                     
-            <% orders.forEach(order => { %>
+            <% orders?.forEach(order => { %>
 
                 <section class="row border rounded p-3 ml-1">
                     <h5 class="col-md-12 pl-2 mb-3">Order Details : </h5>
@@ -33,17 +34,18 @@
                         <p>Quantity: <%= order.quantity %></p>
                     </div>
                     <div class="col-md-5 mb-1 pb-1">
-                        <p>Total Initial Price: $<%= order.totalInitialMrp %></p>
-                        <p>Discount Amount: $<%= order.totalInitialMrp - order.totalFinalAmount %></p>
+                        <p>Total Initial Price: <%= order.totalInitialMrp %></p>
+                        <p>Discount Amount: <%= order.totalInitialMrp - order.totalFinalAmount %></p>
                         
                     </div>
                     <div class="col-md-5 mb-2 pb-1 mt-3">
-                        <p style="font-size: larger; font-weight: 600;">Total MRP: $<%= order.totalFinalAmount %></p>
+                        <p style="font-size: larger; font-weight: 600;">Total MRP: <%= order.totalFinalAmount %></p>
                     </div>
                 </section>
 
                 <% }); %>
                     <!-- Shipping Address Section -->
+                    <% if(orders?.address){ %>
                     <section class="border rounded p-3">
                         <h5>Shipping Address : </h5>
                         <!-- Placeholder for address details content -->
@@ -59,6 +61,7 @@
                         </div>
                     </section>
 
+                    <% } %>
                     <!-- Home Button Section -->
                     <section class="border rounded p-3 ">
                         <div class="row d-flex justify-content-center my-3 py-2">
