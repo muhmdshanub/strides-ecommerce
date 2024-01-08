@@ -10,9 +10,9 @@
                     </div>
 
                     <div class="col-6 col-md-4 order-2 order-md-1 site-search-icon text-left ">
-                        <form action="" class="site-block-top-search">
+                        <form action="/products" method="GET" class="site-block-top-search">
                             <span class="icon icon-search2 px-3"></span>
-                            <input type="text" class="form-control border-0 pl-5" placeholder="Search">
+                            <input type="text" name="search" class="form-control border-0 pl-5" placeholder="Search">
                         </form>
                     </div>
 
@@ -57,9 +57,11 @@
                                 MEN
                             </a>
                             <div class="dropdown-menu" aria-labelledby="menDropdown">
-                                <a class="dropdown-item" href="/products">Casual Shoes</a>
-                                <a class="dropdown-item" href="/products">Formal Shoes</a>
-                                <a class="dropdown-item" href="/products">Sports Shoes</a>
+                                <% categories.forEach(category => { %>
+                                    <a class="dropdown-item" href="/products?gender=men&category=<%= category._id %>">
+                                      <%= category.name %>
+                                    </a>
+                                  <% }); %>
                             </div>
                         </li>
 
@@ -69,9 +71,11 @@
                                 WOMEN
                             </a>
                             <div class="dropdown-menu" aria-labelledby="menDropdown">
-                                <a class="dropdown-item" href="#">Casual Shoes</a>
-                                <a class="dropdown-item" href="#">Formal Shoes</a>
-                                <a class="dropdown-item" href="#">Sports Shoes</a>
+                                <% categories.forEach(category => { %>
+                                    <a class="dropdown-item" href="/products?gender=women&category=<%= category._id %>">
+                                      <%= category.name %>
+                                    </a>
+                                  <% }); %>
                             </div>
                         </li>
 
@@ -81,9 +85,11 @@
                                 UNISEX
                             </a>
                             <div class="dropdown-menu" aria-labelledby="menDropdown">
-                                <a class="dropdown-item" href="#">Casual Shoes</a>
-                                <a class="dropdown-item" href="#">Formal Shoes</a>
-                                <a class="dropdown-item" href="#">Sports Shoes</a>
+                                <% categories.forEach(category => { %>
+                                    <a class="dropdown-item" href="/products?gender=unisex&category=<%= category._id %>">
+                                      <%= category.name %>
+                                    </a>
+                                  <% }); %>
                             </div>
                         </li>
 

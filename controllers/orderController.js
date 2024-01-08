@@ -12,6 +12,15 @@ const sendOtpEmail = require('../utils/sendEmail');
 const bcrypt = require('bcrypt');
 const { NetworkContextImpl } = require('twilio/lib/rest/supersim/v1/network');
 
+async function getAllCategories() {
+    try {
+      const categories = await Category.find();
+      return categories;
+    } catch (error) {
+      throw error;
+    }
+  }
+
 
 const profileOrdersLoader = async (req, res, next) => {
     try {
@@ -32,9 +41,10 @@ const profileOrdersLoader = async (req, res, next) => {
             })
             .exec();
 
+        const categoriesData = await  getAllCategories();
 
         // Render the payment-selection page with the first address and cart details
-        res.render('./user/profile/orders.ejs',  { orders });
+        res.render('./user/profile/orders.ejs',  { orders,categories : categoriesData });
 
     } catch (error) {
         console.log(error.message);
@@ -245,9 +255,10 @@ const codPlaceOrderHandler = async (req, res, next) => {
         cart.totalDiscountAmount = parseFloat(cart.totalInitialAmount - cart.totalAmount).toFixed(2);
 
         if (invalidItems.length > 0) {
+            const categories = await getAllCategories();
             // If there are invalid items, redirect to the cart page with the invalid items
             req.flash('error', "You have some invalid items in your cart. Please click On the MOVE TO ADDDRESS button to know more.")
-            return res.render('./user/cart', { invalidItems, cart });
+            return res.render('./user/cart', { invalidItems, cart , categories});
         }
 
         //updating the order model
@@ -325,7 +336,8 @@ const codPlaceOrderHandler = async (req, res, next) => {
 
         if (cartUpdate) {
 
-            res.render('./user/order-confirmed.ejs',{ orders: orderUpdates });
+                const categories = await getAllCategories();
+            res.render('./user/order-confirmed.ejs',{ orders: orderUpdates, categories });
         }
 
 

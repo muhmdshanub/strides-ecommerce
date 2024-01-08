@@ -14,6 +14,8 @@ const sendOtpEmail = require('../utils/sendEmail'); // Your function to send OTP
 const bcrypt = require('bcrypt');
 
 
+
+
 const CategoryListLoaderAdmin = async (req, res, next) => {
     try {
         const page = parseInt(req.query.page) || 1;

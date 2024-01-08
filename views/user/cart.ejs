@@ -300,7 +300,7 @@ function updateQuantity(itemId, operation) {
   }
 
   const updater = (operation === "add") ? 1 : -1;
-  displayInput.value = parseInt(displayInput.value) + updater;
+  
 
   const URL = `/cart-item-quantity-update?itemId=${parsedItemId}&operation=${updater}`;
 
@@ -311,8 +311,10 @@ function updateQuantity(itemId, operation) {
   })
     .then(response => {
       if (!response.ok) {
+        
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
+      displayInput.value = parseInt(displayInput.value) + updater;
       // Reload the page upon a successful update
       location.reload();
     })

@@ -11,7 +11,14 @@ const Wishlist = require('../models/wishlistModel');
 const sendOtpEmail = require('../utils/sendEmail');
 const bcrypt = require('bcrypt');
 
-
+async function getAllCategories() {
+    try {
+      const categories = await Category.find();
+      return categories;
+    } catch (error) {
+      throw error;
+    }
+  }
 
 const addToCartHandler = async (req, res, next) => {
     try {
@@ -184,9 +191,12 @@ const cartLoader = async (req, res, next) => {
         cart.totalAmount = parseFloat(cart.items.reduce((total, item) => total + item.totalAmount, 0)).toFixed(2);
         cart.totalInitialAmount = parseFloat(cart.items.reduce((total, item) => total + item.totalInitialAmount, 0)).toFixed(2);
 
+        const categoriesData = await  getAllCategories();
+
         // Render the cart page with cart details
         res.render('./user/cart.ejs', {
-            cart
+            cart,
+            categories : categoriesData,
         });
     } catch (error) {
         console.log(error.message);
@@ -278,7 +288,7 @@ const cartItemQuantityUpdateHandler = async (req, res, next) => {
                 }
 
                 if (cartData.items[itemIndex].quantity === 1 && operation === -1 || cartData.items[itemIndex].quantity === 10 && operation === 1) {
-                    console.log("MAximum or minimum reached.")
+                    console.log("Maximum or minimum reached.")
                     return res.redirect('/cart');
                 }
 
@@ -288,11 +298,21 @@ const cartItemQuantityUpdateHandler = async (req, res, next) => {
                 // Fetch the product from the Product collection
                 const product = await Products.findOne({ _id: productId });
 
+                
+
                 if (!product) {
                     console.log("Product not found")
                     return res.status(404).json({ message: 'Corresponding Product not found' });
                 }
 
+                const size = cartData.items[itemIndex].size;
+                const availableStock = product.sizes[0][`${size}`].availableStock;
+
+
+                if (cartData.items[itemIndex].quantity === availableStock && operation === 1) {
+                    console.log("Maximum available stock is reached.")
+                    return res.status(404).json({ message: 'Maximum available stock is reached' });
+                }
                 // Now you can access the initialPrice
 
 

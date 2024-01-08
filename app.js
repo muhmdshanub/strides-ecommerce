@@ -5,6 +5,8 @@ const {cacheBlock} = require('./middlewares/cacheBlock');
 const userRoute = require('./routes/userRoute');
 const adminRoute = require('./routes/adminRoute');
 
+const Category = require('./models/categoryModel')
+
 const app = express ();
 
 app.set('view engine', 'ejs');
@@ -26,8 +28,10 @@ app.use('*', (req, res, next) => {
     next(err);
   });
 
-app.use((err, req, res, next) => {
+app.use( async (err, req, res, next) => {
     const statusCode = err.status || 500;
+
+    const categories = await Category.find();
     
     if (req.session.adminId) {
         // Admin is logged in
@@ -40,6 +44,7 @@ app.use((err, req, res, next) => {
         return res.status(statusCode).render('./user/error', {
             status: statusCode,
             message: err.message || 'Internal Server Error',
+            categories,
         });
     } else {
         // No login details

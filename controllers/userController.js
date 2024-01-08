@@ -12,6 +12,14 @@ const sendOtpEmail = require('../utils/sendEmail');
 
 const bcrypt = require('bcrypt');
 
+async function getAllCategories() {
+    try {
+      const categories = await Category.find();
+      return categories;
+    } catch (error) {
+      throw error;
+    }
+}
 
 //logging out admin
 const logoutHandler = async (req, res, next) => {
@@ -567,7 +575,9 @@ const forgotPasswordUpdateHandler = async (req, res, next) =>{
 
 const homeLoader = async (req, res, next) => {
     try {
-        res.render('./user/home.ejs')
+        const categories = await getAllCategories();
+
+        res.render('./user/home.ejs',{categories})
     } catch (error) {
         console.log(error.message);
         next(error)
@@ -646,13 +656,15 @@ const paymentSelectionLoader = async (req, res, next) => {
         cart.totalInitialAmount = parseFloat(cart.items.reduce((total, item) => total + item.totalInitialAmount, 0)).toFixed(2);
         cart.totalDiscountAmount = parseFloat(cart.totalInitialAmount - cart.totalAmount).toFixed(2);
 
+        const categories = await getAllCategories();
+
         if (invalidItems.length > 0) {
             // If there are invalid items, redirect to the cart page with the invalid items
             req.flash('error', "You have some invalid items in your cart. Please click On the MOVE TO ADDDRESS button to know more.")
-            return res.render('./user/cart', { invalidItems, cart });
+            return res.render('./user/cart', { invalidItems, cart, categories });
         } else {
             // Render the payment-selection page with the first address and cart details
-            res.render('./user/payment-selection.ejs', { firstAddress, user, cart });
+            res.render('./user/payment-selection.ejs', { firstAddress, user, cart, categories});
         }
 
 
@@ -675,8 +687,9 @@ const profileLoader = async (req, res, next) => {
 
         user.stringDateOfBirth = `${day}-${month}-${year}`;
 
+        const categories = await getAllCategories();
 
-        res.render('./user/profile/profile.ejs', { user });
+        res.render('./user/profile/profile.ejs', { user , categories });
 
     } catch (error) {
         console.log(error.message)

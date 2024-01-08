@@ -1,40 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    .heart {
-      width: 100px;
-      height: 100px;
-      background-color: red;
-      position: relative;
-      transform: rotate(-45deg);
-      margin: 50px;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Page Title</title>
 
-    .heart::before,
-    .heart::after {
-      content: '';
-      width: 100px;
-      height: 100px;
-      background-color: red;
-      border-radius: 50%;
-      position: absolute;
-    }
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
 
-    .heart::before {
-      top: -50px;
-      left: 0;
-    }
+    <!-- ElevateZoom CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/elevatezoom/3.0.8/jquery.elevatezoom.min.css" />
 
-    .heart::after {
-      top: 0;
-      left: 50px;
-    }
-  </style>
+    <!-- jQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+    <!-- ElevateZoom JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/elevatezoom/3.0.8/jquery.elevatezoom.min.js"></script>
+
+    <style>
+        .stretch-card > .card { width: 100%; min-width: 100%; }
+        body { background-color: #f9f9fa; }
+        .flex { -webkit-box-flex: 1; -ms-flex: 1 1 auto; flex: 1 1 auto; }
+        @media (max-width: 991.98px) { .padding { padding: 1.5rem; } }
+        @media (max-width: 767.98px) { .padding { padding: 1rem; } }
+        .padding { padding: 3rem; }
+        .card .card-title { color: #000000; margin-bottom: 0.625rem; text-transform: capitalize; font-size: 0.875rem; font-weight: 500; }
+        .card .card-description { margin-bottom: .875rem; font-weight: 400; color: #76838f; }
+        .mainimage { width: 100% !important; max-width: 100%; height: auto; }
+    </style>
 </head>
 <body>
-  <div class="heart"></div>
+    <div class="page-content page-container" id="page-content">
+        <div class="padding">
+            <div class="row container d-flex justify-content-center">
+                <div class="col-md-10 grid-margin stretch-card">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Image Zoom Example</h4>
+                            <p class="card-description">Basic Image Zoom Example with ElevateZoom</p>
+                            <img id="zoom-image" class="mainimage" src="https://img.freepik.com/premium-photo/closeup-drop-water-leaf-flower-reflecting-surrounding-colors-textures_674594-4382.jpg" alt="Main Image" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            $('#zoom-image').elevateZoom({
+                zoomType: "inner",
+                cursor: "crosshair",
+                scrollZoom: false
+            });
+        });
+    </script>
 </body>
 </html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Zoom</title>
+  <!-- React and ReactDOM CDN links -->
+  <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+  <!-- ReactImageMagnify CDN links -->
+  <script src="https://unpkg.com/react-image-magnify/dist/ReactImageMagnify.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- Your component script -->
+  <script type="module">
+    // Destructure the needed components directly from the global React object
+    const { useState, useRef, useEffect } = React;
+    const { render } = ReactDOM;
+    const { ReactImageMagnify } = window.ReactImageMagnify;
+
+    const ImageMagnifyExample = () => {
+      const [isZoomed, setIsZoomed] = useState(false);
+
+      const handleZoomToggle = () => {
+        setIsZoomed(!isZoomed);
+      };
+
+      return (
+        <ReactImageMagnify
+          {...{
+            smallImage: {
+              alt: 'Zoomable Image',
+              isFluidWidth: true,
+              src: '../../public/images/logo.jpg', // Adjust the path as needed
+            },
+            largeImage: {
+              src: '../../public/images/logo.jpg', // Adjust the path as needed
+              width: 1200,
+              height: 1800,
+            },
+            lensStyle: { backgroundColor: 'rgba(0, 0, 0, 0.6)' },
+            isActivatedOnTouch: true,
+            shouldHideHintAfterFirstActivation: false,
+            enlargedImagePosition: 'over',
+            hoverDelayInMs: 0,
+          }}
+        />
+      );
+    };
+
+    render(<ImageMagnifyExample />, document.getElementById('root'));
+  </script>
+</body>
+</html>

@@ -288,6 +288,9 @@
                             </div>
                         </div>
                         
+                        <!-- Include hidden input fields for searchQuery and sortOption -->
+                        <input type="hidden" name="search" value="<%= searchQuery %>">
+                        <input type="hidden" name="sort" value="<%= sortOption %>">
 
                         <button type="submit" class="btn btn-primary">Filter Now</button>
                     </form>
@@ -306,37 +309,78 @@
                     <div class="container-fluid">
 
                         <div class="row mb-5">
-                            <div class="col-12 order-2">
+                            <div class="col-10 px-0 offset-1 border rounded">
 
                                 <!-- Filter button -->
                                 <span style="font-size:30px;cursor:pointer; z-index: 3000;" onclick="openNav()">&#9776; Filter </span>
-
-                                <div class="row">
-                                    <div class="col-md-12 mb-5">
-                                        <div class="d-flex">
-                                            <div class="ml-auto">
-                                                <div class="btn-group">
-                                                    <button type="button"
-                                                        class="btn btn-secondary btn-sm dropdown-toggle"
-                                                        id="dropdownMenuReference" data-toggle="dropdown">Sort
-                                                        By</button>
-                                                    <div class="dropdown-menu" aria-labelledby="dropdownMenuReference">
-                                                        <a class="dropdown-item" href="#">Latest Products</a>
-                                                        <a class="dropdown-item" href="#">Popularity</a>
-                                                        <div class="dropdown-divider"></div>
-                                                        <a class="dropdown-item" href="#">Price, low to high</a>
-                                                        <a class="dropdown-item" href="#">Price, high to low</a>
+                                
+                                
+                                
+                                <% function generateSortLink(sortOption, filters, searchQuery) { const queryString=Object.entries(filters)
+                                    .filter(([key, value])=> value != null)
+                                    .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+                                    .join('&');
+                                
+                                    const search = searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : '';
+                                
+                                    return `/products?sort=${sortOption}${queryString ? `&${queryString}` : ''}${search}`;
+                                    } 
+                                %>
+                                    <div class="row">
+                                        <div class="col-md-12 mb-5">
+                                            <div class="d-flex">
+                                                <div class="ml-auto">
+                                                    <div class="btn-group">
+                                                        <button type="button" class="btn btn-secondary btn-sm dropdown-toggle"
+                                                            id="dropdownMenuReference" data-toggle="dropdown">
+                                                            Sort By : <%= (sortOption && sortOption !== 'createdAt') ? sortOption : 'Latest Products' %>
+                                                        </button>
+                                                        <div class="dropdown-menu" aria-labelledby="dropdownMenuReference">
+                                                            <a class="dropdown-item" href="<%= generateSortLink('Latest Products', selectedFilters, searchQuery) %>">
+                                                                Latest Products
+                                                            </a>
+                                                            <a class="dropdown-item" href="<%= generateSortLink('Popularity', selectedFilters, searchQuery) %>">
+                                                                Popularity
+                                                            </a>
+                                                            <div class="dropdown-divider"></div>
+                                                            <a class="dropdown-item"
+                                                                href="<%= generateSortLink('Price, low to high', selectedFilters, searchQuery) %>">
+                                                                Price, low to high
+                                                            </a>
+                                                            <a class="dropdown-item"
+                                                                href="<%= generateSortLink('Price, high to low', selectedFilters, searchQuery) %>">
+                                                                Price, high to low
+                                                            </a>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <div class="row mb-5 col-12">
-                                    <%
-                                        for(let i=0; i<products.length;i++) {
-                                    %>
+                                    <div class="container-fluid mb-4">
+                                        <div class="card text-black ">
+                                            <div class="card-body">
+                                                <% if (searchQuery) { %>
+                                                    <h4 class="card-title text-left">
+                                                        Search results for: <span class='ml-3' style='font-weight: 700;'>"<%=searchQuery%>"</span>
+
+                                                        <a href="/products" class="btn btn-warning ml-3">Clear</a>
+                                                    </h4>
+                                                    <% } else { %>
+                                                        <h4 class="card-title text-left">
+                                                            All Products
+                                                        </h4>
+                                                        <% } %>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                <div class="row mb-5 col-12 ">
+                                    <div class="row border rounded col-12 mx-3 pt-3">
+                                        <%
+                                            for(let i=0; i<products.length;i++) {
+                                        %>
                                         <div class="col-10 offset-1 offset-sm-0 col-sm-6 col-md-4 col-lg-4 col-xl-3 mb-4" data-aos="fade-up">
                                             <div class="block-4 text-center border">
                                                 <figure class="block-4-image">
@@ -409,6 +453,15 @@
 
                                         <%}%>
 
+                                        <%if(products.length < 1 && searchQuery.length >0){ %>
+
+                                            <h4>No products related to the search  "<%=searchQuery%>" Found.</h4>
+                                        
+
+                                       <%}%>
+                                    
+                                    </div>
+
 
 
 
@@ -420,28 +473,30 @@
                                     <div class="col-md-12 text-center">
                                         <div class="site-block-27">
 
-                                            <% function generatePageLink(pageNumber, filters) { const
-                                                queryString=Object.entries(filters) .filter(([key, value])=> value !=
-                                                null) // Exclude null or undefined values
+                                            <% function generatePageLink(pageNumber, filters, sortOption, searchQuery) { const queryString=Object.entries(filters)
+                                                .filter(([key, value])=> value != null)
                                                 .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
-                                                .join(' &'); return `/products?page=${pageNumber}${queryString ?
-                                            `&${queryString}` : '' }`; } %>
-
+                                                .join('&');
+                                                const sortString = sortOption ? `&sort=${sortOption}` : '';
+                                                const search = searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : '';
+                                            
+                                                return `/products?page=${pageNumber}${queryString ? `&${queryString}` : ''}${sortString}${search}`;
+                                                } %>
 
                                             <% if (currentPage> 1) { %>
-                                                <a href="<%= generatePageLink(currentPage - 1, selectedFilters) %>"
+                                                <a href="<%= generatePageLink(currentPage - 1, selectedFilters, sortOption, searchQuery) %>"
                                                     class="prev border rounded px-2 mx-1">&lt;</a>
                                                 <% } %>
 
                                                     <% for (let i=1; i <=totalPages; i++) { %>
-                                                        <a href="<%= generatePageLink(i, selectedFilters) %>"
+                                                        <a href="<%= generatePageLink(i, selectedFilters, sortOption, searchQuery) %>"
                                                             class="<%= i === currentPage ? 'active' : '' %> border rounded px-2 mx-1">
                                                             <%= i %>
                                                         </a>
                                                         <% } %>
 
                                                             <% if (currentPage < totalPages) { %>
-                                                                <a href="<%= generatePageLink(currentPage + 1, selectedFilters) %>"
+                                                                <a href="<%= generatePageLink(currentPage + 1, selectedFilters, sortOption, searchQuery) %>"
                                                                     class="next border rounded px-2 mx-1"> &gt;</a>
                                                                 <% } %>
 

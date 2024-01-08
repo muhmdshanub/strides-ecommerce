@@ -13,6 +13,15 @@ const sendOtpEmail = require('../utils/sendEmail');
 
 const bcrypt = require('bcrypt');
 
+async function getAllCategories() {
+    try {
+      const categories = await Category.find();
+      return categories;
+    } catch (error) {
+      throw error;
+    }
+  }
+
 
 const addToWishlistHandler = async (req, res, next) => {
     try {
@@ -172,9 +181,9 @@ const wishlistLoader = async (req, res, next) => {
             return isAnySizeAvailable;
         });
 
-
+        const categories = await getAllCategories()
         // Render the wishlist page with the populated wishlist data
-        return res.render('./user/wishlist', { wishlist });
+        return res.render('./user/wishlist', { wishlist, categories });
 
     } catch (error) {
         console.error('Error loading wishlist:', error);

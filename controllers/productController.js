@@ -13,6 +13,16 @@ const sendOtpEmail = require('../utils/sendEmail'); // Your function to send OTP
 
 const bcrypt = require('bcrypt');
 
+
+async function getAllCategories() {
+    try {
+      const categories = await Category.find();
+      return categories;
+    } catch (error) {
+      throw error;
+    }
+  }
+
 const getFilterOptions = async () => {
     try {
         const brands = await Products.distinct('brandName', { isDeleted: false });
@@ -33,6 +43,9 @@ const productListLoader = async (req, res, next) => {
         const userId = req.session.userId;
         const page = parseInt(req.query.page) || 1;
         const pageSize = 10; // Set the number of products to display per page
+
+        // Extracting the search query from the request
+        const searchQuery = req.query.search || '';
 
 
         // Extracting filter parameters from the query
@@ -136,13 +149,42 @@ const productListLoader = async (req, res, next) => {
             }
         }
 
+        // Extracting sorting parameter from the query
+        const sortOption = req.query.sort || 'craetedAt'; // Default to sorting by creation date if not provided
+
+        // Constructing the sort object based on the query parameter
+        const sortObject = {};
+        if (sortOption === 'Latest Products') {
+            sortObject.createdAt = -1; // Sort by creation date in descending order (latest first)
+        } else if (sortOption === 'Popularity') {
+            sortObject.popularity = -1;
+        } else if (sortOption === 'Price, low to high') {
+            sortObject.finalPrice = 1; // Sort by final price in ascending order
+        } else if (sortOption === 'Price, high to low') {
+            sortObject.finalPrice = -1; // Sort by final price in descending order
+        }
+
+        //search logic
+        if (typeof searchQuery === 'string' && searchQuery.trim().length > 0) {
+            const searchWords = searchQuery.trim().split(/\s+/); // Split the search query into words
+        
+            // Construct an array of regex conditions for each word
+            const regexConditions = searchWords.map(word => ({
+                $or: [
+                    { brandName: { $regex: new RegExp(word, 'i') } }, // Case-insensitive brandName match
+                    { productName: { $regex: new RegExp(word, 'i') } }, // Case-insensitive productName match
+                    { colors: { $elemMatch: { $in: [new RegExp(word, 'i')] } } }, // Case-insensitive color match
+                    { description: { $regex: new RegExp(word, 'i') } }, // Case-insensitive description match
+                    { gender: { $regex: new RegExp(word, 'i') } }, // Case-insensitive gender match
+                ],
+            }));
+        
+            // Combine the regex conditions with $and
+            filterObject.$and = regexConditions;
+        }
 
 
-
-
-
-
-        const result = await Products.paginate(filterObject, { page: page, limit: pageSize });
+        const result = await Products.paginate(filterObject, { page: page, limit: pageSize, sort: sortObject });
 
         const filterOptions = await getFilterOptions();
 
@@ -156,13 +198,17 @@ const productListLoader = async (req, res, next) => {
             ...(minPriceFilter !== null && !isNaN(minPriceFilter) && { minPrice: minPriceFilter }),
             ...(maxPriceFilter !== null && !isNaN(maxPriceFilter) && { maxPrice: maxPriceFilter }),
             ...(discountFilter !== null && !isNaN(discountFilter) && { discount: discountFilter }),
+
         };
+
+
 
         Object.keys(selectedFilters).forEach((key) => selectedFilters[key] == null && delete selectedFilters[key]);
 
 
         //getting wishlist document
         const userWishlist = await Wishlist.findOne({ user: userId });
+        const categories = await  getAllCategories();
 
         res.render('./user/productList.ejs', {
             products: result.docs,
@@ -171,6 +217,9 @@ const productListLoader = async (req, res, next) => {
             filterOptions: filterOptions,
             selectedFilters: selectedFilters,
             userWishlist: userWishlist,
+            sortOption: sortOption,
+            searchQuery: searchQuery,
+            categories,
         });
     } catch (error) {
         console.log(error.message);
@@ -190,9 +239,9 @@ const productSingleLoader = async (req, res, next) => {
         }
 
         const productData = await Products.findById(productId).populate('category');
-
+        const categories = await getAllCategories();
         if (productData) {
-            res.render('./user/product-single.ejs', { product: productData });
+            res.render('./user/product-single.ejs', { product: productData, categories });
         } else {
             const genericErrorMessage = 'Invalid user details:';
             const genericError = new Error(genericErrorMessage);

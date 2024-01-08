@@ -31,20 +31,22 @@ const stockSchema = new mongoose.Schema({
       image3: { name: { type: String, required: true } },
       image4: { name: { type: String, required: true } },
     },
-    brandName: { type: String, required: true },
-    productName: { type: String, required: true },
+    brandName: { type: String, required: true, text: true },
+    productName: { type: String, required: true, text: true  },
     initialPrice: { type: Number, required: true },
-    description: { type: String, required: true },
+    description: { type: String, required: true, text: true  },
     discountPercentage: { type: Number, required: true },
     finalPrice: { type: Number },
     category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
-    gender: { type: String, required: true },
-    colors: [{ type: String }],
+    gender: { type: String, required: true, text: true  },
+    colors: [{ type: String, text: true  }],
     sizes: [stockSchema],
     addedDate: { type: Date, default: Date.now },
     popularity: { type: Number, default: 0 },
     isDeleted: { type: Boolean, default: false },
   });
+
+  productSchema.index({ brandName: 'text', productName: 'text', description: 'text', colors: 'text', gender: 'text' });
 
 // Custom validator function to ensure the images array has exactly 4 elements
 function arrayLengthValidator(val) {
