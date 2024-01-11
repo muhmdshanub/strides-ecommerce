@@ -6,6 +6,7 @@ const cartController = require('../controllers/cartController')
 const wishlistController = require('../controllers/wishlistController')
 const orderController = require('../controllers/orderController.js')
 const addressController = require('../controllers/addressController.js')
+const paymentController = require('../controllers/paymentController')
 const auth = require('../middlewares/loginAuth')
 
 const userRoute = express();
@@ -59,6 +60,14 @@ userRoute.get('/payment-selection',auth.isLogin,userController.paymentSelectionL
 userRoute.get('/cod-place-order/:addressId',auth.isLogin,orderController.codPlaceOrderHandler);
 
 
+
+userRoute.post('/razorpay-place-order/:addressId',auth.isLogin,orderController.razorpayPlaceOrderHandler);
+
+
+
+userRoute.post('/verify-razorpay-payment/:razorpay_order_id',auth.isLogin,orderController.razorpayVerifyPaymentHandler);
+
+userRoute.get('/order-confirm/:paymentDBId',auth.isLogin,paymentController.orderConfirmLoader)
 
 userRoute.get('/profile',auth.isLogin,userController.profileLoader);
 userRoute.post('/profile-user-edit',auth.isLogin,userController.profileUserEditHandler);

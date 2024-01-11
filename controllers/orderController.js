@@ -8,18 +8,21 @@ const Products = require('../models/productModel');
 const Cart = require('../models/cartModel');
 const Order = require('../models/orderModel');
 const Wishlist = require('../models/wishlistModel');
+const Payment = require('../models/paymentModel');
 const sendOtpEmail = require('../utils/sendEmail');
 const bcrypt = require('bcrypt');
+const razorpay = require('razorpay');
+const crypto = require( 'crypto' );
 const { NetworkContextImpl } = require('twilio/lib/rest/supersim/v1/network');
 
 async function getAllCategories() {
     try {
-      const categories = await Category.find();
-      return categories;
+        const categories = await Category.find();
+        return categories;
     } catch (error) {
-      throw error;
+        throw error;
     }
-  }
+}
 
 
 const profileOrdersLoader = async (req, res, next) => {
@@ -41,10 +44,10 @@ const profileOrdersLoader = async (req, res, next) => {
             })
             .exec();
 
-        const categoriesData = await  getAllCategories();
+        const categoriesData = await getAllCategories();
 
         // Render the payment-selection page with the first address and cart details
-        res.render('./user/profile/orders.ejs',  { orders,categories : categoriesData });
+        res.render('./user/profile/orders.ejs', { orders, categories: categoriesData });
 
     } catch (error) {
         console.log(error.message);
@@ -75,7 +78,7 @@ const profileOrdersCancelHandler = async (req, res, next) => {
 
         // Check if the current status is 'Placed'
         if (order.status !== 'Placed') {
-            
+
             const genericErrorMessage = 'Cannot cancel the order right now. : ';
             const genericError = new Error(genericErrorMessage);
             genericError.status = 400;
@@ -113,30 +116,30 @@ const profileOrdersReturnHandler = async (req, res, next) => {
         if (!order) {
             return res.status(404).json({ message: 'Order not found for the user' });
         }
-        if(order.deliveredDate){
+        if (order.deliveredDate) {
             deliveredDate = new Date(order.deliveredDate);
             currentDate = new Date();
             daysDifference = Math.abs(deliveredDate - currentDate) / (1000 * 60 * 60 * 24);
-            
+
             // Check if the current status is 'Delivered'
             if (order.status === 'Delivered' && daysDifference <= 10) {
                 // Change the status of the document to 'Cancelled'
                 order.status = 'Returned';
                 const updatedOrder = await order.save();
-                 // Send back the new updated order details to the client
+                // Send back the new updated order details to the client
                 res.json({ message: 'Order returned successfully', order: updatedOrder });
 
-            }else{
+            } else {
                 return res.status(400).json({ message: 'Cannot return the order. Either the order status is not "Delivered" or the return period has expired.' });
-                const genericErrorMessage = 'cannot return the order : ' ;
+                const genericErrorMessage = 'cannot return the order : ';
                 const genericError = new Error(genericErrorMessage);
                 genericError.status = 400;
                 throw genericError;
-           
+
             }
         }
- 
-       
+
+
     } catch (error) {
         console.error('Error returning order:', error);
         next(error)
@@ -258,7 +261,7 @@ const codPlaceOrderHandler = async (req, res, next) => {
             const categories = await getAllCategories();
             // If there are invalid items, redirect to the cart page with the invalid items
             req.flash('error', "You have some invalid items in your cart. Please click On the MOVE TO ADDDRESS button to know more.")
-            return res.render('./user/cart', { invalidItems, cart , categories});
+            return res.render('./user/cart', { invalidItems, cart, categories });
         }
 
         //updating the order model
@@ -292,6 +295,17 @@ const codPlaceOrderHandler = async (req, res, next) => {
         // Use Promise.all to wait for all order promises to resolve
         const orderUpdates = await Promise.all(orderPromises);
 
+        //update payment collection
+
+        const payment = new Payment({
+            user: userId,
+            paymentMethod: 'Cash on Delivery',
+            orders: orderUpdates.map(order => order._id),
+            totalAmount: cart.totalAmount,
+        });
+
+        // Save the Payment document
+        const paymentUpdate = await payment.save();
 
         // update product collection
 
@@ -325,7 +339,7 @@ const codPlaceOrderHandler = async (req, res, next) => {
         })
         ));
 
-        if (orderUpdates && productUpdate) {
+        if (orderUpdates && productUpdate && paymentUpdate) {
             // If all updates are successful, remove the cart items
             cart.items = [];
             cart.totalItems = 0;
@@ -336,8 +350,8 @@ const codPlaceOrderHandler = async (req, res, next) => {
 
         if (cartUpdate) {
 
-                const categories = await getAllCategories();
-            res.render('./user/order-confirmed.ejs',{ orders: orderUpdates, categories });
+            
+            res.redirect(`/order-confirm/${paymentUpdate._id}`);
         }
 
 
@@ -345,6 +359,330 @@ const codPlaceOrderHandler = async (req, res, next) => {
         console.log(error.message);
         next(error)
     }
+}
+
+const razorpayPlaceOrderHandler = async (req, res, next) => {
+    try {
+
+
+        const userId = req.session.userId;
+        const addressId = req.params.addressId;
+
+        if (!mongoose.Types.ObjectId.isValid(addressId)) {
+            const genericErrorMessage = 'Invalid address ID: ';
+            const genericError = new Error(genericErrorMessage);
+            genericError.status = 500;
+            throw genericError;
+        }
+
+        if (!userId) {
+            console.log("no valid userID on session")
+            req.flash('error', 'unauthenticated user ID.')
+            return res.redirect('/home')
+        }
+
+        if (!addressId) {
+            console.log("no valid addressId on url")
+            req.flash('error', 'No valid address selected.')
+            return res.redirect('/address')
+        }
+
+        // Find the user document
+        const user = await User.findOne({ _id: userId });
+
+        if (!user) {
+            console.log("user not found on user collection")
+            req.flash('error', 'User not found.');
+            return res.redirect('/home');
+        }
+
+        // Check if the given addressId exists in the user's addresses
+        const selectedAddressIndex = user.addresses.findIndex(address => address._id.toString() === addressId);
+
+        if (selectedAddressIndex === -1) {
+            console.log("Invalid address selected")
+            req.flash('error', 'Invalid address selected.');
+            return res.redirect('/address');
+        }
+
+        // If the selected address is not already at the 0th index, swap it
+        if (selectedAddressIndex !== 0) {
+            // Swap the addresses
+            const temp = user.addresses[0];
+            user.addresses[0] = user.addresses[selectedAddressIndex];
+            user.addresses[selectedAddressIndex] = temp;
+
+            // Save the updated user document
+            userUpdate = await user.save();
+        }
+
+
+        // Fetch user's cart details
+        let cart = await Cart.findOne({ user: userId }).populate({
+            path: 'items.product',
+            match: { isDeleted: false }, // Only populate products that are not deleted
+        });
+
+        // Check for invalidated items in the cart
+        const invalidItems = [];
+
+        for (const item of cart.items) {
+            const product = item.product;
+
+            const selectedSize = item.size;
+
+            // Assuming sizes array has only one element
+            const stockSchema = product.sizes[0];
+
+            // Check if the selected size exists in the stock schema
+            if (!(selectedSize in stockSchema)) {
+                invalidItems.push({
+                    item: item.product,
+                    productName: product.productName,
+                    brandName: product.brandName,
+                    size: selectedSize,
+                    selectedQuantity: item.quantity,
+                    reason: 'Invalid size',
+                });
+                continue;
+            }
+
+            const availableStock = stockSchema[selectedSize].availableStock;
+
+            // Check if availableStock is 0 or quantity is greater than available stock or greater than 10
+            if (availableStock === 0 || item.quantity > 10 || item.quantity > availableStock) {
+                invalidItems.push({
+                    item: item.product,
+                    productName: product.productName,
+                    brandName: product.brandName,
+                    size: selectedSize,
+                    selectedQuantity: item.quantity,
+                    reason: availableStock === 0 ? 'Not available' : (item.quantity > 10 ? 'More than 10' : 'More than available stock'),
+                });
+            }
+        }
+
+        // Calculate total price details for the cart
+        cart.items.forEach(item => {
+            item.totalAmount = item.quantity * item.product.finalPrice;
+            item.totalInitialAmount = item.quantity * item.product.initialPrice;
+        });
+        cart.totalAmount = parseFloat(cart.items.reduce((total, item) => total + item.totalAmount, 0)).toFixed(2);
+        cart.totalInitialAmount = parseFloat(cart.items.reduce((total, item) => total + item.totalInitialAmount, 0)).toFixed(2);
+        cart.totalDiscountAmount = parseFloat(cart.totalInitialAmount - cart.totalAmount).toFixed(2);
+
+        if (invalidItems.length > 0) {
+            const categories = await getAllCategories();
+            // If there are invalid items, redirect to the cart page with the invalid items
+            req.flash('error', "You have some invalid items in your cart. Please click On the MOVE TO ADDDRESS button to know more.")
+            return res.render('./user/cart', { invalidItems, cart, categories });
+        }
+
+        // Store order and payment data in session
+        req.session.orderData = {
+            order: {
+                user: userId,
+                userName: user.name,
+                address: user.addresses[0], // Use the address ID or details as needed
+                product: cart.items.map(item => ({
+                    productId: item.product._id,
+                    productName: item.product.productName,
+                    brandName: item.product.brandName,
+                    size: item.size,
+                    quantity: item.quantity,
+                    totalFinalAmount: item.totalAmount,
+                    totalInitialMrp: item.totalInitialAmount,
+                })),
+            },
+            payment: {
+                user: userId,
+                paymentMethod: 'RazorPay Payment', // Update this if payment method changes
+                totalAmount: cart.totalAmount,
+            },
+        };
+
+        var instance = new razorpay({ key_id: process.env.RAZORPAY_KEY_ID, key_secret: process.env.RAZORPAY_KEY_SECRET })
+
+
+
+        const order = await instance.orders.create({
+            amount: cart.totalAmount * 100,
+            currency: "INR",
+            receipt: "receipt"
+        })
+
+        req.session.orderData.razorPayOrderId = order.id;
+
+        res.json({ order, success: true });
+
+    } catch (error) {
+        console.log(error.message + "here");
+        next(error)
+    }
+}
+
+const razorpayVerifyPaymentHandler = async (req, res) => {
+    
+    try {
+        
+        const razorPayOrderId = req.params.razorpay_order_id;
+        const razorPayPaymentId = req.body.payment_id;
+        const razorPaySignature = req.body.razorpay_signature;
+
+        const userId = req.session.userId;
+
+        // Find the user document
+        const user = await User.findOne({ _id: userId });
+
+        if (!user) {
+            console.log("user not found on user collection")
+            req.flash('error', 'User not found.');
+            return res.redirect('/home');
+        }
+
+
+        // Check if orderData is present in the session
+        if (!req.session.orderData) {
+            console.log("req.session.orderData is not found")
+            return res.json({ success: false, error: 'Order data not found in session' });
+        }
+
+        // Extract necessary data from orderData
+        const { order, payment } = req.session.orderData;
+
+        if (!order || !payment) {
+            console.log("order and payment is not found in req.session.orderData ")
+            return res.json({ success: false, error: 'Incomplete order data in session' });
+        }
+
+        var instance = new razorpay({ key_id: process.env.RAZORPAY_KEY_ID, key_secret: process.env.RAZORPAY_KEY_SECRET });
+
+        // Verify payment with Razorpay
+        const paymentVerificationResponse = await instance.payments.fetch(razorPayPaymentId);
+
+        if (paymentVerificationResponse && paymentVerificationResponse.status === 'captured') {
+            
+            // Check if the payment amount matches the expected amount
+            const expectedAmount = req.session.orderData.payment.totalAmount * 100;
+            const actualAmount = paymentVerificationResponse.amount;
+
+
+            // **Signature verification using Razorpay's secret key:**
+            const expectedSignature = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+                .update(`${razorPayOrderId}|${razorPayPaymentId}`)
+                .digest('hex');
+
+            if (expectedSignature !== razorPaySignature) {
+                console.error('Signature verification failed');
+                return res.json({ success: false, error: 'Invalid signature' });
+            }
+
+            if (expectedAmount !== actualAmount) {
+                console.log("Amount does not matches ")
+                return res.json({ success: false, error: 'Payment amount mismatch' });
+            }
+
+            // Check if the Razorpay Payment ID and Order ID already exist in the Payment collection
+            const existingPayment = await Payment.findOne({
+                razorpayPaymentId: razorPayPaymentId,
+                razorpayOrderId: razorPayOrderId,
+                razorpaySignature:razorPaySignature,
+            });
+
+            if (existingPayment) {
+                console.log("This is an already existing payment ")
+                return res.json({ success: false, error: 'Payment already processed' });
+            }
+
+            // Populate the shipping address details
+            const populatedAddress = await Address.findById(user.addresses[0]);
+
+            // Now, let's create order documents for each product in the orderData
+            const orderPromises = req.session.orderData.order.product.map(async (item) => {
+                try {
+                    // Create an order document for the current item
+                    const order = new Order({
+                        user: req.session.orderData.order.user,
+                        userName: req.session.orderData.order.userName,
+                        address: populatedAddress,
+                        product: item.productId,
+                        productName: item.productName,
+                        brandName: item.brandName,
+                        size: item.size,
+                        quantity: item.quantity,
+                        totalFinalAmount: item.totalFinalAmount,
+                        totalInitialMrp: item.totalInitialMrp,
+                        // Add other fields as needed
+                    });
+
+                    // Save the order document
+                    const savedOrder = await order.save();
+
+                    return savedOrder;
+                } catch (error) {
+                    console.error('Error creating order document:', error);
+                    throw error;
+                }
+            });
+
+            // Use Promise.all to wait for all order promises to resolve
+            const orderUpdates = await Promise.all(orderPromises);
+
+
+            const payment = new Payment({
+                user: req.session.orderData.payment.user,
+                paymentMethod: req.session.orderData.payment.paymentMethod,
+                orders: orderUpdates.map(order => order._id),
+                totalAmount: req.session.orderData.payment.totalAmount,
+                razorpayPaymentId: razorPayPaymentId,
+                razorpayOrderId: razorPayOrderId,
+                razorpaySignature: razorPaySignature,
+            });
+
+            // Save the Payment document
+            const paymentUpdate = await payment.save();
+
+            // Fetch user's cart details
+            let cart = await Cart.findOne({ user: userId }).populate({
+                path: 'items.product',
+                match: { isDeleted: false }, // Only populate products that are not deleted
+            });
+
+            // Save the updated product details to the database
+            const productUpdate = await Products.bulkWrite(cart.items.map(item => ({
+                updateOne: {
+                    filter: { _id: item.product._id },
+                    update: { $set: { sizes: item.product.sizes } },
+                },
+            })
+            ));
+
+            if (orderUpdates && productUpdate && paymentUpdate) {
+                // If all updates are successful, remove the cart items
+                cart.items = [];
+                cart.totalItems = 0;
+                cart.totalAmount = 0;
+
+                cartUpdate = await cart.save();
+            }
+
+            if (cartUpdate) {
+                
+                
+                return res.json({ success: true, paymentDBId : paymentUpdate._id });
+            }
+
+            
+        } else {
+            console.log("payment verification response is not okay or not equals to capture")
+            // Payment verification failed
+            return res.json({ success: false, error: 'Payment verification failed' });
+        }
+    } catch (error) {
+        console.error('Error during payment verification:', error);
+        return res.json({ success: false, error: 'Internal server error' });
+    }
+
 }
 
 const ordersListLoaderAdmin = async (req, res, next) => {
@@ -373,7 +711,7 @@ const ordersListLoaderAdmin = async (req, res, next) => {
         next(error)
     }
 }
-      
+
 const orderStatusUpdateHandlerAdmin = async (req, res, next) => {
     try {
         // Extract values from the request body
@@ -420,6 +758,8 @@ module.exports = {
 
 
     codPlaceOrderHandler,
+    razorpayPlaceOrderHandler,
+    razorpayVerifyPaymentHandler,
     profileOrdersLoader,
     profileOrdersCancelHandler,
     profileOrdersReturnHandler,

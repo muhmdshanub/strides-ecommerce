@@ -86,9 +86,9 @@
       
           <!-- Right Section (8/12 width) -->
           <div class="col-md-6 border payment-show text-center justify-content-center">
-            <!-- Content for the right section goes here -->
-            <!-- Initially, this section can be empty -->
-            <!-- Place Order Now button can be dynamically added later using JavaScript -->
+            
+            
+
           </div>
         </div>
       </div>
@@ -142,19 +142,25 @@
 
 
 
-
+<!--Inside index.html -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <script>
   // Assuming this is triggered when the "Cash on Delivery" button is clicked
-  document.getElementById('cashOnDeliveryBtn').addEventListener('click', function() {
+  document.getElementById('cashOnDeliveryBtn').addEventListener('click', function () {
     // Check if the "Place Order Now" button already exists
     if (!document.getElementById('placeOrderBtn')) {
+
+      // Remove existing elements inside the payment show section
+      document.querySelector('.payment-show').innerHTML = '';
+
+
       // Dynamically add the text above the "Place Order Now" button
-      const infoText = document.createElement('p');
-      infoText.className = 'p-2 mt-3 ';
-      infoText.style = 'background-color:rgb(230, 246, 228)'
-      infoText.textContent = "If you are proceeding with the Cash on Delivery method, please click on the below link to place the order:";
-      document.querySelector('.payment-show').appendChild(infoText);
+      const infoTextCOD = document.createElement('p');
+      infoTextCOD.className = 'p-2 mt-3 ';
+      infoTextCOD.style = 'background-color:rgb(230, 246, 228)'
+      infoTextCOD.textContent = "If you are proceeding with the Cash on Delivery method, please click on the below link to place the order:";
+      document.querySelector('.payment-show').appendChild(infoTextCOD);
 
       // Dynamically add the "Place Order Now" button to the right section
       const placeOrderButton = document.createElement('button');
@@ -163,30 +169,170 @@
       placeOrderButton.textContent = 'Place Order Now';
 
       // Add an event listener or any other logic for the "Place Order Now" button if needed
-       // Event listener for the "Continue To Payment" button
-   placeOrderButton.addEventListener('click', function() {
+      // Event listener for the "Continue To Payment" button
+      placeOrderButton.addEventListener('click', function () {
 
-    
-// Find the selected address radio button
-const selectedAddressRadioButton = document.querySelector('input[name="addressRadio"]:checked');
 
-// Check if any address is selected
-if (!selectedAddressRadioButton) {
-  alert('Please select an address before placing the order.');
-  return;
-}
+        // Find the selected address radio button
+        const selectedAddressRadioButton = document.querySelector('input[name="addressRadio"]:checked');
 
-// Extract the addressId from the selected radio button
-const addressId = selectedAddressRadioButton.id.split('_')[1];
-console.log("addressID is " + addressId)
-// Update the window location directly without making a fetch request
-window.location.href = `/cod-place-order/${addressId}`;
+        // Check if any address is selected
+        if (!selectedAddressRadioButton) {
+          alert('Please select an address before placing the order.');
+          return;
+        }
 
-});
+        // Extract the addressId from the selected radio button
+        const addressId = selectedAddressRadioButton.id.split('_')[1];
+        console.log("addressID is " + addressId)
+        // Update the window location directly without making a fetch request
+        window.location.href = `/cod-place-order/${addressId}`;
+
+      });
 
       // Append the button to the right section
       document.querySelector('.payment-show').appendChild(placeOrderButton);
     }
+  });
+
+  document.getElementById('payNowBtn').addEventListener('click', async function () {
+
+
+    if (!document.getElementById('razorpayOrderBtn')) {
+      try {
+
+        // Remove existing elements inside the payment show section
+        document.querySelector('.payment-show').innerHTML = '';
+
+        // Add new info text specific to Razorpay
+        const infoTextRazorPay = document.createElement('p');
+        infoTextRazorPay.className = 'p-2 mt-3 ';
+        infoTextRazorPay.style = 'background-color:rgb(230, 246, 228)';
+        infoTextRazorPay.textContent = "If you are proceeding with the Razorpay method, please click on the below link to complete the payment:";
+        document.querySelector('.payment-show').appendChild(infoTextRazorPay);
+
+        // Dynamically add the Razorpay button to the right section
+        const razorpayOrderBtn = document.createElement('button');
+        razorpayOrderBtn.id = 'razorpayOrderBtn';
+        razorpayOrderBtn.className = 'btn btn-success p-2 my-2'; // Adjusted the style
+        razorpayOrderBtn.textContent = 'Proceed to Razorpay';
+
+        razorpayOrderBtn.addEventListener('click', async () => {
+    try {
+        // Find the selected address radio button
+        const selectedAddressRadioButton = document.querySelector('input[name="addressRadio"]:checked');
+
+        // Check if any address is selected
+        if (!selectedAddressRadioButton) {
+            alert('Please select an address before placing the order.');
+            return;
+        }
+
+        // Extract the addressId from the selected radio button
+        const addressId = selectedAddressRadioButton.id.split('_')[1];
+        console.log("addressID is " + addressId);
+
+        // Make a request to the server to get necessary data (except addressId)
+        const serverDataResponse = await fetch(`/razorpay-place-order/${addressId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            
+        });
+
+        const serverData = await serverDataResponse.json();
+
+        // Check if the server data retrieval was successful
+        if (serverData.success) {
+            
+          const rzp_key = '<%= process.env.RAZORPAY_KEY_ID %>'
+
+          var options = {
+            "key": rzp_key, // Enter the Key ID generated from the Dashboard
+            "amount": serverData.order.amount, // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
+            "currency": "INR",
+            "name": "Male fashion", //your business name
+            "description": "Test Transaction",
+            "image": "/user/img/logo.png",
+            "order_id": serverData.order.id, //This is a sample Order ID. Pass the `id` obtained in the response of Step 1
+            "notes": {
+              "address": "Male fashion office"
+            },
+            "theme": {
+              "color": "#3399cc"
+            },
+            "handler": function (response){
+              handlePaymentSuccess(response);
+            },
+          };
+
+            const razorpayObject = new Razorpay(options);
+
+            // Define a function to handle payment success
+const handlePaymentSuccess = async (response) => {
+    try {
+        console.log("Entered the try block inside handlepayment success");
+        // Make a request to your server to verify the payment
+        const verificationResponse = await fetch(`/verify-razorpay-payment/${response.razorpay_order_id}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+            }),
+        });
+
+        const verificationData = await verificationResponse.json();
+
+        if (verificationResponse.ok && verificationData.success) {
+          // Payment verification successful
+          const { paymentDBId } = verificationData;
+
+          // Redirect to the specific route with the paymentDBId
+          window.location.href = `/order-confirm/${paymentDBId}`;
+
+
+        } else {
+            // Payment verification failed
+            console.error('Payment verification failed:', verificationData.error);
+            alert('Payment verification failed. Please contact support.');
+        }
+    } catch (error) {
+        console.error('Error during payment verification:', error);
+        alert('Error during payment verification. Please contact support.');
+    }
+};
+
+            razorpayObject.on('payment.failed', function (response) {
+                // Handle failure
+                alert('Payment failed! Error: ' + response.error.description);
+            });
+
+            // Trigger the Razorpay checkout
+            razorpayObject.open();
+        } else {
+            // Handle the case where the server data retrieval failed
+            console.error('Failed to fetch server data:', serverData.error);
+            alert('Failed to fetch server data. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error during Razorpay order creation:', error);
+        alert('Error during Razorpay order creation. Please try again.');
+    }
+});
+
+        // Append the Razorpay button to the right section
+        document.querySelector('.payment-show').appendChild(razorpayOrderBtn);
+      } catch (error) {
+        console.error('Error during Razorpay order creation:', error);
+        alert('Error during Razorpay order creation. Please try again.');
+      }
+    }
+
+
   });
 
   function selectAddress(index) {
@@ -198,7 +344,7 @@ window.location.href = `/cod-place-order/${addressId}`;
   }
 
 
-  
+
 </script>
 
 
