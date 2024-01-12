@@ -673,8 +673,19 @@ const paymentSelectionLoader = async (req, res, next) => {
             req.flash('error', "You have some invalid items in your cart. Please click On the MOVE TO ADDDRESS button to know more.")
             return res.render('./user/cart', { invalidItems, cart, categories });
         } else {
+
+            // Fetch the user's wallet from the database
+            const wallet = await Wallet.findOne({ user: userId });
+
+            // Check if the wallet exists
+            if (!wallet) {
+                const walletNotFoundMessage = 'Wallet not found for the user';
+                const walletNotFoundError = new Error(walletNotFoundMessage);
+                walletNotFoundError.status = 404;
+                throw walletNotFoundError;
+            }
             // Render the payment-selection page with the first address and cart details
-            res.render('./user/payment-selection.ejs', { firstAddress, user, cart, categories });
+            res.render('./user/payment-selection.ejs', { firstAddress, user, cart, categories,wallet });
         }
 
 

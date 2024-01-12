@@ -37,6 +37,17 @@ const walletSchema = new mongoose.Schema({
                 type: Date,
                 default: Date.now,
             },
+            razorpayPaymentId: {
+                type: String,
+                
+            },
+            razorpayOrderId: {
+                type: String,
+                
+            },
+            razorpaySignature:{
+              type: String,
+            },
         },
     ],
 });

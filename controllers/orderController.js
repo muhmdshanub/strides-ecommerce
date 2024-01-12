@@ -9,6 +9,7 @@ const Cart = require('../models/cartModel');
 const Order = require('../models/orderModel');
 const Wishlist = require('../models/wishlistModel');
 const Payment = require('../models/paymentModel');
+const Wallet = require('../models/walletModel')
 const sendOtpEmail = require('../utils/sendEmail');
 const bcrypt = require('bcrypt');
 const razorpay = require('razorpay');
@@ -361,6 +362,247 @@ const codPlaceOrderHandler = async (req, res, next) => {
     }
 }
 
+const placeOrderByWalletHandler = async (req, res, next) => {
+    try {
+
+
+        const userId = req.session.userId;
+        const addressId = req.params.addressId;
+
+        if (!mongoose.Types.ObjectId.isValid(addressId)) {
+            console.log("address id is invalid")
+            const genericErrorMessage = 'Invalid address ID: ';
+            const genericError = new Error(genericErrorMessage);
+            genericError.status = 500;
+            throw genericError;
+        }
+
+        if (!userId) {
+            console.log("no valid userID on session")
+            req.flash('error', 'unauthenticated user ID.')
+            return res.redirect('/home')
+        }
+
+        if (!addressId) {
+            console.log("no valid addressId on url")
+            req.flash('error', 'No valid address selected.')
+            return res.redirect('/address')
+        }
+
+        // Find the user document
+        const user = await User.findOne({ _id: userId });
+
+        if (!user) {
+            console.log("user not found on user collection")
+            req.flash('error', 'User not found.');
+            return res.redirect('/home');
+        }
+
+         // Find the user document
+         const wallet = await Wallet.findOne({ user: userId });
+
+         // Check if the wallet exists
+        if (!wallet) {
+            console.log("corresponding wallet not found")
+            const walletNotFoundMessage = 'Wallet not found for the user';
+            const walletNotFoundError = new Error(walletNotFoundMessage);
+            walletNotFoundError.status = 404;
+            throw walletNotFoundError;
+        }
+
+        // Check if the given addressId exists in the user's addresses
+        const selectedAddressIndex = user.addresses.findIndex(address => address._id.toString() === addressId);
+
+        if (selectedAddressIndex === -1) {
+            console.log("Invalid address selected")
+            req.flash('error', 'Invalid address selected.');
+            return res.redirect('/address');
+        }
+
+        // If the selected address is not already at the 0th index, swap it
+        if (selectedAddressIndex !== 0) {
+            // Swap the addresses
+            const temp = user.addresses[0];
+            user.addresses[0] = user.addresses[selectedAddressIndex];
+            user.addresses[selectedAddressIndex] = temp;
+
+            // Save the updated user document
+            userUpdate = await user.save();
+        }
+
+
+        // Fetch user's cart details
+        let cart = await Cart.findOne({ user: userId }).populate({
+            path: 'items.product',
+            match: { isDeleted: false }, // Only populate products that are not deleted
+        });
+
+        // Check for invalidated items in the cart
+        const invalidItems = [];
+
+        for (const item of cart.items) {
+            const product = item.product;
+
+            const selectedSize = item.size;
+
+            // Assuming sizes array has only one element
+            const stockSchema = product.sizes[0];
+
+            // Check if the selected size exists in the stock schema
+            if (!(selectedSize in stockSchema)) {
+                invalidItems.push({
+                    item: item.product,
+                    productName: product.productName,
+                    brandName: product.brandName,
+                    size: selectedSize,
+                    selectedQuantity: item.quantity,
+                    reason: 'Invalid size',
+                });
+                continue;
+            }
+
+            const availableStock = stockSchema[selectedSize].availableStock;
+
+            // Check if availableStock is 0 or quantity is greater than available stock or greater than 10
+            if (availableStock === 0 || item.quantity > 10 || item.quantity > availableStock) {
+                invalidItems.push({
+                    item: item.product,
+                    productName: product.productName,
+                    brandName: product.brandName,
+                    size: selectedSize,
+                    selectedQuantity: item.quantity,
+                    reason: availableStock === 0 ? 'Not available' : (item.quantity > 10 ? 'More than 10' : 'More than available stock'),
+                });
+            }
+        }
+
+        // Calculate total price details for the cart
+        cart.items.forEach(item => {
+            item.totalAmount = item.quantity * item.product.finalPrice;
+            item.totalInitialAmount = item.quantity * item.product.initialPrice;
+        });
+        cart.totalAmount = parseFloat(cart.items.reduce((total, item) => total + item.totalAmount, 0)).toFixed(2);
+        cart.totalInitialAmount = parseFloat(cart.items.reduce((total, item) => total + item.totalInitialAmount, 0)).toFixed(2);
+        cart.totalDiscountAmount = parseFloat(cart.totalInitialAmount - cart.totalAmount).toFixed(2);
+
+        if (invalidItems.length > 0) {
+            console.log("invalid items in cart")
+            const categories = await getAllCategories();
+            // If there are invalid items, redirect to the cart page with the invalid items
+            req.flash('error', "You have some invalid items in your cart. Please click On the MOVE TO ADDDRESS button to know more.")
+            return res.render('./user/cart', { invalidItems, cart, categories });
+        }
+
+        //check if available wallet amount is less than the cart total
+        if(cart.totalAmount > parseFloat(wallet.balance)){
+            console.log("not enough money in wallet")
+            const walletNotEnoughMessage = 'Wallet not found for the user';
+            const walletNotEnoughError = new Error(walletNotEnoughMessage);
+            walletNotEnoughError.status = 404;
+            throw walletNotEnoughError;
+        }
+
+        //reduce the amopunt from wallet and save 
+
+        wallet.balance -= cart.totalAmount ;
+
+        const walletUpdate = wallet.save();
+
+        // Populate the shipping address details
+        const populatedAddress = await Address.findById(user.addresses[0]);
+
+        // Create an array to store the promises of saving each order
+        const orderPromises = [];
+
+        // Iterate through each item in the cart
+        cart.items.forEach(item => {
+            // Create an order document for the current item
+            const order = new Order({
+                user: userId,
+                userName: user.name,
+                address: populatedAddress,
+                product: item.product._id,
+                productName: item.product.productName,
+                brandName: item.product.brandName,
+                size: item.size,
+                quantity: item.quantity,
+                totalFinalAmount: item.totalAmount,
+                totalInitialMrp: item.totalInitialAmount,
+            });
+
+            // Save the order document and push the promise to the array
+            orderPromises.push(order.save());
+        });
+
+        // Use Promise.all to wait for all order promises to resolve
+        const orderUpdates = await Promise.all(orderPromises);
+
+        //update payment collection
+
+        const payment = new Payment({
+            user: userId,
+            paymentMethod: 'Wallet Payment',
+            orders: orderUpdates.map(order => order._id),
+            totalAmount: cart.totalAmount,
+        });
+
+        // Save the Payment document
+        const paymentUpdate = await payment.save();
+
+        // update product collection
+
+        // Update product quantities based on the items in the cart
+        for (const item of cart.items) {
+            const product = item.product;
+            const selectedSize = item.size;
+
+            // Assuming sizes array has only one element
+            const stockSchema = product.sizes[0];
+
+            // Deduct the quantity from the available stock
+            if (selectedSize in stockSchema) {
+                stockSchema[selectedSize].availableStock -= item.quantity;
+                stockSchema[selectedSize].soldStock += item.quantity;
+            } else {
+                // Handle the case where the selected size is not valid
+                invalidItems.push({
+                    // ... Include details of the invalid item ...
+                    reason: 'Invalid size',
+                });
+            }
+        }
+
+        // Save the updated product details to the database
+        const productUpdate = await Products.bulkWrite(cart.items.map(item => ({
+            updateOne: {
+                filter: { _id: item.product._id },
+                update: { $set: { sizes: item.product.sizes } },
+            },
+        })
+        ));
+
+        if (orderUpdates && productUpdate && paymentUpdate && walletUpdate) {
+            // If all updates are successful, remove the cart items
+            cart.items = [];
+            cart.totalItems = 0;
+            cart.totalAmount = 0;
+
+            cartUpdate = await cart.save();
+        }
+
+        if (cartUpdate) {
+
+            
+            return res.json({ success: true, paymentDBId : paymentUpdate._id });
+        }
+
+
+    } catch (error) {
+        console.log(error.message);
+        next(error)
+    }
+}
+
 const razorpayPlaceOrderHandler = async (req, res, next) => {
     try {
 
@@ -584,14 +826,29 @@ const razorpayVerifyPaymentHandler = async (req, res) => {
 
             // Check if the Razorpay Payment ID and Order ID already exist in the Payment collection
             const existingPayment = await Payment.findOne({
-                razorpayPaymentId: razorPayPaymentId,
-                razorpayOrderId: razorPayOrderId,
-                razorpaySignature:razorPaySignature,
+                $or: [
+                    { 'transactions.razorpayPaymentId': razorPayPaymentId },
+                    { 'transactions.razorpayOrderId': razorPayOrderId },
+                    { 'transactions.razorpaySignature': razorPaySignature },
+                ],
             });
 
             if (existingPayment) {
                 console.log("This is an already existing payment ")
                 return res.json({ success: false, error: 'Payment already processed' });
+            }
+
+            const existingTransaction = await Wallet.findOne({
+                $or: [
+                    { 'transactions.razorpayPaymentId': razorPayPaymentId },
+                    { 'transactions.razorpayOrderId': razorPayOrderId },
+                    { 'transactions.razorpaySignature': razorPaySignature },
+                ],
+            });
+
+            if (existingTransaction) {
+                console.log("This is an already existing wallet transaction ")
+                return res.json({ success: false, error: 'Transaction already processed' });
             }
 
             // Populate the shipping address details
@@ -759,6 +1016,7 @@ module.exports = {
 
 
     codPlaceOrderHandler,
+    placeOrderByWalletHandler,
     razorpayPlaceOrderHandler,
     razorpayVerifyPaymentHandler,
     profileOrdersLoader,

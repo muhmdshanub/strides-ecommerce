@@ -87,6 +87,11 @@ userRoute.post('/remove-from-wishlist/:productId',auth.isLogin,wishlistControlle
 userRoute.post('/move-from-wishlist-to-cart/:productId',auth.isLogin,wishlistController.moveFromWishlistToCartHandler);
 
 userRoute.get('/wallet',auth.isLogin,walletController.walletLoader);
+userRoute.post('/add-money-to-wallet',auth.isLogin,walletController.createOrderToAddMoney);
+
+userRoute.post('/wallet-place-order/:addressId',auth.isLogin,orderController.placeOrderByWalletHandler);
+
+userRoute.post('/verify-razorpay-wallet-payment/:razorpay_order_id',auth.isLogin,walletController.verifyOrderToAddMoneyHandler)
 
 
 module.exports =userRoute;

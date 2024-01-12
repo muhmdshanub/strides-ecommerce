@@ -11,7 +11,7 @@ const paymentSchema = new mongoose.Schema({
     },
     paymentMethod: {
       type: String,
-      enum: ['Cash on Delivery', 'RazorPay Payment'],
+      enum: ['Cash on Delivery', 'RazorPay Payment', 'Wallet Payment'],
       required: true,
     },
     orders: [

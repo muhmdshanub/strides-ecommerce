@@ -8,30 +8,36 @@
 <%- include('../layouts/_messages') -%>
 
 
-  <style>
+<style>
   /* Custom styles */
   .address-container {
-    height: 400px; /* Fixed height for the container */
-    overflow-y: auto; /* Enable vertical scrolling */
+      
+     
   }
 
   /* Custom sticky class */
-  .sticky-col {
-    position: -webkit-sticky;
-    position: sticky;
-    top: 0;
-    z-index: 2100;
+  #sticky-col {
+      position: -webkit-sticky;
+      position: sticky;
+      top: 40px;
+      z-index: 2100;
+      overflow: hidden;
+      background-color: rgb(132, 0, 255);
+      color:rgb(255, 255, 255);
+      font-weight: 700;
   }
+
+  
 </style>
 
 
-<div class="container-fluid mb-5 pb-5 text-black" style="background-color: rgba(186, 251, 251, 0.799);">
+<div class="container mb-5 pb-5 text-black" style="background-color: rgba(186, 251, 251, 0.799);">
   <div class="row mt-4 mb-5">
     <!-- Left Part (7/12) -->
-    <div class="col-md-7 mb-5">
+    <div  class="col-md-7 mb-5">
 
       
-      <h3 class="py-2 mt-3">Select Address</h3>
+      <h3  class="py-2 mt-3">Select Address</h3>
       <div class="address-container mt-1 mb-5 border rounded text-black p-3  " style="background-color: rgb(228, 251, 251);">
        
 
@@ -74,11 +80,14 @@
           <!-- Left Section (4/12 width) -->
           <div class="col-md-4 border p-0 offset-1">
             <!-- Content for the left section goes here -->
-            <div class="col-12 py-2 border rounded" style="background-color: rgb(251, 213, 190);">
+            <div class="col-12 py-0 border rounded" style="background-color: rgb(251, 213, 190);">
               <button class="btn btn-danger btn-block my-3" id="cashOnDeliveryBtn">Cash on Delivery</button>
             </div>
-            <div class="col-12 py-2 border rounded" style="background-color:rgb(251, 213, 190) ;" >
+            <div class="col-12 py-0 border rounded" style="background-color:rgb(251, 213, 190) ;" >
               <button class="btn btn-pink btn-block my-3" id="payNowBtn">Pay Now</button>
+            </div>
+            <div class="col-12 py-0 border rounded" style="background-color:rgb(251, 213, 190) ;" >
+              <button class="btn btn-warning btn-block my-3" id="walletMethod">Wallet Purchase</button>
             </div>
             
             
@@ -97,12 +106,12 @@
     </div>
 
     <!-- Right Part (5/12) -->
-    <div class="col-md-5 sticky-col">
-      <div class="container-fluid mt-4 border rounded p-5 bg-white">
+    <div class="col-md-5 ">
+      <div class="container-fluid mt-4 border rounded p-5"  id="sticky-col">
         <div class="row">
-            <div class="col-md-10 offset-md-1">
-                <div class="total-amount-section">
-                    <h2>Total Amount</h2>
+            <div class="col-md-10 offset-md-1 " >
+                <div  class="total-amount-section">
+                    <h2 >Total Amount</h2>
     
                     <!-- MRP Section -->
                     <div class="amount-row d-flex justify-content-between mt-5 mb-1" style="font-size: larger;">
@@ -117,16 +126,12 @@
                     </div>
                     <hr>
                     <!-- Amount To Pay Section -->
-                    <div class="amount-row d-flex justify-content-between mt-3 mb-5" style="font-size: larger; font-weight: 500;">
+                    <div class="amount-row d-flex justify-content-between mt-3 mb-5" style="font-size: larger; font-weight: 900;">
                         <span>Amount To Pay</span>
                         <span id="amountToPay"><%= cart.totalAmount  %>Rs.</span>
-                      </div></span>
                     </div>
-    
-                    
-                    
-                    
-                </div>
+                </div>    
+              </div>
             </div>
         </div>
         </div>
@@ -142,7 +147,7 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Custom Modal Title</h5>
+        <h5 class="modal-title">ALERT</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
@@ -151,7 +156,7 @@
         <p id="modalText"></p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal" >Close</button>
       </div>
     </div>
   </div>
@@ -164,6 +169,12 @@
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <script>
+
+const walletBalance = <%= JSON.stringify(wallet.balance) %>;
+const cartTotal = <%= JSON.stringify(cart.totalAmount) %>;
+
+
+
 
 function showAlert(message) {
   // Set the modal text
@@ -296,41 +307,43 @@ function showAlert(message) {
             const razorpayObject = new Razorpay(options);
 
             // Define a function to handle payment success
-const handlePaymentSuccess = async (response) => {
-    try {
-        console.log("Entered the try block inside handlepayment success");
-        // Make a request to your server to verify the payment
-        const verificationResponse = await fetch(`/verify-razorpay-payment/${response.razorpay_order_id}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-            }),
-        });
+          const handlePaymentSuccess = async (response) => {
+            try {
+                
+                // Make a request to your server to verify the payment
+                const verificationResponse = await fetch(`/verify-razorpay-payment/${response.razorpay_order_id}`, {
+                     method: 'POST',
+                     headers: {
+                        'Content-Type': 'application/json',
+                     },
 
-        const verificationData = await verificationResponse.json();
+                     body: JSON.stringify({
+                     payment_id: response.razorpay_payment_id,
+                     razorpay_signature: response.razorpay_signature,
+                   }),
+                 });
 
-        if (verificationResponse.ok && verificationData.success) {
-          // Payment verification successful
-          const { paymentDBId } = verificationData;
+                const verificationData = await verificationResponse.json();
 
-          // Redirect to the specific route with the paymentDBId
-          window.location.href = `/order-confirm/${paymentDBId}`;
+                if (verificationResponse.ok && verificationData.success) {
+                   // Payment verification successful
+                   const { paymentDBId } = verificationData;
+
+                   // Redirect to the specific route with the paymentDBId
+                   window.location.href = `/order-confirm/${paymentDBId}`;
 
 
-        } else {
-            // Payment verification failed
-            console.error('Payment verification failed:', verificationData.error);
-            alert('Payment verification failed. Please contact support.');
-        }
-    } catch (error) {
-        console.error('Error during payment verification:', error);
-        showAlert('Error during payment verification. Please contact support.');
-    }
-};
+                } else {
+                    // Payment verification failed
+                    console.error('Payment verification failed:', verificationData.error);
+                   showAlert('Payment verification failed. Please contact support.');
+                }
+             
+              } catch (error) {
+              console.error('Error during payment verification:', error);
+              showAlert('Error during payment verification. Please contact support.');
+            }
+         };
 
             razorpayObject.on('payment.failed', function (response) {
                 // Handle failure
@@ -342,11 +355,11 @@ const handlePaymentSuccess = async (response) => {
         } else {
             // Handle the case where the server data retrieval failed
             console.error('Failed to fetch server data:', serverData.error);
-            alert('Failed to fetch server data. Please try again.');
+            showAlert('Failed to fetch server data. Please try again.');
         }
     } catch (error) {
         console.error('Error during Razorpay order creation:', error);
-        alert('Error during Razorpay order creation. Please try again.');
+        showAlert('Error during Razorpay order creation. Please try again.');
     }
 });
 
@@ -360,6 +373,94 @@ const handlePaymentSuccess = async (response) => {
 
 
   });
+
+  document.getElementById('walletMethod').addEventListener('click', async function () {
+    // Check if the "Place Order By Wallet" button already exists
+    if (!document.getElementById('placeOrderByWallet')) {
+
+        // Remove existing elements inside the payment show section
+        document.querySelector('.payment-show').innerHTML = '';
+
+        // Display current wallet amount
+        const walletAmountDisplay = document.createElement('p');
+        walletAmountDisplay.className = 'p-2 mt-3 text-white';
+        walletAmountDisplay.style = 'background-color: rgba(66, 4, 253, 0.499);';
+        walletAmountDisplay.textContent = `Current Wallet Amount: ${walletBalance} Rs.`;
+        document.querySelector('.payment-show').appendChild(walletAmountDisplay);
+
+
+        // Add new info text specific to Wallet
+        const infoTextWallet = document.createElement('p');
+        infoTextWallet.className = 'p-2 mt-3 text-white';
+        
+        if (cartTotal <= walletBalance) {
+          infoTextWallet.style = 'background-color:rgba(0, 0, 0, 0.773)';
+          infoTextWallet.textContent = "If you are proceeding with the Wallet method, please click on the below button to place the order:";
+        }else{
+          infoTextWallet.style = 'background-color:rgba(253, 4, 4, 0.4)';
+          infoTextWallet.textContent = "You do not have enough amount in your wallet. Please add money to your wallet or choose another payment method";
+        }
+
+        
+        document.querySelector('.payment-show').appendChild(infoTextWallet);
+
+        if (cartTotal <= walletBalance) {
+          // Dynamically add the "Place Order By Wallet" button to the right section
+        const placeOrderByWalletButton = document.createElement('button');
+        placeOrderByWalletButton.id = 'placeOrderByWallet';
+        placeOrderByWalletButton.className = 'btn btn-success p-2 my-2'; // Adjusted the style
+        placeOrderByWalletButton.textContent = 'Place Order By Wallet';
+
+        placeOrderByWalletButton.addEventListener('click', async () => {
+            try {
+              
+                // Find the selected address radio button
+                const selectedAddressRadioButton = document.querySelector('input[name="addressRadio"]:checked');
+
+                // Check if any address is selected
+                if (!selectedAddressRadioButton) {
+                    showAlert('Please select an address before placing the order.');
+                    return;
+                }
+
+                // Extract the addressId from the selected radio button
+                const addressId = selectedAddressRadioButton.id.split('_')[1];
+                console.log("addressID is " + addressId);
+
+                // Make a request to the server to place an order using the wallet
+                const walletOrderResponse = await fetch(`/wallet-place-order/${addressId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const walletOrderData = await walletOrderResponse.json();
+
+                // Check if the wallet order placement was successful
+                if (walletOrderResponse.ok && walletOrderData.success) {
+                  
+                    // Redirect to the specific route with the paymentDBId or any other relevant data
+                    window.location.href = `/order-confirm/${walletOrderData.paymentDBId}`;
+                } else {
+                    // Handle the case where the wallet order placement failed
+                    console.error('Failed to place order by wallet:', walletOrderData.error);
+                    showAlert('Failed to place order by wallet. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error during wallet order placement:', error);
+                showAlert('Error during wallet order placement. Please try again.');
+            }
+        });
+
+        // Append the "Place Order By Wallet" button to the right section
+        document.querySelector('.payment-show').appendChild(placeOrderByWalletButton);
+        }
+
+        
+    }
+});
+
 
   function selectAddress(index) {
     // Get the radio button corresponding to the clicked card
