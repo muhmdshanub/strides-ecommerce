@@ -7,6 +7,7 @@ const wishlistController = require('../controllers/wishlistController')
 const orderController = require('../controllers/orderController.js')
 const addressController = require('../controllers/addressController.js')
 const paymentController = require('../controllers/paymentController')
+const walletController = require('../controllers/walletController.js')
 const auth = require('../middlewares/loginAuth')
 
 const userRoute = express();
@@ -84,6 +85,8 @@ userRoute.get('/wishlist',auth.isLogin,wishlistController.wishlistLoader);
 userRoute.post('/add-to-wishlist/:productId',auth.isLogin,wishlistController.addToWishlistHandler);
 userRoute.post('/remove-from-wishlist/:productId',auth.isLogin,wishlistController.removeFromWishlistHandler);
 userRoute.post('/move-from-wishlist-to-cart/:productId',auth.isLogin,wishlistController.moveFromWishlistToCartHandler);
+
+userRoute.get('/wallet',auth.isLogin,walletController.walletLoader);
 
 
 module.exports =userRoute;

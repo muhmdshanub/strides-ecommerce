@@ -668,6 +668,7 @@ const razorpayVerifyPaymentHandler = async (req, res) => {
 
             if (cartUpdate) {
                 
+                req.session.orderData = null;
                 
                 return res.json({ success: true, paymentDBId : paymentUpdate._id });
             }

@@ -8,16 +8,17 @@ const Products = require('../models/productModel');
 const Cart = require('../models/cartModel');
 const Wishlist = require('../models/wishlistModel');
 const Order = require('../models/orderModel');
-const sendOtpEmail = require('../utils/sendEmail'); 
+const Wallet = require('../models/walletModel')
+const sendOtpEmail = require('../utils/sendEmail');
 
 const bcrypt = require('bcrypt');
 
 async function getAllCategories() {
     try {
-      const categories = await Category.find();
-      return categories;
+        const categories = await Category.find();
+        return categories;
     } catch (error) {
-      throw error;
+        throw error;
     }
 }
 
@@ -69,22 +70,22 @@ const signupHandler = async (req, res, next) => {
             req.flash('error', 'Name is required');
             return res.redirect('/signup');
         }
-        
+
         if (!email) {
             req.flash('error', 'Email is required');
             return res.redirect('/signup');
         }
-        
+
         if (!phone) {
             req.flash('error', 'Phone is required');
             return res.redirect('/signup');
         }
-        
+
         if (!password) {
             req.flash('error', 'Password is required');
             return res.redirect('/signup');
         }
-        
+
         if (!dateOfBirth) {
             req.flash('error', 'Date of Birth is required');
             return res.redirect('/signup');
@@ -272,18 +273,27 @@ const signupVerificationHandler = async (req, res, next) => {
             const wishlist = new Wishlist({ user: userData._id });
             const wishlistData = await wishlist.save();
 
-            if (cartData && wishlistData) {
+            // Create a new Wallet document for the user
+            const wallet = new Wallet({ user: userData._id });
+            const walletData = await wallet.save();
+
+            if (cartData && wishlistData && walletData) {
                 // Update the user's cart field with the new cart's _id
                 userData.cart = cartData._id;
                 userData.wishlist = wishlistData._id;
-                const updatedUserData = await userData.save();
+                userData.wallet = walletData._id;
+
+                updatedUserData = await userData.save();
             }
 
-            // Remove user data from the session after successful signup
-            delete req.session.userData;
+            if (updatedUserData) {
+                // Remove user data from the session after successful signup
+                delete req.session.userData;
 
-            req.flash('success', 'You have been successfully registered.');
-            return res.redirect('/signup'); // Redirect to the registration page or handle it as needed
+                req.flash('success', 'You have been successfully registered.');
+                return res.redirect('/signup'); // Redirect to the registration page or handle it as needed
+            }
+
         }
     } catch (error) {
         console.error('Error in signupVerificationHandler:', error.message);
@@ -346,7 +356,7 @@ const loginHandler = async (req, res) => {
     }
 }
 
-const forgotPasswordFormLoader = async(req, res, next) =>{
+const forgotPasswordFormLoader = async (req, res, next) => {
     try {
         res.render('./user/forgot-password-form.ejs');
     } catch (error) {
@@ -355,16 +365,16 @@ const forgotPasswordFormLoader = async(req, res, next) =>{
     }
 }
 
-const forgotPasswordFormHandler = async(req, res, next) =>{
+const forgotPasswordFormHandler = async (req, res, next) => {
     try {
         // Validate incoming data (add more validation as needed)
         const { email, phone } = req.body;
 
-        if ( !email ) {
+        if (!email) {
             req.flash('error', 'Email field is required');
             res.redirect('/forgot-password');
         }
-        if ( !phone ) {
+        if (!phone) {
             req.flash('error', 'Phone field is required');
             res.redirect('/forgot-password');
         }
@@ -378,16 +388,16 @@ const forgotPasswordFormHandler = async(req, res, next) =>{
         }
 
         // Store user details in the session
-        req.session.userDataPassword = {  email, phone};
+        req.session.userDataPassword = { email, phone };
         //craete otps
         const emailOtp = generateOtp();
-        
+
 
         // Store user details and OTPs in the database
         const otpData = await OTP.create({
             intendedEmail: email,
             emailOtp: emailOtp,
-            
+
         });
 
         req.session.userDataPassword.otpCreatedTime = otpData.createdAt; // Get the created time
@@ -470,7 +480,7 @@ const forgotPasswordResendOtpHandler = async (req, res, next) => {
             return res.redirect('/forgot-password');
         }
 
-        
+
 
 
         // Redirect to the signup-verify page with the created time as a query parameter
@@ -485,7 +495,7 @@ const forgotPasswordResendOtpHandler = async (req, res, next) => {
 }
 
 const forgotPasswordOtpVerifyHandler = async (req, res, next) => {
-    try{
+    try {
         // Retrieve user data and OTPs from the session
         const { email, phone } = req.session.userDataPassword || {};
         const { emailOtp } = req.body;
@@ -494,16 +504,16 @@ const forgotPasswordOtpVerifyHandler = async (req, res, next) => {
         const otpData = await OTP.findOne({ emailOtp: emailOtp, intendedEmail: email });
 
         if (!otpData || !otpData.createdAt) {
-            
+
             req.flash('error', 'Invalid or expired OTPs. Please try again.');
             return res.redirect('/forgot-password-otp-verify');
         }
 
-        req.session.userDataPassword.isOtpVerified = true ;
+        req.session.userDataPassword.isOtpVerified = true;
         req.flash('success', 'You have been verified your authenticity Now you can update the Password.');
         return res.redirect('/forgot-password-update-password'); // Redirect to the registration page or handle it as needed
 
-    }catch (error) {
+    } catch (error) {
         console.log(error.message);
         next(error)
     }
@@ -517,19 +527,19 @@ const forgotPasswordUpdateLoader = async (req, res, next) => {
             res.render('./user/forgot-password-update-form.ejs');
 
         } else {
-            req.session.userDataPassword.isOtpVerified = false ;
+            req.session.userDataPassword.isOtpVerified = false;
             res.redirect('forgot-password-otp-verify');
         }
 
     } catch (error) {
         console.log(error.message);
-        
+
         next(error)
     }
 }
 
-const forgotPasswordUpdateHandler = async (req, res, next) =>{
-    try{
+const forgotPasswordUpdateHandler = async (req, res, next) => {
+    try {
         // Validate incoming data (add more validation as needed)
         const { password, confirmPassword } = req.body;
 
@@ -552,7 +562,7 @@ const forgotPasswordUpdateHandler = async (req, res, next) =>{
         });
 
         if (!user) {
-            req.session.userDataPassword.isOtpVerified = false ;
+            req.session.userDataPassword.isOtpVerified = false;
             req.flash('error', 'User not found. Please restart the password reset process.');
             return res.redirect('/forgot-password');
         }
@@ -567,7 +577,7 @@ const forgotPasswordUpdateHandler = async (req, res, next) =>{
         req.flash('success', 'Password updated successfully. You can now login with your new password.');
         return res.redirect('/login');
 
-    }catch (error) {
+    } catch (error) {
         console.log(error.message);
         next(error)
     }
@@ -577,7 +587,7 @@ const homeLoader = async (req, res, next) => {
     try {
         const categories = await getAllCategories();
 
-        res.render('./user/home.ejs',{categories})
+        res.render('./user/home.ejs', { categories })
     } catch (error) {
         console.log(error.message);
         next(error)
@@ -664,7 +674,7 @@ const paymentSelectionLoader = async (req, res, next) => {
             return res.render('./user/cart', { invalidItems, cart, categories });
         } else {
             // Render the payment-selection page with the first address and cart details
-            res.render('./user/payment-selection.ejs', { firstAddress, user, cart, categories});
+            res.render('./user/payment-selection.ejs', { firstAddress, user, cart, categories });
         }
 
 
@@ -689,7 +699,7 @@ const profileLoader = async (req, res, next) => {
 
         const categories = await getAllCategories();
 
-        res.render('./user/profile/profile.ejs', { user , categories });
+        res.render('./user/profile/profile.ejs', { user, categories });
 
     } catch (error) {
         console.log(error.message)
@@ -818,5 +828,5 @@ module.exports = {
     profileLoader,
     profileUserEditHandler,
     passwordChangeHandler,
-    
+
 }

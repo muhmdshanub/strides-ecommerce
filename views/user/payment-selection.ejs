@@ -137,7 +137,25 @@
 
 
 
-
+<!-- Place this modal structure at the end of your HTML body -->
+<div class="modal" id="customModal" tabindex="-1" role="dialog" style="z-index: 2500;">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Custom Modal Title</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p id="modalText"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 
 
@@ -146,6 +164,14 @@
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <script>
+
+function showAlert(message) {
+  // Set the modal text
+  document.getElementById('modalText').innerText = message;
+
+  // Show the modal
+  $('#customModal').modal('show');
+}
   // Assuming this is triggered when the "Cash on Delivery" button is clicked
   document.getElementById('cashOnDeliveryBtn').addEventListener('click', function () {
     // Check if the "Place Order Now" button already exists
@@ -178,7 +204,7 @@
 
         // Check if any address is selected
         if (!selectedAddressRadioButton) {
-          alert('Please select an address before placing the order.');
+          showAlert('Please select an address before placing the order.');
           return;
         }
 
@@ -224,7 +250,7 @@
 
         // Check if any address is selected
         if (!selectedAddressRadioButton) {
-            alert('Please select an address before placing the order.');
+            showAlert('Please select an address before placing the order.');
             return;
         }
 
@@ -302,13 +328,13 @@ const handlePaymentSuccess = async (response) => {
         }
     } catch (error) {
         console.error('Error during payment verification:', error);
-        alert('Error during payment verification. Please contact support.');
+        showAlert('Error during payment verification. Please contact support.');
     }
 };
 
             razorpayObject.on('payment.failed', function (response) {
                 // Handle failure
-                alert('Payment failed! Error: ' + response.error.description);
+                showAlert('Payment failed! Error: ' + response.error.description);
             });
 
             // Trigger the Razorpay checkout
@@ -328,7 +354,7 @@ const handlePaymentSuccess = async (response) => {
         document.querySelector('.payment-show').appendChild(razorpayOrderBtn);
       } catch (error) {
         console.error('Error during Razorpay order creation:', error);
-        alert('Error during Razorpay order creation. Please try again.');
+        showAlert('Error during Razorpay order creation. Please try again.');
       }
     }
 

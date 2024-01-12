@@ -1,59 +1,124 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Page Title</title>
-
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-
-    <!-- ElevateZoom CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/elevatezoom/3.0.8/jquery.elevatezoom.min.css" />
-
-    <!-- jQuery -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-
-    <!-- ElevateZoom JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/elevatezoom/3.0.8/jquery.elevatezoom.min.js"></script>
-
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
-        .stretch-card > .card { width: 100%; min-width: 100%; }
-        body { background-color: #f9f9fa; }
-        .flex { -webkit-box-flex: 1; -ms-flex: 1 1 auto; flex: 1 1 auto; }
-        @media (max-width: 991.98px) { .padding { padding: 1.5rem; } }
-        @media (max-width: 767.98px) { .padding { padding: 1rem; } }
-        .padding { padding: 3rem; }
-        .card .card-title { color: #000000; margin-bottom: 0.625rem; text-transform: capitalize; font-size: 0.875rem; font-weight: 500; }
-        .card .card-description { margin-bottom: .875rem; font-weight: 400; color: #76838f; }
-        .mainimage { width: 100% !important; max-width: 100%; height: auto; }
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .balance-container {
+            position: relative;
+            padding: 20px;
+            border-radius: 15px;
+            background: linear-gradient(45deg, #4CAF50, #2196F3);
+            color: white;
+            text-align: center;
+            margin-bottom: 20px;
+            height:60vh;
+        }
+
+        .balance-container h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .balance-container p {
+            font-size: 1.2em;
+        }
+
+        .add-money-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        .history-section {
+            background-color: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .history-header {
+            color: #4CAF50;
+        }
+
+        .table th, .table td {
+            text-align: center;
+        }
     </style>
+    <title>Wallet Management</title>
 </head>
+
 <body>
-    <div class="page-content page-container" id="page-content">
-        <div class="padding">
-            <div class="row container d-flex justify-content-center">
-                <div class="col-md-10 grid-margin stretch-card">
-                    <div class="card">
-                        <div class="card-body">
-                            <h4 class="card-title">Image Zoom Example</h4>
-                            <p class="card-description">Basic Image Zoom Example with ElevateZoom</p>
-                            <img id="zoom-image" class="mainimage" src="https://img.freepik.com/premium-photo/closeup-drop-water-leaf-flower-reflecting-surrounding-colors-textures_674594-4382.jpg" alt="Main Image" />
+
+    <div class="container mt-5">
+        <div class="balance-container">
+            <h1>$500.00</h1>
+            <p>Your current wallet balance</p>
+            <button class="btn btn-light add-money-btn" data-toggle="modal" data-target="#addMoneyModal">Add Money</button>
+        </div>
+
+        <div class="history-section mt-4">
+            <h5 class="history-header">Transaction History</h5>
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Transaction Type</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>2024-01-10</td>
+                        <td>Money Added</td>
+                        <td>₹500</td>
+                    </tr>
+                    <tr>
+                        <td>2024-01-08</td>
+                        <td>Product Purchase</td>
+                        <td>-₹700</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add Money Modal -->
+    <div class="modal fade" id="addMoneyModal" tabindex="-1" role="dialog" aria-labelledby="addMoneyModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addMoneyModalLabel">Add Money to Wallet</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="amount">Enter Amount</label>
+                            <input type="number" class="form-control" id="amount" placeholder="Enter amount">
                         </div>
-                    </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Add Money</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-        $(document).ready(function() {
-            $('#zoom-image').elevateZoom({
-                zoomType: "inner",
-                cursor: "crosshair",
-                scrollZoom: false
-            });
-        });
-    </script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
 </body>
+
 </html>

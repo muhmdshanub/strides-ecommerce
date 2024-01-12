@@ -1,10 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
+<%- include('../layouts/user-header') -%>
+<%- include('../layouts/user-navbar') -%>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
     <style>
         body {
             background-color: #f8f9fa;
@@ -56,14 +53,16 @@
             text-align: center;
         }
     </style>
-    <title>Wallet Management</title>
-</head>
 
-<body>
+
+
 
     <div class="container mt-5">
+
+        <%- include('../layouts/_messages') -%>
+
         <div class="balance-container justify-content-center align-items-center">
-          <h1 style="background-color: #fefefe51; color: white; padding: 10px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-align: center; width: 5em; height: 5em;">$500.00</h1>
+          <h1 style="background-color: #fefefe51; color: white; padding: 10px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-align: center; width: 5em; height: 5em;"><%= parseFloat(wallet.balance)  %></h1>
            <h4 class="mt-3">Your current wallet balance</h4>
             <button class="btn btn-danger add-money-btn" data-toggle="modal" data-target="#addMoneyModal" style="display: flex; align-items: center; justify-content: center; text-align: center; width: 8em; height: 4em;font-size: large;">Add Money</button>
         </div>
@@ -99,7 +98,7 @@
     </div>
 
     <!-- Add Money Modal -->
-    <div class="modal fade" id="addMoneyModal" tabindex="-1" role="dialog" aria-labelledby="addMoneyModalLabel" aria-hidden="true">
+    <div class="modal fade" id="addMoneyModal" tabindex="-1" role="dialog" aria-labelledby="addMoneyModalLabel" aria-hidden="true" style="z-index: 2060;">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -124,10 +123,4 @@
         </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
-</body>
-
-</html>
+    <%- include('../layouts/user-footer') -%>
