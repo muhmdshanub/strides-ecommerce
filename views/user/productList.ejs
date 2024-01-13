@@ -101,19 +101,19 @@
                         <!-- form content inside overlay-->
 
                         <!-- New Heading for Filters -->
-                        <div class="mb-4">
-                            <h2 class="h5 text-uppercase font-weight-bold ">FILTERS</h2>
+                        <div class="mb-4 text-center">
+                            <h1 class=" text-uppercase text-light " style="font-weight: 900;">FILTERS</h1>
                         </div>
 
 
 
                         <!-- Add this at the top or bottom of your EJS template -->
-                        <form action="/products" method="get">
-                            <div class="container-fluid">
-                                <div class="row">
+                        <form action="/products" method="get" style="background-color: #f1f1f1;">
+                            <div class="container-fluid" style="background-color: #000000;">
+                                <div class="row offset-2 pt-5">
 
                                     <!-- Gender Filter -->
-                                    <div class="col-10 col-sm-6 col-md-3 border p-3 mx-md-3 mx-lg-2 rounded mb-4 bg-white text-black text-left">
+                                    <div class="col-10  col-sm-6 col-md-3 border p-3 mx-md-3 mx-lg-2 rounded mb-4 bg-white text-black text-left">
                                         <div class="form-group">
                                             <label>
                                                 <h4>Gender</h4>
@@ -292,7 +292,7 @@
                         <input type="hidden" name="search" value="<%= searchQuery %>">
                         <input type="hidden" name="sort" value="<%= sortOption %>">
 
-                        <button type="submit" class="btn btn-primary">Filter Now</button>
+                        <button type="submit" class="btn btn-primary my-5">Filter Now</button>
                     </form>
 
 

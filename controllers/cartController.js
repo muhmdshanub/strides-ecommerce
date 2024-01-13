@@ -8,6 +8,7 @@ const Products = require('../models/productModel');
 const Cart = require('../models/cartModel');
 const Order = require('../models/orderModel');
 const Wishlist = require('../models/wishlistModel');
+const Coupon = require('../models/couponModel');
 const sendOtpEmail = require('../utils/sendEmail');
 const bcrypt = require('bcrypt');
 
@@ -193,10 +194,24 @@ const cartLoader = async (req, res, next) => {
 
         const categoriesData = await  getAllCategories();
 
+        // Fetch all documents from the coupons collection
+        const allCoupons = await Coupon.find();
+
+        // Check if the user's orders field is not empty
+        const user = await User.findById(userId);
+        if (user.orders && user.orders.length > 0) {
+            // Remove the WELCOME350 coupon from the list
+            const welcomeCouponIndex = allCoupons.findIndex(coupon => coupon.code === 'WELCOME350');
+            if (welcomeCouponIndex !== -1) {
+                allCoupons.splice(welcomeCouponIndex, 1);
+            }
+        }
+
         // Render the cart page with cart details
         res.render('./user/cart.ejs', {
             cart,
             categories : categoriesData,
+            coupons: allCoupons,
         });
     } catch (error) {
         console.log(error.message);
@@ -250,9 +265,9 @@ const cartItemDeleteHandler = async (req, res, next) => {
         cart.totalItems--;
 
         // Save the updated cart
-        await cart.save();
+        const updatedCart = await cart.save();
 
-        return res.status(200).json({ message: 'Item deleted successfully' });
+        return res.status(200).json({ message: 'Item deleted successfully', cart : updatedCart });
     } catch (error) {
         console.error('Error deleting item:', error);
         next(error)

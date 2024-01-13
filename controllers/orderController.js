@@ -13,7 +13,7 @@ const Wallet = require('../models/walletModel')
 const sendOtpEmail = require('../utils/sendEmail');
 const bcrypt = require('bcrypt');
 const razorpay = require('razorpay');
-const crypto = require( 'crypto' );
+const crypto = require('crypto');
 const { NetworkContextImpl } = require('twilio/lib/rest/supersim/v1/network');
 
 async function getAllCategories() {
@@ -57,7 +57,15 @@ const profileOrdersLoader = async (req, res, next) => {
 }
 
 const profileOrdersCancelHandler = async (req, res, next) => {
+
+    let mongooseSession;
+
     try {
+
+        mongooseSession = await mongoose.startSession(); // Create a new session
+        mongooseSession.startTransaction(); // Start a transaction
+
+
         const orderId = req.params.orderId;
         const userId = req.session.userId;
 
@@ -86,20 +94,71 @@ const profileOrdersCancelHandler = async (req, res, next) => {
             throw genericError;
         }
 
+
+
+
+        const paymentUpdate = await Payment.findOneAndUpdate(
+            { orders: { $elemMatch: { $in: [orderId] } } },
+            { $inc: { totalAmount: -order.totalFinalAmount } },
+            { new: true }
+        );
+
+        const productUpdate = await Products.findOneAndUpdate(
+            { _id: order.product },
+            {
+                $inc: {
+                    [`sizes[0].${order.size}.availableStock`]: order.quantity,
+                    [`sizes[0].${order.size}.soldStock`]: -order.quantity,
+                },
+            },
+            { mongooseSession }
+        );
+
+        // Add the amount to the wallet balance
+        const walletUpdate = await Wallet.findOneAndUpdate(
+            { user: userId },
+            {
+                $inc: {
+                    balance: order.totalFinalAmount,
+                },
+                $push: {
+                    transactions: {
+                        type: 'credit',
+                        amount: order.totalFinalAmount,
+                        description: 'refund money received',
+                    },
+                },
+            },
+            { new: true, mongooseSession }
+        );
+
         // Change the status of the document to 'Cancelled'
         order.status = 'Cancelled';
-        const updatedOrder = await order.save();
+        const updatedOrder = await order.save({ mongooseSession });
+
+        await mongooseSession.commitTransaction();
+        mongooseSession.endSession();
 
         // Send back the new updated order details to the client
         res.json({ message: 'Order cancelled successfully', order: updatedOrder });
     } catch (error) {
         console.error('Error cancelling order:', error);
+        await mongooseSession.abortTransaction();
+        mongooseSession.endSession();
         next(error)
     }
 };
 
 const profileOrdersReturnHandler = async (req, res, next) => {
+
+    let mongooseSession;
+
     try {
+
+        mongooseSession = await mongoose.startSession(); // Create a new session
+        mongooseSession.startTransaction(); // Start a transaction
+
+
         const orderId = req.params.orderId;
         const userId = req.session.userId;
 
@@ -124,18 +183,60 @@ const profileOrdersReturnHandler = async (req, res, next) => {
 
             // Check if the current status is 'Delivered'
             if (order.status === 'Delivered' && daysDifference <= 10) {
+
+                const paymentUpdate = await Payment.findOneAndUpdate(
+                    { orders: { $elemMatch: { $in: [orderId] } } },
+                    { $inc: { totalAmount: -order.totalFinalAmount } },
+                    { new: true, mongooseSession }
+                );
+
+                const productUpdate = await Products.findOneAndUpdate(
+                    { _id: order.product },
+                    {
+                        $inc: {
+                            [`sizes[0].${order.size}.availableStock`]: order.quantity,
+                            [`sizes[0].${order.size}.soldStock`]: -order.quantity,
+                        },
+                    },
+                    { mongooseSession }
+                );
+
+                // Add the amount to the wallet balance
+                const walletUpdate = await Wallet.findOneAndUpdate(
+                    { user: userId },
+                    {
+                        $inc: {
+                            balance: order.totalFinalAmount,
+                        },
+                        $push: {
+                            transactions: {
+                                type: 'credit',
+                                amount: order.totalFinalAmount,
+                                description: 'refund money received',
+                            },
+                        },
+                    },
+                    { new: true, mongooseSession }
+                );
+
                 // Change the status of the document to 'Cancelled'
                 order.status = 'Returned';
                 const updatedOrder = await order.save();
+
+                await mongooseSession.commitTransaction();
+                mongooseSession.endSession();
+
                 // Send back the new updated order details to the client
-                res.json({ message: 'Order returned successfully', order: updatedOrder });
+                if (paymentUpdate && productUpdate && walletUpdate && updatedOrder) {
+                    res.json({ message: 'Order returned successfully', order: updatedOrder });
+                }
+
 
             } else {
+                await mongooseSession.commitTransaction();
+                mongooseSession.endSession();
                 return res.status(400).json({ message: 'Cannot return the order. Either the order status is not "Delivered" or the return period has expired.' });
-                const genericErrorMessage = 'cannot return the order : ';
-                const genericError = new Error(genericErrorMessage);
-                genericError.status = 400;
-                throw genericError;
+
 
             }
         }
@@ -143,6 +244,8 @@ const profileOrdersReturnHandler = async (req, res, next) => {
 
     } catch (error) {
         console.error('Error returning order:', error);
+        await mongooseSession.commitTransaction();
+        mongooseSession.endSession();
         next(error)
     }
 };
@@ -296,6 +399,12 @@ const codPlaceOrderHandler = async (req, res, next) => {
         // Use Promise.all to wait for all order promises to resolve
         const orderUpdates = await Promise.all(orderPromises);
 
+        // Extract the order IDs from the saved orders
+        const orderIds = orderUpdates.map(order => order._id);
+
+        // Update the user document with the order IDs
+        await User.findByIdAndUpdate(userId, { $push: { orders: { $each: orderIds } } });
+
         //update payment collection
 
         const payment = new Payment({
@@ -351,7 +460,7 @@ const codPlaceOrderHandler = async (req, res, next) => {
 
         if (cartUpdate) {
 
-            
+
             res.redirect(`/order-confirm/${paymentUpdate._id}`);
         }
 
@@ -398,10 +507,10 @@ const placeOrderByWalletHandler = async (req, res, next) => {
             return res.redirect('/home');
         }
 
-         // Find the user document
-         const wallet = await Wallet.findOne({ user: userId });
+        // Find the user document
+        const wallet = await Wallet.findOne({ user: userId });
 
-         // Check if the wallet exists
+        // Check if the wallet exists
         if (!wallet) {
             console.log("corresponding wallet not found")
             const walletNotFoundMessage = 'Wallet not found for the user';
@@ -494,7 +603,7 @@ const placeOrderByWalletHandler = async (req, res, next) => {
         }
 
         //check if available wallet amount is less than the cart total
-        if(cart.totalAmount > parseFloat(wallet.balance)){
+        if (cart.totalAmount > parseFloat(wallet.balance)) {
             console.log("not enough money in wallet")
             const walletNotEnoughMessage = 'Wallet not found for the user';
             const walletNotEnoughError = new Error(walletNotEnoughMessage);
@@ -504,7 +613,15 @@ const placeOrderByWalletHandler = async (req, res, next) => {
 
         //reduce the amopunt from wallet and save 
 
-        wallet.balance -= cart.totalAmount ;
+        wallet.balance -= cart.totalAmount;
+
+        // Add a transaction to the transactions array with the current date
+        wallet.transactions.push({
+            type: 'debit',
+            amount: cart.totalAmount,
+            description: 'product purchased',
+            date: new Date(),
+        });
 
         const walletUpdate = wallet.save();
 
@@ -536,6 +653,12 @@ const placeOrderByWalletHandler = async (req, res, next) => {
 
         // Use Promise.all to wait for all order promises to resolve
         const orderUpdates = await Promise.all(orderPromises);
+
+        // Extract the order IDs from the saved orders
+        const orderIds = orderUpdates.map(order => order._id);
+
+        // Update the user document with the order IDs
+        await User.findByIdAndUpdate(userId, { $push: { orders: { $each: orderIds } } });
 
         //update payment collection
 
@@ -592,8 +715,8 @@ const placeOrderByWalletHandler = async (req, res, next) => {
 
         if (cartUpdate) {
 
-            
-            return res.json({ success: true, paymentDBId : paymentUpdate._id });
+
+            return res.json({ success: true, paymentDBId: paymentUpdate._id });
         }
 
 
@@ -764,9 +887,9 @@ const razorpayPlaceOrderHandler = async (req, res, next) => {
 }
 
 const razorpayVerifyPaymentHandler = async (req, res) => {
-    
+
     try {
-        
+
         const razorPayOrderId = req.params.razorpay_order_id;
         const razorPayPaymentId = req.body.payment_id;
         const razorPaySignature = req.body.razorpay_signature;
@@ -803,7 +926,7 @@ const razorpayVerifyPaymentHandler = async (req, res) => {
         const paymentVerificationResponse = await instance.payments.fetch(razorPayPaymentId);
 
         if (paymentVerificationResponse && paymentVerificationResponse.status === 'captured') {
-            
+
             // Check if the payment amount matches the expected amount
             const expectedAmount = req.session.orderData.payment.totalAmount * 100;
             const actualAmount = paymentVerificationResponse.amount;
@@ -885,6 +1008,12 @@ const razorpayVerifyPaymentHandler = async (req, res) => {
             // Use Promise.all to wait for all order promises to resolve
             const orderUpdates = await Promise.all(orderPromises);
 
+            // Extract the order IDs from the saved orders
+            const orderIds = orderUpdates.map(order => order._id);
+
+            // Update the user document with the order IDs
+            await User.findByIdAndUpdate(userId, { $push: { orders: { $each: orderIds } } });
+
 
             const payment = new Payment({
                 user: req.session.orderData.payment.user,
@@ -924,13 +1053,13 @@ const razorpayVerifyPaymentHandler = async (req, res) => {
             }
 
             if (cartUpdate) {
-                
+
                 req.session.orderData = null;
-                
-                return res.json({ success: true, paymentDBId : paymentUpdate._id });
+
+                return res.json({ success: true, paymentDBId: paymentUpdate._id });
             }
 
-            
+
         } else {
             console.log("payment verification response is not okay or not equals to capture")
             // Payment verification failed

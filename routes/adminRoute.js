@@ -4,6 +4,7 @@ const adminController = require('../controllers/adminController');
 const productController = require('../controllers/productController');
 const orderController = require('../controllers/orderController');
 const categoryController = require('../controllers/categoryController');
+const couponController = require('../controllers/couponController')
 const upload = require('../configs/multerConfig');
 const auth = require('../middlewares/adminAuth')
 
@@ -49,6 +50,11 @@ adminRoute.post('/category-add',auth.isLogin,categoryController.categoryAddHandl
 adminRoute.get('/category-edit/:categoryId',auth.isLogin,categoryController.categoryEditLoaderAdmin);
 adminRoute.post('/category-edit/:categoryId',auth.isLogin,categoryController.categoryEditHandlerAdmin);
 
+adminRoute.get('/coupon-list',auth.isLogin,couponController.couponListLoaderAdmin);
+adminRoute.get('/coupon-add',auth.isLogin,couponController.couponAddLoaderAdmin);
+adminRoute.post('/coupon-add',auth.isLogin,couponController.couponAddHandlerAdmin);
+adminRoute.get('/coupon-edit/:couponId',auth.isLogin,couponController.couponEditLoaderAdmin);
+adminRoute.post('/coupon-edit/:couponId',auth.isLogin,couponController.couponEditHandlerAdmin);
 
 adminRoute.get('/orders-list',auth.isLogin,orderController.ordersListLoaderAdmin);
 adminRoute.post('/order-status-update',auth.isLogin,orderController.orderStatusUpdateHandlerAdmin);
