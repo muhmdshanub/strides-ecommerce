@@ -296,7 +296,7 @@ const productAddLoaderAdmin = async (req, res, next) => {
     }
 }
 
-const productAddHandlerAdmin = async (req, res) => {
+const productAddHandlerAdmin = async (req, res, next) => {
     try {
         const {
             brandName,
@@ -312,6 +312,8 @@ const productAddHandlerAdmin = async (req, res) => {
             available_stock_large,
             available_stock_extra_large,
         } = req.body;
+
+        files = req.files;
 
         // Check individual fields
         if (!brandName) {
@@ -535,6 +537,8 @@ const productEditHandlerAdmin = async (req, res, next) => {
             sold_stock_large,
             sold_stock_extra_large,
         } = req.body;
+
+        files = req.files;
 
         // Check if required fields are present
         if (

@@ -586,8 +586,9 @@ const forgotPasswordUpdateHandler = async (req, res, next) => {
 const homeLoader = async (req, res, next) => {
     try {
         const categories = await getAllCategories();
+        const products = await Products.find().sort({ createdAt: -1 }).limit(12);
 
-        res.render('./user/home.ejs', { categories })
+        res.render('./user/home.ejs', { categories, products })
     } catch (error) {
         console.log(error.message);
         next(error)

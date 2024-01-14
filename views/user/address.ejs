@@ -13,9 +13,27 @@
     height: 400px; /* Fixed height for the container */
     overflow-y: auto; /* Enable vertical scrolling */
   }
+
+ 
+  
+
+  /* Custom sticky class */
+  #sticky-col {
+      position: -webkit-sticky;
+      position: sticky;
+      top: 40px;
+      z-index: 2100;
+      overflow: hidden;
+      background-color: rgb(132, 0, 255);
+      color:rgb(255, 255, 255);
+      font-weight: 700;
+  }
+
+  
+
 </style>
 
-<div class="container-fluid mb-5 pb-5">
+<div class="container mb-5 pb-5">
   <div class="row mt-4">
     <!-- Left Part (7/12) -->
     <div class="col-md-7 border rounded pt-3">
@@ -64,7 +82,7 @@
 
     <!-- Right Part (5/12) -->
     <div class="col-md-5">
-      <div class="container-fluid mt-4 border rounded p-5">
+      <div class="container-fluid mt-4 border rounded p-5" id="sticky-col">
         <div class="row">
             <div class="col-md-10 offset-md-1">
                 <div class="total-amount-section">

@@ -6,102 +6,13 @@
 
 <!-- Bootstrap JS with Popper.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-<style>
-    body {
-        margin: 0;
-        padding: 0;
-        font-family: Arial, sans-serif;
-        height: 100vh;
-        overflow: hidden; /* Prevent body scroll */
-        background-color: #e9ecef; /* Light faded background color */
-    }
 
-    .custom-container {
-        display: flex;
-        height: 100%;
-        width:100%;
-        border-radius: 15px; /* Rounded border for the entire container */
-        overflow: hidden; /* Hide overflowing content */
-    }
-
-    .custom-sidebar {
-        width: 25%;
-        max-height: 100%;
-        overflow-y: auto; /* Enable sidebar scrolling if content is taller than max-height */
-        background-color: #ffffff; /* Light faded green color */
-        padding: 20px;
-        box-sizing: border-box;
-    }
-
-    .custom-navlink {
-        color: #ffffff; /* Navbar text color */
-        border-bottom: 1px solid #495057; /* Navbar border color */
-        transition: background-color 0.3s;
-        background-color: #ff0073da;
-        margin-bottom: 5px;
-        border-radius: 5px;
-    }
-
-    .custom-navlink:hover {
-        background-color: #ff007382; /* Navbar background color on hover */
-        color:#fff;
-    }
-
-    .custom-navlink.active {
-        background-color: #3e0226; /* Highlighted color for active navbar */
-        color: #fff; /* Text color for active navbar */
-    }
-
-    .custom-content {
-        width: 75%;
-        background-color: #f8f9fa; /* Light faded background color */
-        padding: 20px;
-        box-sizing: border-box;
-        overflow-y: auto; /* Enable content scroll */
-    }
-</style>
-
-
-
-<div class="container   border shadow my-2 mb-2 h-80">
+<div class="container-fluid">
+    <%- include('../../layouts/_messages') -%>
     <div class="row">
-        <!-- Side Navbar (3/12 width) -->
-        <nav class="col-3 d-none d-md-block bg-light sidebar custom-sidebar">
-            <div class="sidebar-sticky">
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link custom-navlink active" href="#" onclick="showSection('userDetails')">
-                            User Details
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link custom-navlink" href="#" onclick="showSection('primaryAddress')">
-                            Primary Address
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link custom-navlink" href="#" onclick="showSection('wallet')">
-                            Wallet
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link custom-navlink" href="#" onclick="showSection('changePassword')">
-                            Change Password
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link custom-navlink" href="#" onclick="showSection('orders')">
-                            Orders
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </nav>
-
-        <!-- Content Section (9/12 width) -->
-        <main role="main" class="col-9 px-4 custom-content">
-            <!-- Section: User Details -->
-            <div id="userDetails" class="text-black p-3 my-3 ml-2 border rounded">
+        <!-- Left Section (7/12 width) -->
+        <div class="col-md-7 ">
+            <div class="text-black p-3 my-3 ml-2 border rounded">
                 <!-- User Details Box -->
                 <div class="border rounded p-3 mt-3 position-relative pt-4" style="background-color: rgb(229, 251, 251);">
                     <button type="button" class="btn btn-danger m-3" style="position:absolute;top:0;right:0" onclick="openEditModal()" id="editUserButton">Edit</button>
@@ -126,81 +37,93 @@
                 </div>
             </div>
 
-            <!-- Section: Primary Address -->
-            <div id="primaryAddress" class="p-3 border rounded text-black ml-2" style="display: none;">
-                 <!-- Content for the second horizontal section goes here -->
-                 <h2>Primary Address</h2>
+            <!-- Second Horizontal Section (12/12 width) -->
+            <div class=" p-3 border rounded text-black ml-2">
             
-                 <% if (user.addresses && user.addresses.length> 0) { %>
-                     <!-- Display the primary address -->
-             
-                     <section class="border rounded p-3" style="background-color: rgb(229, 251, 251);">
-             
-                         <!-- Placeholder for address details content -->
-                         <address>
-                             <div class="content mt-4 p-2">
-                                 <p class="py-0 my-0">
-                                     <%= user.addresses[0].name %> | <%= user.addresses[0].phoneNumber %>
-                                 </p>
-                                 <p class="py-0 my-0">
-                                     <%= user.addresses[0].city %>, <%= user.addresses[0].state %>
-                                             , <%= user.addresses[0].zipCode %>
-                                 </p>
-                                 <!-- Add more address details as needed -->
-                             </div>
-                         </address>
-             
-                     </section>
-             
-                 <% } else { %>
-                     <p>No primary address found.</p>
-                 <% } %>
- 
-                 <!-- Button to navigate to /profile-address -->
-                 <a href="/list-profile-addresses" class="btn btn-primary mt-3 w-100">View/Update All Addresses</a>
-            </div>
+            
+                <!-- Content for the second horizontal section goes here -->
+                <h2>Primary Address</h2>
+            
+                <% if (user.addresses && user.addresses.length> 0) { %>
+                    <!-- Display the primary address -->
+            
+                    <section class="border rounded p-3" style="background-color: rgb(229, 251, 251);">
+            
+                        <!-- Placeholder for address details content -->
+                        <address>
+                            <div class="content mt-4 p-2">
+                                <p class="py-0 my-0">
+                                    <%= user.addresses[0].name %> | <%= user.addresses[0].phoneNumber %>
+                                </p>
+                                <p class="py-0 my-0">
+                                    <%= user.addresses[0].city %>, <%= user.addresses[0].state %>
+                                            , <%= user.addresses[0].zipCode %>
+                                </p>
+                                <!-- Add more address details as needed -->
+                            </div>
+                        </address>
+            
+                    </section>
+            
+                    <% } else { %>
+                        <p>No primary address found.</p>
+                        <% } %>
 
-            <!-- Section: Wallet -->
-            <div id="wallet" class="row mt-5" style="display: none;">
+                    <!-- Button to navigate to /profile-address -->
+                    <a href="/list-profile-addresses" class="btn btn-primary mt-3 w-100">View/Update All Addresses</a>
+            </div>
+        </div>
+
+        <div class="col-md-4 p-2 ">
+
+            <div class="row mt-5">
                 <div class="col-12 border rounded py-4 mt-4" style="background-color: rgb(227, 249, 250);">
                     <!-- Content for the first full-width div goes here -->
                     <div class="border rounded text-center mb-4" style="background-color: rgb(251, 221, 207);">
-                        <p class="py-4 text-black">You can view and add to your WALLET here. Click on the button below.</p>
+                        <p class="py-4 text-black">You can viw and add to your WALLET here. Click on the button below.</p>
+
                     </div>
 
                     <!-- Button to navigate to Orders -->
                     <a href="/wallet" class="btn btn-success mt-3 w-100">WALLET</a>
+                    
                 </div>
             </div>
-
-            <!-- Section: Change Password -->
-            <div id="changePassword" class="row mb-5" style="display: none;">
+            
+            <!-- Password Reset Button -->
+            <div class="row mb-5">
                 <div class="col-12 border rounded py-4 mt-4" style="background-color: rgb(227, 249, 250);">
                     <!-- Content for the first full-width div goes here -->
                     <div class="border rounded text-center mb-4" style="background-color: rgb(251, 221, 207);">
-                        <p class="py-4 text-black">Do you want to reset your PASSWORD?</p>
+                        <p class="py-4 text-black">Do you want to reset your PASSWORD ?</p>
+
                     </div>
 
                     <!-- Change Password Button -->
                     <button class="btn btn-danger col-8 offset-2" data-toggle="modal" data-target="#changePasswordModal" id="changePasswordButton">Change Password</button>
+                    
                 </div>
             </div>
-
-            <!-- Section: Orders -->
-            <div id="orders" class="row mt-5" style="display: none;">
+            <!-- Second Full-width Div -->
+            <div class="row mt-5">
                 <div class="col-12 border rounded py-4 mt-4" style="background-color: rgb(227, 249, 250);">
                     <!-- Content for the first full-width div goes here -->
                     <div class="border rounded text-center mb-4" style="background-color: rgb(251, 221, 207);">
-                        <p class="py-4 text-black">You can view and edit your orders here. Click on the button below.</p>
+                        <p class="py-4 text-black">You can viw and edit your orders here. Click on the button below.</p>
+
                     </div>
 
                     <!-- Button to navigate to Orders -->
                     <a href="/list-profile-orders" class="btn btn-primary mt-3 w-100">Orders</a>
+                    
                 </div>
             </div>
-        </main>
+        </div>
     </div>
 </div>
+
+
+
 <!-- Modal for Edit -->
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true" style="z-index: 2050;">
     <div class="modal-dialog">
@@ -274,26 +197,9 @@
     </div>
 </div>
 
+
 <script>
-function showSection(sectionId) {
-        // Hide all sections
-        var sections = document.querySelectorAll('.custom-content > div');
-        sections.forEach(function (section) {
-            section.style.display = 'none';
-        });
 
-        // Show the selected section
-        document.getElementById(sectionId).style.display = 'block';
-
-        // Remove 'active' class from all nav links
-        var navLinks = document.querySelectorAll('.nav-link');
-        navLinks.forEach(function (navLink) {
-            navLink.classList.remove('active');
-        });
-        // Add 'active' class to the clicked nav link
-        event.currentTarget.classList.add('active');
-    
-    }
 
 //popover initialization
 $(function () {
@@ -466,7 +372,6 @@ function hidePopover(modalId, inputId) {
         $('#editModal').modal('hide');
     }
 
-    
     // Attach the functions to the buttons
     $(document).ready(function () {
         // Trigger the openEditModal function on "Edit" button click
