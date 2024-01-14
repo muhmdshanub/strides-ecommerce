@@ -14,12 +14,12 @@ const bcrypt = require('bcrypt');
 
 async function getAllCategories() {
     try {
-      const categories = await Category.find();
-      return categories;
+        const categories = await Category.find();
+        return categories;
     } catch (error) {
-      throw error;
+        throw error;
     }
-  }
+}
 
 const addToCartHandler = async (req, res, next) => {
     try {
@@ -79,6 +79,13 @@ const addToCartHandler = async (req, res, next) => {
             cart.totalAmount = cart.items.reduce((total, item) => total + item.totalAmount, 0);
 
             // Save the cart
+
+            // Rest COupon details of cart
+            cart.coupon = {
+                amount: 0,
+                code: "",
+            };
+
             await cart.save();
 
             return res.json({
@@ -192,7 +199,7 @@ const cartLoader = async (req, res, next) => {
         cart.totalAmount = parseFloat(cart.items.reduce((total, item) => total + item.totalAmount, 0)).toFixed(2);
         cart.totalInitialAmount = parseFloat(cart.items.reduce((total, item) => total + item.totalInitialAmount, 0)).toFixed(2);
 
-        const categoriesData = await  getAllCategories();
+        const categoriesData = await getAllCategories();
 
         // Fetch all documents from the coupons collection
         const allCoupons = await Coupon.find();
@@ -210,7 +217,7 @@ const cartLoader = async (req, res, next) => {
         // Render the cart page with cart details
         res.render('./user/cart.ejs', {
             cart,
-            categories : categoriesData,
+            categories: categoriesData,
             coupons: allCoupons,
         });
     } catch (error) {
@@ -264,10 +271,16 @@ const cartItemDeleteHandler = async (req, res, next) => {
 
         cart.totalItems--;
 
+        // Rest COupon details of cart
+        cart.coupon = {
+            amount: 0,
+            code: "",
+        };
+
         // Save the updated cart
         const updatedCart = await cart.save();
 
-        return res.status(200).json({ message: 'Item deleted successfully', cart : updatedCart });
+        return res.status(200).json({ message: 'Item deleted successfully', cart: updatedCart });
     } catch (error) {
         console.error('Error deleting item:', error);
         next(error)
@@ -313,7 +326,7 @@ const cartItemQuantityUpdateHandler = async (req, res, next) => {
                 // Fetch the product from the Product collection
                 const product = await Products.findOne({ _id: productId });
 
-                
+
 
                 if (!product) {
                     console.log("Product not found")
@@ -340,6 +353,11 @@ const cartItemQuantityUpdateHandler = async (req, res, next) => {
                 cartData.items[itemIndex].totalAmount = parseFloat(cartData.items[itemIndex].totalAmount + finalPriceChange);
                 cartData.totalAmount = parseFloat(cartData.totalAmount + finalPriceChange);
 
+                // Rest COupon details of cart
+                cartData.coupon = {
+                    amount: 0,
+                    code: "",
+                };
 
                 const updatedItem = await cartData.save();
 
@@ -413,6 +431,17 @@ const cartItemSizeUpdateHandler = async (req, res, next) => {
             cartData.items[itemIndex].size = newSize;
         }
 
+        // Recalculate totalItems and totalAmount
+        cartData.totalItems = cartData.items.reduce((total, item) => total + item.quantity, 0);
+        cartData.totalAmount = cartData.items.reduce((total, item) => total + item.totalAmount, 0);
+
+
+        // Rest COupon details of cart
+        cartData.coupon = {
+            amount: 0,
+            code: "",
+        };
+
         const updatedItem = await cartData.save();
 
         if (updatedItem) {
@@ -445,10 +474,24 @@ const cartToAddressHandler = async (req, res, next) => {
             throw genericError;
         }
 
+        // Check if the cart has a coupon
+        if (cart.coupon) {
+            const isValidCoupon = await isCouponValidForUser(cart.coupon, userId, cart);
+
+            // If the coupon is not valid, reset it in the cart
+            if (!isValidCoupon) {
+                console.log('Invalid coupon. Resetting cart coupon.');
+                cart.coupon.amount = 0;
+                cart.coupon.code="";
+                await cart.save();
+                return res.status(400).json({ error: 'Invalid coupon. Cart coupon has been reset.' });
+            }
+        }
+
         // Iterate through cart items and check quantity conditions
         const invalidItems = [];
 
-        if (cart.length === 0) {
+        if (cart.items.length === 0) {
             const genericErrorMessage = 'Empty cart: ';
             const genericError = new Error(genericErrorMessage);
             genericError.status = 404;
@@ -513,8 +556,37 @@ const cartToAddressHandler = async (req, res, next) => {
     }
 };
 
+async function isCouponValidForUser(coupon, userId, userCart) {
+    // Check if the coupon code is "WELCOME350"
+    if (coupon.code === "WELCOME350") {
+        // Check if it's the user's first purchase
+        const user = await User.findById(userId);
+        if (user && user.orders && user.orders.length > 0) {
+            console.log("cannot use welcome coupon after the first purchase");
+            return false;
+        }
+    }
 
-module.exports ={
+    // For other coupons
+    if (userCart.totalAmount < coupon.minimumPurchaseLimit) {
+        console.log("minimum purchase limit not met " + userCart.totalAmount + " " + coupon.minimumPurchaseLimit);
+        return false;
+    }
+
+    if (new Date(coupon.validFrom) > Date.now()) {
+        console.log("coupon not yet activated ");
+        return false;
+    }
+
+    if (coupon.validUpto && new Date(coupon.validUpto) < Date.now()) {
+        console.log("expired coupon ");
+        return false;
+    }
+
+    // If all conditions pass, the coupon is valid
+    return true;
+}
+module.exports = {
     addToCartHandler,
     cartLoader,
     cartItemDeleteHandler,

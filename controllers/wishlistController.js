@@ -262,6 +262,13 @@ const moveFromWishlistToCartHandler = async (req, res, next) => {
             cart.totalItems = cart.items.length;
             cart.totalAmount = cart.items.reduce((total, item) => total + item.totalAmount, 0);
 
+
+            // Rest COupon details of cart
+            cart.coupon = {
+                amount: 0,
+                code: "",
+            };
+            
             // Save the cart
             await cart.save();
 

@@ -155,6 +155,18 @@
                             <span>Apply Coupon</span>
                             <button class="btn  btn-danger" data-toggle="modal" data-target="#applyCouponModal">Apply Coupon</button>
                         </div>
+                        <!-- Faded background box with warnings -->
+                        <div class="coupon-warnings"
+                            style="background-color: rgba(0, 0, 0, 0.2); padding: 10px; border-radius: 5px; position: relative;">
+                            <!-- Close button -->
+                            <button type="button btn-warning" class="close" aria-label="Close" onclick="hideCouponWarnings()"
+                                style="position: absolute; top: 0px; right: 5px;color: rgb(255, 30, 0);font-size:30px;">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                    
+                            <p>Please add coupons after selecting the products and size and quantity.</p>
+                            <p>Always utilize the welcome coupon on your first purchase.</p>
+                        </div>
                     </div>
                     <div class="total-amount-section">
                         
@@ -163,26 +175,26 @@
                         <!-- MRP Section -->
                         <div class="amount-row d-flex justify-content-between mt-5 mb-1">
                             <span>Total MRP</span>
-                            <span id="totalMRP"><%= cart.totalInitialAmount  %>Rs.</span>
+                            <span id="totalMRP"><%= cart.totalInitialAmount  + " " %>Rs.</span>
                         </div>
         
                         <!-- Discount Section -->
                         <div class="amount-row d-flex justify-content-between my-1">
                             <span>Discount</span>
-                            <span id="discount"><%= parseFloat(cart.totalInitialAmount - cart.totalAmount).toFixed(2)   %>Rs.</span>
+                            <span id="discount"><%= parseFloat(cart.totalInitialAmount - cart.totalAmount).toFixed(2) + " "  %>Rs.</span>
                         </div>
         
                         <!--  Coupon Section -->
                         <div class="amount-row d-flex justify-content-between my-1">
                             <span>Coupon deduction</span>
-                            <span id="totalMRP"><% cart?.couponSelected?.amount ? cart?.couponSelected?.amount : "0"  %>Rs.</span>
+                            <span id="deductableAmount"><%= (cart.coupon?.amount || "0") + " " %>Rs.</span>
                         </div>
                         
                         
                         <!-- Amount To Pay Section -->
                         <div class="amount-row d-flex justify-content-between mt-5 mb-5">
                             <span>Amount To Pay</span>
-                            <span id="amountToPay"><%= cart.totalAmount  %>Rs.</span>
+                            <span id="amountToPay"><%= parseFloat(cart.totalAmount) - parseFloat(cart.coupon.amount) + " "  %>Rs.</span>
                           </div></span>
                         </div>
         
@@ -274,7 +286,7 @@
                         
                                         <!-- Radio Button -->
                                         <div class="form-check mb-1">
-                                            <input class="form-check-input" type="radio" name="selectedCoupon" id="<%= coupon._id %>" value="<%= coupon.code %>" <%= isCouponActive ? '' : 'disabled' %>>
+                                            <input class="form-check-input" type="radio" name="selectedCoupon" id="<%= coupon._id %>" value="<%= coupon._id %>"  <%= isCouponActive ? '' : 'disabled' %>   <%= coupon.code === cart.coupon.code ? 'checked' : '' %>>
                                         </div>
                                         <div class="pl-4">
                                             <!-- Coupon Code -->
@@ -320,10 +332,90 @@
 </div>
 
 
+
+<!-- modal structure for show alert -->
+<div class="modal" id="customModalAlert" tabindex="-1" role="dialog" style="z-index: 2500;">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">ALERT</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p id="modalTextAlert"></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal" >Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 <script>
 
+function hideCouponWarnings() {
+        // Assuming you have a class to hide the coupon warnings
+        document.querySelector('.coupon-warnings').style.display = 'none';
+}
 
+async function applyCoupon() {
+    try {
+        // Get the selected coupon ID
+        const selectedCouponId = document.querySelector('input[name="selectedCoupon"]:checked');
 
+        // Check if a coupon is selected
+        if (!selectedCouponId) {
+            // Display an error alert if no coupon is selected
+            showAlert('Please select a coupon before applying.');
+            return;
+        }
+
+        // Prepare the data for the fetch request
+        const couponId = selectedCouponId.value;
+
+        // Send a fetch request to apply the coupon
+        const response = await fetch(`/apply-coupon/${couponId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        } else {
+            const data = await response.json();
+            // Update UI with new cart information
+            const totalAmountElement = document.getElementById('amountToPay');
+            const deductableAmountElement = document.getElementById('deductableAmount');
+
+            // Assuming 'data.cart' contains the updated cart information
+            totalAmountElement.textContent = `${data.cart.totalAmount - data.cart.coupon.amount} Rs.`;
+            deductableAmountElement.textContent = `${data.cart.coupon.amount} Rs.`;
+
+            
+
+            hideCouponModal();
+            
+        }
+
+    } catch (error) {
+        console.error('Error applying coupon:', error.message);
+        // Show error on the alert modal
+        showAlert(`Error applying coupon: ${error.message}`);
+    }
+}
+
+function hideCouponModal() {
+    // Assuming you have a modal element with the ID 'applyCouponModal'
+    const couponModal = $('#applyCouponModal');
+
+    // Hide the modal using jQuery
+    couponModal.modal('hide');
+}
 
 
 function checkCouponValidity(coupons, cart) {
@@ -435,7 +527,7 @@ function validateAndRedirect() {
 
   function deleteCartItem(itemId, cartDetails, deletedItemDetails) {
 
-const { totalAmount, totalInitialAmount } = cartDetails;
+const { totalAmount, totalInitialAmount,coupon } = cartDetails;
 const { deletedItemTotalAmount, deletedItemTotalInitialAmount } = deletedItemDetails;
 
 // Send DELETE request to server
@@ -465,6 +557,7 @@ fetch(`/cart-item-delete/${itemId}`, {
   document.getElementById('totalMRP').textContent = `${currentInitialAmountToPay} Rs.`;
   document.getElementById('discount').textContent = `${currentInitialAmountToPay - currentFinalTotalAmount} Rs.`;
   document.getElementById('amountToPay').textContent = `${currentFinalTotalAmount} Rs.`;
+  document.getElementById('deductableAmount').textContent = "0 Rs.";
 })
 .catch(error => {
   console.error('Error deleting item:', error);
@@ -534,7 +627,13 @@ function updateSize(itemId, newSize) {
 }
 
 
+function showAlert(message) {
+  // Set the modal text
+  document.getElementById('modalTextAlert').innerText = message;
 
+  // Show the modal
+  $('#customModalAlert').modal('show');
+}
 
 
 </script>

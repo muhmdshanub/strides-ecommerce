@@ -668,6 +668,25 @@ const paymentSelectionLoader = async (req, res, next) => {
 
         const categories = await getAllCategories();
 
+        // Check if the cart has a coupon
+        if (cart.coupon) {
+            const isValidCoupon = await isCouponValidForUser(cart.coupon, userId, cart);
+
+            // If the coupon is not valid, reset it in the cart
+            if (!isValidCoupon) {
+                console.log('Invalid coupon. Resetting cart coupon.');
+                cart.coupon.amount = 0;
+                cart.coupon.code="";
+
+                const cartData = await cart.save();
+
+                // If there are invalid coupons
+                 req.flash('error', "You have some invalid items in your cart. Please click On the MOVE TO ADDDRESS button to know more.")
+                return res.render('./user/cart', {cart:cartData, categories });
+            }
+        }
+
+
         if (invalidItems.length > 0) {
             // If there are invalid items, redirect to the cart page with the invalid items
             req.flash('error', "You have some invalid items in your cart. Please click On the MOVE TO ADDDRESS button to know more.")
@@ -815,7 +834,36 @@ const passwordChangeHandler = async (req, res, next) => {
     }
 };
 
+async function isCouponValidForUser(coupon, userId, userCart) {
+    // Check if the coupon code is "WELCOME350"
+    if (coupon.code === "WELCOME350") {
+        // Check if it's the user's first purchase
+        const user = await User.findById(userId);
+        if (user && user.orders && user.orders.length > 0) {
+            console.log("cannot use welcome coupon after the first purchase");
+            return false;
+        }
+    }
 
+    // For other coupons
+    if (userCart.totalAmount < coupon.minimumPurchaseLimit) {
+        console.log("minimum purchase limit not met " + userCart.totalAmount + " " + coupon.minimumPurchaseLimit);
+        return false;
+    }
+
+    if (new Date(coupon.validFrom) > Date.now()) {
+        console.log("coupon not yet activated ");
+        return false;
+    }
+
+    if (coupon.validUpto && new Date(coupon.validUpto) < Date.now()) {
+        console.log("expired coupon ");
+        return false;
+    }
+
+    // If all conditions pass, the coupon is valid
+    return true;
+}
 
 
 module.exports = {

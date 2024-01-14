@@ -8,6 +8,7 @@ const orderController = require('../controllers/orderController.js')
 const addressController = require('../controllers/addressController.js')
 const paymentController = require('../controllers/paymentController')
 const walletController = require('../controllers/walletController.js')
+const couponController = require('../controllers/couponController.js')
 const auth = require('../middlewares/loginAuth')
 
 const userRoute = express();
@@ -47,6 +48,8 @@ userRoute.delete('/cart-item-delete/:itemId',auth.isLogin,cartController.cartIte
 userRoute.get('/cart-item-quantity-update',auth.isLogin,cartController.cartItemQuantityUpdateHandler);
 userRoute.get('/cart-item-size-update',auth.isLogin,cartController.cartItemSizeUpdateHandler);
 userRoute.get('/cart-to-address',auth.isLogin,cartController.cartToAddressHandler);
+
+userRoute.post('/apply-coupon/:couponId',auth.isLogin,couponController.applyCouponInCartHandler)
 
 userRoute.get('/address',auth.isLogin,addressController.addressLoader);
 

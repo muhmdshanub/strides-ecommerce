@@ -250,10 +250,101 @@ const couponEditHandlerAdmin = async (req, res, next) => {
 };
 
 
+const applyCouponInCartHandler = async (req, res, next) => {
+    try {
+        console.log("reached the function")
+        // Extract couponId from params
+        const { couponId } = req.params;
+
+         // Extract couponId from session
+         const userId = req.session.userId;
+
+        // Check if couponId is present
+        if (!couponId) {
+            console.log("No couponId")
+            return res.status(400).json({ error: 'Coupon ID is required.' });
+        }
+
+        // Check if couponId is a valid ObjectId
+        if (!mongoose.Types.ObjectId.isValid(couponId)) {
+            console.log("invalid format couponId")
+            return res.status(400).json({ error: 'Invalid Coupon ID.' });
+        }
+
+        // Find the coupon in the database
+        const coupon = await Coupon.findById(couponId);
+
+        // Check if the coupon exists
+        if (!coupon) {
+            console.log("No coupon with id in db")
+            return res.status(404).json({ error: 'Coupon not found.' });
+        }
+
+        // Fetch the cart data for the current user
+        const userCart = await Cart.findOne({ user: userId });
+
+        // Check if the user has a cart
+        if (!userCart) {
+            console.log("corresponding users cart not found")
+            return res.status(404).json({ error: 'Cart not found for the user.' });
+        }
+
+         // Check if the coupon code is "WELCOME350"
+         if (coupon.code === "WELCOME350") {
+            // Check if it's the user's first purchase
+            const user = await User.findById(userId);
+            if (user && user.orders && user.orders.length > 0) {
+                console.log("cannot use welcome coupon after first purchase")
+                return res.status(400).json({ error: 'This coupon can only be used on the first purchase.' });
+            }
+        }
+
+        // For other coupons
+        if (userCart.totalAmount < coupon.minimumPurchaseLimit) {
+            console.log("minimum purchase limit not met " +userCart.totalAmount + "   "+ coupon.minimumPurchaseLimit)
+            return res.status(400).json({ error: 'Coupon is invalid for the current purchase.' });
+        }
+
+        if (new Date(coupon.validFrom) > Date.now()){
+            console.log("coupon not yet activated ")
+            return res.status(400).json({ error: 'Coupon is invalid for the current purchase.' });
+        }
+
+        if (coupon.validUpto && new Date(coupon.validUpto) < Date.now()){
+            console.log("expired coupon ")
+            return res.status(400).json({ error: 'Coupon is invalid for the current purchase.' });
+        }
+
+        // Apply the coupon logic here and update the cart's coupon details
+        userCart.coupon = {
+            amount: coupon.amount,
+            code: coupon.code,
+        };
+
+        // Save the updated cart with the applied coupon
+        await userCart.save();
+
+        
+
+        // Send a success response or additional data as needed
+        return res.status(200).json({ message: 'Coupon applied successfully.', data: coupon , cart: userCart});
+
+    } catch (error) {
+
+        console.log('Error applying coupon:', error.message);
+        // Send an error response to the client
+        return res.status(500).json({ error: 'Internal Server Error.' });
+    }
+};
+
+
+
+
 module.exports = {
     couponAddLoaderAdmin,
     couponAddHandlerAdmin,
     couponListLoaderAdmin,
     couponEditLoaderAdmin,
     couponEditHandlerAdmin,
+    applyCouponInCartHandler,
 }

@@ -124,7 +124,7 @@
                     <!-- Amount To Pay Section -->
                     <div class="amount-row d-flex justify-content-between mt-3 mb-5" style="font-size: larger; font-weight: 900;">
                         <span>Amount To Pay</span>
-                        <span id="amountToPay"><%= cart.totalAmount  %>Rs.</span>
+                        <span id="amountToPay"><%= cart.totalAmount - cart.coupon?.amount  %>Rs.</span>
                     </div>
                 </div>    
               </div>

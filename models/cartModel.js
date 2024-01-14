@@ -19,6 +19,10 @@ const cartSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
+    coupon:{
+        amount : { type: Number, default: 0 },
+        code : { type: String,default: ''}, 
+    }
 });
 
 // Create a compound unique index for items.product and items.size within each item

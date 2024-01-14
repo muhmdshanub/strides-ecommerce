@@ -313,6 +313,24 @@ const codPlaceOrderHandler = async (req, res, next) => {
             match: { isDeleted: false }, // Only populate products that are not deleted
         });
 
+        // Check if the cart has a coupon
+        if (cart.coupon) {
+            const isValidCoupon = await isCouponValidForUser(cart.coupon, userId, cart);
+
+            // If the coupon is not valid, reset it in the cart
+            if (!isValidCoupon) {
+                console.log('Invalid coupon. Resetting cart coupon.');
+                cart.coupon.amount = 0;
+                cart.coupon.code = "";
+
+                const cart = await cart.save();
+
+                // If there are invalid coupons
+                req.flash('error', "You have some invalid coupon atatched to cart. We have resetted it for you.")
+                return res.redirect('/cart');
+            }
+        }
+
         // Check for invalidated items in the cart
         const invalidItems = [];
 
@@ -378,6 +396,9 @@ const codPlaceOrderHandler = async (req, res, next) => {
 
         // Iterate through each item in the cart
         cart.items.forEach(item => {
+            // Adjust totalFinalAmount based on the coupon amount
+            item.totalFinalAmount = item.totalAmount - (cart.coupon ? cart.coupon.amount / cart.totalItems : 0);
+
             // Create an order document for the current item
             const order = new Order({
                 user: userId,
@@ -388,7 +409,7 @@ const codPlaceOrderHandler = async (req, res, next) => {
                 brandName: item.product.brandName,
                 size: item.size,
                 quantity: item.quantity,
-                totalFinalAmount: item.totalAmount,
+                totalFinalAmount: item.totalFinalAmount, // Use the adjusted value here
                 totalInitialMrp: item.totalInitialAmount,
             });
 
@@ -407,11 +428,14 @@ const codPlaceOrderHandler = async (req, res, next) => {
 
         //update payment collection
 
+        // Calculate totalAmount for Payment document based on adjusted item.totalFinalAmount
+        const totalAmountAfterCoupon = cart.totalAmount - (cart.coupon ? cart.coupon.amount : 0);
+
         const payment = new Payment({
             user: userId,
             paymentMethod: 'Cash on Delivery',
             orders: orderUpdates.map(order => order._id),
-            totalAmount: cart.totalAmount,
+            totalAmount: totalAmountAfterCoupon, // Use the adjusted value here
         });
 
         // Save the Payment document
@@ -454,6 +478,8 @@ const codPlaceOrderHandler = async (req, res, next) => {
             cart.items = [];
             cart.totalItems = 0;
             cart.totalAmount = 0;
+            cart.coupon.code = "";
+            cart.coupon.amount = 0;
 
             cartUpdate = await cart.save();
         }
@@ -546,6 +572,25 @@ const placeOrderByWalletHandler = async (req, res, next) => {
             match: { isDeleted: false }, // Only populate products that are not deleted
         });
 
+
+        // Check if the cart has a coupon
+        if (cart.coupon) {
+            const isValidCoupon = await isCouponValidForUser(cart.coupon, userId, cart);
+
+            // If the coupon is not valid, reset it in the cart
+            if (!isValidCoupon) {
+                console.log('Invalid coupon. Resetting cart coupon.');
+                cart.coupon.amount = 0;
+                cart.coupon.code = "";
+
+                const cart = await cart.save();
+
+                // If there are invalid coupons
+                req.flash('error', "You have some invalid coupon atatched to cart. We have resetted it for you.")
+                return res.redirect('/cart');
+            }
+        }
+
         // Check for invalidated items in the cart
         const invalidItems = [];
 
@@ -602,23 +647,24 @@ const placeOrderByWalletHandler = async (req, res, next) => {
             return res.render('./user/cart', { invalidItems, cart, categories });
         }
 
-        //check if available wallet amount is less than the cart total
-        if (cart.totalAmount > parseFloat(wallet.balance)) {
+        // Check if wallet balance is sufficient
+        const amountToDeduct = cart.totalAmount - (cart.coupon ? cart.coupon.amount : 0);
+
+        if (amountToDeduct > parseFloat(wallet.balance)) {
             console.log("not enough money in wallet")
-            const walletNotEnoughMessage = 'Wallet not found for the user';
+            const walletNotEnoughMessage = 'Insufficient balance in the wallet';
             const walletNotEnoughError = new Error(walletNotEnoughMessage);
             walletNotEnoughError.status = 404;
             throw walletNotEnoughError;
         }
 
-        //reduce the amopunt from wallet and save 
-
-        wallet.balance -= cart.totalAmount;
+        // Reduce the amount from the wallet and save
+        wallet.balance -= amountToDeduct;
 
         // Add a transaction to the transactions array with the current date
         wallet.transactions.push({
             type: 'debit',
-            amount: cart.totalAmount,
+            amount: amountToDeduct,
             description: 'product purchased',
             date: new Date(),
         });
@@ -633,6 +679,9 @@ const placeOrderByWalletHandler = async (req, res, next) => {
 
         // Iterate through each item in the cart
         cart.items.forEach(item => {
+            // Adjust totalFinalAmount based on the coupon amount
+            item.totalFinalAmount = item.totalAmount - (cart.coupon ? cart.coupon.amount / cart.totalItems : 0);
+
             // Create an order document for the current item
             const order = new Order({
                 user: userId,
@@ -643,7 +692,7 @@ const placeOrderByWalletHandler = async (req, res, next) => {
                 brandName: item.product.brandName,
                 size: item.size,
                 quantity: item.quantity,
-                totalFinalAmount: item.totalAmount,
+                totalFinalAmount: item.totalFinalAmount, // Use the adjusted value here
                 totalInitialMrp: item.totalInitialAmount,
             });
 
@@ -662,15 +711,22 @@ const placeOrderByWalletHandler = async (req, res, next) => {
 
         //update payment collection
 
+        // Calculate totalAmount for Payment document based on adjusted item.totalFinalAmount
+        const totalAmountAfterCoupon = cart.totalAmount - (cart.coupon ? cart.coupon.amount : 0);
+
         const payment = new Payment({
             user: userId,
             paymentMethod: 'Wallet Payment',
             orders: orderUpdates.map(order => order._id),
-            totalAmount: cart.totalAmount,
+            totalAmount: totalAmountAfterCoupon, // Use the adjusted value here
         });
 
         // Save the Payment document
         const paymentUpdate = await payment.save();
+
+       
+
+
 
         // update product collection
 
@@ -709,6 +765,8 @@ const placeOrderByWalletHandler = async (req, res, next) => {
             cart.items = [];
             cart.totalItems = 0;
             cart.totalAmount = 0;
+            cart.coupon.code = "";
+            cart.coupon.amount = 0;
 
             cartUpdate = await cart.save();
         }
@@ -788,6 +846,24 @@ const razorpayPlaceOrderHandler = async (req, res, next) => {
             match: { isDeleted: false }, // Only populate products that are not deleted
         });
 
+        // Check if the cart has a coupon
+        if (cart.coupon) {
+            const isValidCoupon = await isCouponValidForUser(cart.coupon, userId, cart);
+
+            // If the coupon is not valid, reset it in the cart
+            if (!isValidCoupon) {
+                console.log('Invalid coupon. Resetting cart coupon.');
+                cart.coupon.amount = 0;
+                cart.coupon.code = "";
+
+                const cart = await cart.save();
+
+                // If there are invalid coupons
+                req.flash('error', "You have some invalid coupon atatched to cart. We have resetted it for you.")
+                return res.redirect('/cart');
+            }
+        }
+
         // Check for invalidated items in the cart
         const invalidItems = [];
 
@@ -855,14 +931,14 @@ const razorpayPlaceOrderHandler = async (req, res, next) => {
                     brandName: item.product.brandName,
                     size: item.size,
                     quantity: item.quantity,
-                    totalFinalAmount: item.totalAmount,
+                    totalFinalAmount: item.totalAmount - (cart.coupon ? cart.coupon.amount / cart.totalItems : 0),
                     totalInitialMrp: item.totalInitialAmount,
                 })),
             },
             payment: {
                 user: userId,
                 paymentMethod: 'RazorPay Payment', // Update this if payment method changes
-                totalAmount: cart.totalAmount,
+                totalAmount: cart.totalAmount - (cart.coupon.amount ? cart.coupon.amount : 0),
             },
         };
 
@@ -871,7 +947,7 @@ const razorpayPlaceOrderHandler = async (req, res, next) => {
 
 
         const order = await instance.orders.create({
-            amount: cart.totalAmount * 100,
+            amount: req.session.orderData.payment.totalAmount * 100,
             currency: "INR",
             receipt: "receipt"
         })
@@ -1048,6 +1124,8 @@ const razorpayVerifyPaymentHandler = async (req, res) => {
                 cart.items = [];
                 cart.totalItems = 0;
                 cart.totalAmount = 0;
+                cart.coupon.code = "";
+                cart.coupon.amount = 0;
 
                 cartUpdate = await cart.save();
             }
@@ -1140,6 +1218,37 @@ const orderStatusUpdateHandlerAdmin = async (req, res, next) => {
         next(error)
     }
 };
+
+async function isCouponValidForUser(coupon, userId, userCart) {
+    // Check if the coupon code is "WELCOME350"
+    if (coupon.code === "WELCOME350") {
+        // Check if it's the user's first purchase
+        const user = await User.findById(userId);
+        if (user && user.orders && user.orders.length > 0) {
+            console.log("cannot use welcome coupon after the first purchase");
+            return false;
+        }
+    }
+
+    // For other coupons
+    if (userCart.totalAmount < coupon.minimumPurchaseLimit) {
+        console.log("minimum purchase limit not met " + userCart.totalAmount + " " + coupon.minimumPurchaseLimit);
+        return false;
+    }
+
+    if (new Date(coupon.validFrom) > Date.now()) {
+        console.log("coupon not yet activated ");
+        return false;
+    }
+
+    if (coupon.validUpto && new Date(coupon.validUpto) < Date.now()) {
+        console.log("expired coupon ");
+        return false;
+    }
+
+    // If all conditions pass, the coupon is valid
+    return true;
+}
 
 module.exports = {
 
