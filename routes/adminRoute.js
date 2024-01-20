@@ -5,6 +5,7 @@ const productController = require('../controllers/productController');
 const orderController = require('../controllers/orderController');
 const categoryController = require('../controllers/categoryController');
 const couponController = require('../controllers/couponController')
+const offerController = require('../controllers/offerController')
 const upload = require('../configs/multerConfig');
 const auth = require('../middlewares/adminAuth')
 
@@ -59,5 +60,10 @@ adminRoute.post('/coupon-edit/:couponId',auth.isLogin,couponController.couponEdi
 
 adminRoute.get('/orders-list',auth.isLogin,orderController.ordersListLoaderAdmin);
 adminRoute.post('/order-status-update',auth.isLogin,orderController.orderStatusUpdateHandlerAdmin);
+
+adminRoute.get('/offers-list',auth.isLogin,offerController.offerListLoader)
+adminRoute.get('/offers-add',auth.isLogin,offerController.offersAddLoader)
+adminRoute.post('/offers-add',auth.isLogin,offerController.offerAddHandlerAdmin);
+adminRoute.get('/autocomplete-products',auth.isLogin,productController.autoCompleteProductsHandler)
 
   module.exports =adminRoute;

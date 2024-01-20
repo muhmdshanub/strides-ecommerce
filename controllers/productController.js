@@ -659,6 +659,35 @@ const productEditHandlerAdmin = async (req, res, next) => {
     }
 };
 
+const autoCompleteProductsHandler = async (req, res , next) =>{
+    try{
+        const term = req.query.term;
+
+        // Use a MongoDB regex to perform a case-insensitive search
+        const regex = new RegExp(term, 'i');
+
+        // Query the products collection for matching products
+        const products = await Products.find({
+            $or: [
+                { productName: { $regex: regex } },
+                { brandName: { $regex: regex } },
+            ],
+        }).select('_id productName brandName images.image1.name'); // Specify the fields to return
+
+        // Prepare the response data
+        const suggestions = products.map(product => ({
+            id: product._id,
+            label: `${product.productName} - ${product.brandName}`,
+            thumbnail: product.images.image1.name,
+        }));
+
+        // Send the suggestions as JSON response
+        res.json(suggestions);
+    }catch(error){
+        console.log(error.message);
+        next(error)
+    }
+}
 
 module.exports = {
     productListLoader,
@@ -670,4 +699,5 @@ module.exports = {
     multipleProductDeletionHandlerAdmin,
     productEditLoaderAdmin,
     productEditHandlerAdmin,
+    autoCompleteProductsHandler,
 }

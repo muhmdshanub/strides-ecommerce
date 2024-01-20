@@ -412,13 +412,12 @@ const userMonthlySpendStatisticsGraphLoader = async (req, res) => {
     try {
         const { selectedYear } = req.query;
 
-        console.log(selectedYear)
+        
 
         const startOfMonth = new Date(parseInt(selectedYear), 0, 1);
         const endOfMonth = new Date(parseInt(selectedYear), 11, 31, 23, 59, 59, 999);
 
-        console.log('startOfMonth:', startOfMonth);
-        console.log('endOfMonth:', endOfMonth);     
+             
         const aggregationPipeline = [
             {
                 $match: {

@@ -34,8 +34,7 @@ const couponAddHandlerAdmin = async (req, res, next) => {
             validFrom,
             validUpto
         } = req.body;
-        console.log("minimum purchase limit is " + minimumPurchaseLimit)
-        console.log("type of minimum purchase limit is " + typeof(minimumPurchaseLimit))
+        
         // Validate that name is present and of string type
         if (!name || typeof name !== 'string') {
             req.flash('error', 'Invalid or missing value for the Name field.');
