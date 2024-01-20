@@ -50,7 +50,7 @@ const addToCartHandler = async (req, res, next) => {
             return res.status(404).json({ error: 'Product not found' });
 
         }
-
+        await Products.updateOne({ _id: productId }, { $inc: { popularity: 0.1 } });
         // Get the available stock for the selected size
         const availableStock = product.sizes[0][size].availableStock;
 

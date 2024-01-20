@@ -9,6 +9,7 @@ const Cart = require('../models/cartModel');
 const Wishlist = require('../models/wishlistModel');
 const Order = require('../models/orderModel');
 const Wallet = require('../models/walletModel')
+const Referrals = require('../models/referralModel')
 const sendOtpEmail = require('../utils/sendEmail');
 
 const bcrypt = require('bcrypt');
@@ -64,7 +65,7 @@ const signupHandler = async (req, res, next) => {
     try {
 
         // Validate incoming data (add more validation as needed)
-        const { name, email, phone, password, dateOfBirth } = req.body;
+        const { name, email, phone, password, dateOfBirth, referralToken } = req.body;
 
         if (!name) {
             req.flash('error', 'Name is required');
@@ -106,6 +107,10 @@ const signupHandler = async (req, res, next) => {
 
             // Store user details in the session
             req.session.userData = { name, email, phone, password, dateOfBirth };
+
+            if (referralToken !== null) {
+                req.session.userData.referralToken = referralToken;
+            }
             //craete otps
             const emailOtp = generateOtp();
             //const phoneOtp = generateOtp();
@@ -235,7 +240,7 @@ const loadsignupVerify = async (req, res, next) => {
 const signupVerificationHandler = async (req, res, next) => {
     try {
         // Retrieve user data and OTPs from the session
-        const { name, email, phone, password, dateOfBirth } = req.session.userData || {};
+        const { name, email, phone, password, dateOfBirth, referralToken } = req.session.userData || {};
         const { emailOtp } = req.body;
 
         // Validate OTPs
@@ -287,6 +292,48 @@ const signupVerificationHandler = async (req, res, next) => {
             }
 
             if (updatedUserData) {
+
+                if (referralToken) {
+                    const referralUser = await Referrals.findOne({ referralToken });
+
+                    if (referralUser) {
+                        // Update the referral user's wallet (assuming there is a field like balance in the Wallet schema)
+                        walletUpdate = await Wallet.findOneAndUpdate(
+                            { user: referralUser.referringUser },
+                            {
+                                $inc: {
+                                    balance: 200,
+                                },
+                                $push: {
+                                    transactions: {
+                                        type: 'credit',
+                                        amount: 200,
+                                        description: 'Referral reward',
+                                    },
+                                },
+                            },
+                            { new: true, }
+                        );
+
+                        if(walletUpdate){
+                            // Update the Referral document with the referred user's details
+                            await Referrals.findOneAndUpdate(
+                                { referralToken },
+                                {
+                                    $push: {
+                                        referredUsers: {
+                                            user: userData._id,
+                                            timestamp: Date.now(),
+                                        },
+                                    },
+                                },
+                                { new: true }
+                            );
+                        }
+                        
+                    }
+
+                }
                 // Remove user data from the session after successful signup
                 delete req.session.userData;
 
@@ -677,13 +724,13 @@ const paymentSelectionLoader = async (req, res, next) => {
             if (!isValidCoupon) {
                 console.log('Invalid coupon. Resetting cart coupon.');
                 cart.coupon.amount = 0;
-                cart.coupon.code="";
+                cart.coupon.code = "";
 
                 const cartData = await cart.save();
 
                 // If there are invalid coupons
-                 req.flash('error', "You have some invalid items in your cart. Please click On the MOVE TO ADDDRESS button to know more.")
-                return res.render('./user/cart', {cart:cartData, categories });
+                req.flash('error', "You have some invalid items in your cart. Please click On the MOVE TO ADDDRESS button to know more.")
+                return res.render('./user/cart', { cart: cartData, categories });
             }
         }
 
@@ -705,7 +752,7 @@ const paymentSelectionLoader = async (req, res, next) => {
                 throw walletNotFoundError;
             }
             // Render the payment-selection page with the first address and cart details
-            res.render('./user/payment-selection.ejs', { firstAddress, user, cart, categories,wallet });
+            res.render('./user/payment-selection.ejs', { firstAddress, user, cart, categories, wallet });
         }
 
 
@@ -728,9 +775,11 @@ const profileLoader = async (req, res, next) => {
 
         user.stringDateOfBirth = `${day}-${month}-${year}`;
 
+
+        const referrals = await Referrals.findOne({ referringUser: userId })
         const categories = await getAllCategories();
 
-        res.render('./user/profile/profile.ejs', { user, categories });
+        res.render('./user/profile/profile.ejs', { user, categories, referrals });
 
     } catch (error) {
         console.log(error.message)

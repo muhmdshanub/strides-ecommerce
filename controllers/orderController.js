@@ -1,5 +1,8 @@
 const otpGenerator = require('otp-generator');
 const mongoose = require('mongoose');
+const easyinvoice = require('easyinvoice');
+var fs = require("fs");
+const moment = require('moment');
 const User = require('../models/userModel');
 const OTP = require('../models/otpModel');
 const Address = require('../models/addressModel');
@@ -43,6 +46,7 @@ const profileOrdersLoader = async (req, res, next) => {
                 model: 'Product',
                 select: '_id images.image1.name', // Include the fields you need
             })
+            .sort({ orderDate: -1 })
             .exec();
 
         const categoriesData = await getAllCategories();
@@ -114,23 +118,27 @@ const profileOrdersCancelHandler = async (req, res, next) => {
             { mongooseSession }
         );
 
-        // Add the amount to the wallet balance
-        const walletUpdate = await Wallet.findOneAndUpdate(
-            { user: userId },
-            {
-                $inc: {
-                    balance: order.totalFinalAmount,
-                },
-                $push: {
-                    transactions: {
-                        type: 'credit',
-                        amount: order.totalFinalAmount,
-                        description: 'refund money received',
+        let walletUpdate;
+
+        if (paymentUpdate.paymentMethod !== "Cash on Delivery") {
+            // Add the amount to the wallet balance
+            walletUpdate = await Wallet.findOneAndUpdate(
+                { user: userId },
+                {
+                    $inc: {
+                        balance: order.totalFinalAmount,
+                    },
+                    $push: {
+                        transactions: {
+                            type: 'credit',
+                            amount: order.totalFinalAmount,
+                            description: 'refund money received',
+                        },
                     },
                 },
-            },
-            { new: true, mongooseSession }
-        );
+                { new: true, mongooseSession }
+            );
+        }
 
         // Change the status of the document to 'Cancelled'
         order.status = 'Cancelled';
@@ -462,16 +470,18 @@ const codPlaceOrderHandler = async (req, res, next) => {
                     reason: 'Invalid size',
                 });
             }
+
+            // Increment the popularity field by 1
+            product.popularity += 1;
         }
 
         // Save the updated product details to the database
         const productUpdate = await Products.bulkWrite(cart.items.map(item => ({
             updateOne: {
                 filter: { _id: item.product._id },
-                update: { $set: { sizes: item.product.sizes } },
+                update: { $set: { sizes: item.product.sizes, popularity: item.product.popularity } },
             },
-        })
-        ));
+        })));
 
         if (orderUpdates && productUpdate && paymentUpdate) {
             // If all updates are successful, remove the cart items
@@ -724,7 +734,7 @@ const placeOrderByWalletHandler = async (req, res, next) => {
         // Save the Payment document
         const paymentUpdate = await payment.save();
 
-       
+
 
 
 
@@ -749,16 +759,18 @@ const placeOrderByWalletHandler = async (req, res, next) => {
                     reason: 'Invalid size',
                 });
             }
+
+            // Increment the popularity field by 1
+            product.popularity += 1;
         }
 
         // Save the updated product details to the database
         const productUpdate = await Products.bulkWrite(cart.items.map(item => ({
             updateOne: {
                 filter: { _id: item.product._id },
-                update: { $set: { sizes: item.product.sizes } },
+                update: { $set: { sizes: item.product.sizes, popularity: item.product.popularity } },
             },
-        })
-        ));
+        })));
 
         if (orderUpdates && productUpdate && paymentUpdate && walletUpdate) {
             // If all updates are successful, remove the cart items
@@ -1110,14 +1122,37 @@ const razorpayVerifyPaymentHandler = async (req, res) => {
                 match: { isDeleted: false }, // Only populate products that are not deleted
             });
 
+            // Update product quantities based on the items in the cart
+            for (const item of cart.items) {
+                const product = item.product;
+                const selectedSize = item.size;
+
+                // Assuming sizes array has only one element
+                const stockSchema = product.sizes[0];
+
+                // Deduct the quantity from the available stock
+                if (selectedSize in stockSchema) {
+                    stockSchema[selectedSize].availableStock -= item.quantity;
+                    stockSchema[selectedSize].soldStock += item.quantity;
+                } else {
+                    // Handle the case where the selected size is not valid
+                    invalidItems.push({
+                        // ... Include details of the invalid item ...
+                        reason: 'Invalid size',
+                    });
+                }
+
+                // Increment the popularity field by 1
+                product.popularity += 1;
+            }
+
             // Save the updated product details to the database
             const productUpdate = await Products.bulkWrite(cart.items.map(item => ({
                 updateOne: {
                     filter: { _id: item.product._id },
-                    update: { $set: { sizes: item.product.sizes } },
+                    update: { $set: { sizes: item.product.sizes, popularity: item.product.popularity } },
                 },
-            })
-            ));
+            })));
 
             if (orderUpdates && productUpdate && paymentUpdate) {
                 // If all updates are successful, remove the cart items
@@ -1158,6 +1193,7 @@ const ordersListLoaderAdmin = async (req, res, next) => {
         const options = {
             page: page,
             limit: pageSize,
+            sort: { orderDate: -1 },
             populate: {
                 path: 'product',
                 select: '_id images.image1.name', // Specify the fields to populate
@@ -1181,10 +1217,18 @@ const orderStatusUpdateHandlerAdmin = async (req, res, next) => {
     try {
         // Extract values from the request body
         const { orderId, newStatus } = req.body;
+        const userId = req.session.userId;
 
         // Check if orderId and newStatus are present in the request body
         if (!orderId || !newStatus) {
             return res.status(400).json({ message: 'Missing orderId or newStatus in the request body' });
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(orderId)) {
+            const genericErrorMessage = 'Invalid order ID: ';
+            const genericError = new Error(genericErrorMessage);
+            genericError.status = 500;
+            throw genericError;
         }
 
         // Find the corresponding order
@@ -1193,6 +1237,30 @@ const orderStatusUpdateHandlerAdmin = async (req, res, next) => {
         // If no order found, send a response
         if (!order) {
             return res.status(404).json({ message: 'Order not found' });
+        }
+
+        //check if wrong status change requested by user
+        const prevStatus = order.status;
+
+        if(prevStatus === "Cancelled" && newStatus === "Placed"){
+            return res.status(404).json({ message: 'Invalid operation. Cannot Proceed with status change.' });
+        }
+
+        if(prevStatus === "Delivered" && (newStatus === "Placed" || newStatus === "Cancelled")){
+            return res.status(404).json({ message: 'Invalid operation. Cannot Proceed with status change.' });
+        }
+
+        if(prevStatus === "Returned" && (newStatus === "Placed" || newStatus === "Cancelled" || newStatus === "Delivered")){
+            return res.status(404).json({ message: 'Invalid operation. Cannot Proceed with status change.' });
+        }
+
+        if(prevStatus === "Return received" && (newStatus === "Placed" || newStatus === "Cancelled" || newStatus === "Delivered" || newStatus === "Returned")){
+            return res.status(404).json({ message: 'Invalid operation. Cannot Proceed with status change.' });
+        }
+
+        if(prevStatus === newStatus){
+            // Send back a success response with the updated order details
+            res.status(200).json({ message: 'Order status updated successfully', order: order });
         }
 
         // Update the status field and save
@@ -1211,6 +1279,102 @@ const orderStatusUpdateHandlerAdmin = async (req, res, next) => {
         // Save the changes
         await order.save();
 
+        if (newStatus === 'Cancelled' && prevStatus === "Placed") {
+            mongooseSession = await mongoose.startSession(); // Create a new session
+            mongooseSession.startTransaction(); // Start a transaction
+
+
+            const paymentUpdate = await Payment.findOneAndUpdate(
+                { orders: { $elemMatch: { $in: [orderId] } } },
+                { $inc: { totalAmount: -order.totalFinalAmount } },
+                { new: true }
+            );
+    
+            const productUpdate = await Products.findOneAndUpdate(
+                { _id: order.product },
+                {
+                    $inc: {
+                        [`sizes[0].${order.size}.availableStock`]: order.quantity,
+                        [`sizes[0].${order.size}.soldStock`]: -order.quantity,
+                    },
+                },
+                { mongooseSession }
+            );
+    
+            let walletUpdate;
+    
+            if (paymentUpdate.paymentMethod !== "Cash on Delivery") {
+                // Add the amount to the wallet balance
+                walletUpdate = await Wallet.findOneAndUpdate(
+                    { user: userId },
+                    {
+                        $inc: {
+                            balance: order.totalFinalAmount,
+                        },
+                        $push: {
+                            transactions: {
+                                type: 'credit',
+                                amount: order.totalFinalAmount,
+                                description: 'refund money received',
+                            },
+                        },
+                    },
+                    { new: true, mongooseSession }
+                );
+            }
+
+            await mongooseSession.commitTransaction();
+            mongooseSession.endSession();
+
+        }
+
+        if (newStatus === 'Returned' && prevStatus === "Delivered") {
+
+            mongooseSession = await mongoose.startSession(); // Create a new session
+            mongooseSession.startTransaction(); // Start a transaction
+
+
+            
+
+                const paymentUpdate = await Payment.findOneAndUpdate(
+                    { orders: { $elemMatch: { $in: [orderId] } } },
+                    { $inc: { totalAmount: -order.totalFinalAmount } },
+                    { new: true, mongooseSession }
+                );
+
+                const productUpdate = await Products.findOneAndUpdate(
+                    { _id: order.product },
+                    {
+                        $inc: {
+                            [`sizes[0].${order.size}.availableStock`]: order.quantity,
+                            [`sizes[0].${order.size}.soldStock`]: -order.quantity,
+                        },
+                    },
+                    { mongooseSession }
+                );
+
+                // Add the amount to the wallet balance
+                const walletUpdate = await Wallet.findOneAndUpdate(
+                    { user: userId },
+                    {
+                        $inc: {
+                            balance: order.totalFinalAmount,
+                        },
+                        $push: {
+                            transactions: {
+                                type: 'credit',
+                                amount: order.totalFinalAmount,
+                                description: 'refund money received',
+                            },
+                        },
+                    },
+                    { new: true, mongooseSession }
+                );
+
+                await mongooseSession.commitTransaction();
+                mongooseSession.endSession();
+        }
+
         // Send back a success response with the updated order details
         res.status(200).json({ message: 'Order status updated successfully', order: order });
     } catch (error) {
@@ -1218,6 +1382,109 @@ const orderStatusUpdateHandlerAdmin = async (req, res, next) => {
         next(error)
     }
 };
+
+
+
+const generateInvoiceHandler = async (req, res, next) => {
+    try {
+        console.log("entered the invoice handler");
+
+        const orderId = req.body.orderId;
+        if (!orderId) {
+            return res.status(400).json({ message: 'Missing orderId in the request body' });
+        }
+
+        const order = await Order.findById(orderId);
+
+        if (!order) {
+            return res.status(400).json({ message: 'Missing orderId in the request body' });
+        }
+
+        if (order.deliveredDate && order.status === "Delivered") {
+            deliveredDate = new Date(order.deliveredDate);
+            currentDate = new Date();
+            daysDifference = Math.abs(deliveredDate - currentDate) / (1000 * 60 * 60 * 24);
+        }
+
+        if (daysDifference <= 10) {
+            return res.status(400).json({ message: 'Order is not valid for invoice generation yet.' });
+        }
+
+        const formatDate = (date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+
+        const data = {
+            sender: {
+                company: 'Strides E-commerce',
+                address: '123 Main Street, Suite 456',
+                zip: 'Cityville, State 12345',
+                city: 'India',
+                country: 'Phone: 8157882661'
+            },
+            client: {
+                company: order.address.name,
+                city: order.address.city,
+                state: order.address.state,
+                zip: order.address.zipCode,
+            },
+            images: {
+                logo: fs.readFileSync('./public/images/logo.jpg', 'base64'),
+            },
+            information: {
+                
+                date: formatDate(new Date(order.deliveredDate)),
+            },
+            products: [
+                {
+                    description: `${order.brandName}_${order.productName}, \t size : ${order.size}`,
+                    quantity: order.quantity,
+                    price: parseFloat(order.totalFinalAmount/2),
+                }
+            ],
+            settings: {
+                currency: 'INR',
+                language: 'en',
+                taxNotation: 'vat',
+                tax: 0,
+            }
+        };
+
+        // Create your invoice! Easy!
+        easyinvoice.createInvoice(data, function (result) {
+            console.log("invoice created");
+            // The response will contain a base64 encoded PDF file
+            const pdfBase64 = result.pdf;
+
+            // Send the PDF as a response
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', 'attachment; filename=invoice.pdf');
+            res.send(Buffer.from(pdfBase64, 'base64'));
+        });
+
+    } catch (error) {
+        console.error(error.message);
+        next(error);
+    }
+};
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', reason.stack || reason);
+    // Recommended: send the information to a service like Sentry
+    // promise.catch((err) => console.error('Promise rejection error:', err));
+});
+
+// Handle unhandled exceptions
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error.stack || error);
+    // Recommended: send the information to a service like Sentry
+    // process.exit(1); // Ensure process exits after uncaught exception
+});
+
 
 async function isCouponValidForUser(coupon, userId, userCart) {
     // Check if the coupon code is "WELCOME350"
@@ -1262,4 +1529,5 @@ module.exports = {
     profileOrdersReturnHandler,
     ordersListLoaderAdmin,
     orderStatusUpdateHandlerAdmin,
+    generateInvoiceHandler,
 }

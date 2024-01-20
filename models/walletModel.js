@@ -30,7 +30,7 @@ const walletSchema = new mongoose.Schema({
             },
             description: {
                 type: String,
-                enum: ['money added to wallet', 'refund money received', 'product purchased', 'other'],
+                enum: ['money added to wallet', 'refund money received', 'product purchased','Referral reward', 'other'],
                 required: true,
             },
             date: {

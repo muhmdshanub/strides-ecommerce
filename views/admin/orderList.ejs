@@ -48,7 +48,7 @@
                                                                 style="width: 50px; height: 50px;">
                                                         </td>
                                                         <td class="tm-order-id">
-                                                            <%= orders[i]._id %>
+                                                            Order_<%= i+1 %>
                                                         </td>
                                                         <td class="tm-order-userName">
                                                             <%= orders[i].userName %>
@@ -102,8 +102,14 @@
                                                             <%= stringDateDelivered%>
                                                         </td>
                                                         <td class="tm-order-orderStatus">
-                                                            <select name="status" id="status<%= i %>" class="form-control" style="width: fit-content;height: fit-content;background-color: rgba(255, 2, 2, 0.607);" onchange="updateStatus('<%= orders[i]._id %>', this.value)">
-                                                                <% const availableStatuses = ['Placed', 'Cancelled', 'Delivered', 'Returned', 'Return Received']; %>
+                                                            <select name="status" id="status<%= i %>" class="form-control" style="width: fit-content;height: fit-content;background-color: rgba(255, 2, 2, 0.607);" onchange="updateStatus('<%= orders[i]._id %>', this.value,'<%=orders[i].status%>','<%= i %>')">
+                                                                <% const availableStatuses = 
+                                                                    orders[i].status === "Placed" ? ['Placed', 'Cancelled', 'Delivered', 'Returned', 'Return Received'] :
+                                                                    orders[i].status === "Cancelled" ? ['Cancelled'] :
+                                                                    orders[i].status === 'Delivered' ? [ 'Delivered',  'Returned', 'Return Received'] :
+                                                                    orders[i].status === 'Returned' ? [   'Returned', 'Return Received'] :
+                                                                    [    'Return Received'] 
+                                                                %>
                                                                 <% for (const status of availableStatuses) { %>
                                                                     <option value="<%= status %>" <%= status === orders[i].status ? 'selected' : '' %>> <%= status %>  </option>
                                                                 <% } %>
@@ -151,31 +157,68 @@
 
 
             <script>
-                // JavaScript function to handle the change event and update the status on the server
-    async function updateStatus(orderId, newStatus) {
-        try {
-            // Make a fetch request to your server API endpoint to update the status
-            const response = await fetch('/admin/order-status-update', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    orderId: orderId,
-                    newStatus: newStatus,
-                }),
-            });
 
-            if (response.ok) {
-                // Optionally, handle the response or perform additional actions
-                console.log('Status updated successfully');
-            } else {
-                console.error('Failed to update status:', response.statusText);
-            }
-        } catch (error) {
-            console.error('Error updating status:', error.message);
-        }
-    }
+                async function updateStatus(orderId, newStatus, prevStatus, index) {
+                    try {
+                        // Check if newStatus is equal to prevStatus, no need to proceed
+                        if (newStatus === prevStatus) {
+                            console.log('Status is already the same. No update needed.');
+                            return;
+                        }
+                        // Make a fetch request to your server API endpoint to update the status
+                        const response = await fetch('/admin/order-status-update', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                orderId: orderId,
+                                newStatus: newStatus,
+                            }),
+                        });
+
+                        if (response.ok) {
+                            // Optionally, handle the response or perform additional actions
+                            console.log('Status updated successfully');
+                            // Generate new options based on the updated status
+                            const updatedOptions = generateStatusOptions(getUpdatedStatusList(newStatus), newStatus);
+
+                            // Update the options in the select element
+                            const selectElement = document.getElementById(`status${index}`);
+                            selectElement.innerHTML = updatedOptions;
+
+                        } else {
+                            console.error('Failed to update status:', response.statusText);
+                        }
+                    } catch (error) {
+                        console.error('Error updating status:', error.message);
+                    }
+                }
+
+                // Function to get the updated status list based on the newStatus
+                function getUpdatedStatusList(newStatus) {
+                    switch (newStatus) {
+                        case 'Placed':
+                            return ['Placed', 'Cancelled', 'Delivered', 'Returned', 'Return Received'];
+                        case 'Cancelled':
+                            return ['Cancelled'];
+                        case 'Delivered':
+                            return ['Delivered', 'Returned', 'Return Received'];
+                        case 'Returned':
+                            return ['Returned', 'Return Received'];
+                        case "Return Received":
+                            return ['Return Received']
+                        default:
+                            return [];
+                    }
+                }
+
+                // Function to generate options based on the status list and selected status
+                function generateStatusOptions(statusList, selectedStatus) {
+                    return statusList.map((status) => (
+                        `<option value="${status}" ${status === selectedStatus ? 'selected' : ''}>${status}</option>`
+                    )).join('');
+                }
             </script>
 
 

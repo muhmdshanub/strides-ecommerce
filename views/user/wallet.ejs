@@ -76,19 +76,25 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <% wallet.transactions.forEach(transaction => { %>
+                    <% const transactionsLength=wallet.transactions.length; for (let i=transactionsLength - 1; i>= 0; i--) {
+                        const transaction = wallet.transactions[i];
+                        %>
                         <tr>
-                            <td><%= transaction.date.toISOString().split('T')[0] %></td>
-                            <td><%= transaction.description %></td>
                             <td>
-                                <% if (transaction.type === 'credit') { %>
+                                <%= transaction.date.toISOString().split('T')[0] %>
+                            </td>
+                            <td>
+                                <%= transaction.description %>
+                            </td>
+                            <td>
+                                <% if (transaction.type==='credit' ) { %>
                                     <span class="badge badge-success">+ ₹<%= transaction.amount %></span>
-                                <% } else { %>
-                                    <span class="badge badge-danger">- ₹<%= transaction.amount %></span>
-                                <% } %>
+                                    <% } else { %>
+                                        <span class="badge badge-danger">- ₹<%= transaction.amount %></span>
+                                        <% } %>
                             </td>
                         </tr>
-                    <% }); %>
+                        <% } %>
                 </tbody>
             </table>
         </div>
@@ -219,31 +225,35 @@ function showAlert(message) {
 
                                 const verificationData = await verificationResponse.json();
 
-                                if ( verificationData.success) {
-                                    
-                                    
-                                    const updatedAmount = verificationData.newTransaction.amount + parseFloat(document.getElementById('walletBalance').innerText) ;
-                                    console.log("updatedAMount is " + updatedAmount);
+                                if (verificationData.success) {
+
+
+                                    const updatedAmount = verificationData.newTransaction.amount + parseFloat(document.getElementById('walletBalance').innerText);
+                                    console.log("updatedAmount is " + updatedAmount);
                                     document.getElementById('walletBalance').innerText = parseFloat(updatedAmount).toFixed(2);
 
-
                                     // Initialize or retrieve the DataTable instance
-
                                     const newRowData = verificationData.newTransaction;
                                     const table = $('#transactionTable');
 
                                     // Parse the date string to create a Date object
                                     const transactionDate = new Date(newRowData.date);
 
-                                    // Append new row to the table body
-                                    table.bootstrapTable('append', [{
+                                    // Get the current data in the table
+                                    const currentData = table.bootstrapTable('getData');
+
+                                    // Add the new row data to the beginning of the current data array
+                                    currentData.unshift({
                                         date: transactionDate.toISOString().split('T')[0],
                                         description: newRowData.description,
                                         amount: `<span class="badge badge-${newRowData.type === 'debit' ? 'danger' : 'success'}">₹${newRowData.amount}</span>`,
-                                    }]);
-                                    // Scroll to the bottom of the table to show the new row
-                                    const height = table.height();
-                                    table.bootstrapTable('scrollTo', height);
+                                    });
+
+                                    // Load the updated data into the table
+                                    table.bootstrapTable('load', currentData);
+
+                                    // Scroll to the top of the table to show the new row
+                                    table.bootstrapTable('scrollTo', 0);
 
 
 

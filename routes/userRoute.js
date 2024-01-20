@@ -9,6 +9,7 @@ const addressController = require('../controllers/addressController.js')
 const paymentController = require('../controllers/paymentController')
 const walletController = require('../controllers/walletController.js')
 const couponController = require('../controllers/couponController.js')
+const referralsController = require('../controllers/referralController.js')
 const auth = require('../middlewares/loginAuth')
 
 const userRoute = express();
@@ -84,6 +85,8 @@ userRoute.get('/list-profile-orders',auth.isLogin,orderController.profileOrdersL
 userRoute.post('/profile-orders-cancel/:orderId',auth.isLogin,orderController.profileOrdersCancelHandler);
 userRoute.post('/profile-orders-return/:orderId',auth.isLogin,orderController.profileOrdersReturnHandler);
 
+userRoute.post('/generate-invoice-for-order',auth.isLogin,orderController.generateInvoiceHandler);
+
 userRoute.get('/wishlist',auth.isLogin,wishlistController.wishlistLoader);
 userRoute.post('/add-to-wishlist/:productId',auth.isLogin,wishlistController.addToWishlistHandler);
 userRoute.post('/remove-from-wishlist/:productId',auth.isLogin,wishlistController.removeFromWishlistHandler);
@@ -95,6 +98,8 @@ userRoute.post('/add-money-to-wallet',auth.isLogin,walletController.createOrderT
 userRoute.post('/wallet-place-order/:addressId',auth.isLogin,orderController.placeOrderByWalletHandler);
 
 userRoute.post('/verify-razorpay-wallet-payment/:razorpay_order_id',auth.isLogin,walletController.verifyOrderToAddMoneyHandler)
+
+userRoute.post('/create-referrals-token',auth.isLogin,referralsController.createReferralsTokenHandler)
 
 
 module.exports =userRoute;

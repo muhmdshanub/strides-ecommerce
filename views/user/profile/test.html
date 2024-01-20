@@ -3,244 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circular Pie Chart</title>
+    <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            overflow: hidden; /* Prevent body scroll */
-        }
-    
-        .carousel-item {
-            height: 300px; /* Adjust the height as needed */
-        }
-    
-        .product-card {
-            margin: 0;
-            padding: 0;
-            border: 5px solid #b6b7b8; /* Thick borders */
-            border-radius: 5px; /* Rounded corners */
-            box-shadow: 5px 5px 5px #e7e7e7; /* Box shadow */
-            transition: all 0.3s ease-in-out; /* Smooth transition on hover */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-    
-        .product-card img {
-            width: 100%; /* Set width to 100% for responsiveness */
-            height: 200px; /* Set fixed height for the image */
-            border-radius: 5px; /* Rounded corners for images */
-        }
-    
-        .product-card:hover {
-            transform: scale(1.05); /* Expand on hover */
-        }
-    
-        .product-text {
-            margin-top: 10px;
-            text-align: center;
-            padding: 10px;
-            border-radius: 5px;
-            background-image: linear-gradient(to top, #dfe9f3 0%, white 100%);
-            font-size: 18px; /* Default font size */
-        }
-    
-        @media (max-width: 576px) {
-            .product-card img {
-                height: 100px; /* Decrease fixed height for small screens */
-            }
-    
-            .product-text {
-                font-size: 10px; /* Decrease font size for small screens */
-            }
-        }
-    
-        @media (min-width: 577px) and (max-width: 768px) {
-            .product-card img {
-                height: 150px; /* Decrease fixed height for medium screens */
-            }
-    
-            .product-text {
-                font-size: 12px; /* Decrease font size for medium screens */
-            }
-        }
-    
-        @media (min-width: 769px) and (max-width: 992px) {
-            .product-card img {
-                height: 175px; /* Decrease fixed height for large screens */
-            }
-    
-            .product-text {
-                font-size: 14px; /* Decrease font size for large screens */
-            }
-        }
-    
-        @media (min-width: 993px) {
-            .product-card img {
-                height: 200px; /* Default fixed height for extra-large screens */
-            }
-    
-            .product-text {
-                font-size: 16px; /* Default font size for extra-large screens */
-            }
-        }
-    </style>
-    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
-<div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel">
-    <ol class="carousel-indicators">
-        <li data-target="#carouselExampleIndicators" data-slide-to="0" class="active"></li>
-        <li data-target="#carouselExampleIndicators" data-slide-to="1"></li>
-        <li data-target="#carouselExampleIndicators" data-slide-to="2"></li>
-        
-    </ol>
-    <div class="carousel-inner">
-        <div class="carousel-item active">
-            <div class="container py-5">
-                <div class="row col-12">
-                    <div class="col-5 col-md-4 col-lg-3">
-                        <div class="product-card" id="product1" onclick="productClicked(1)">
-                            <img src="https://fujifilm-x.com/wp-content/uploads/2021/01/gfx100s_sample_04_thum-1.jpg" alt="Product 1">
-                        </div>
-                        <p class="product-text">Nike Blue shoe • 60% off</p>
-                    </div>
-                
-                    <div class="col-5 col-md-4 col-lg-3">
-                        <div class="product-card" id="product2" onclick="productClicked(2)">
-                            <img src="https://fujifilm-x.com/wp-content/uploads/2021/01/gfx100s_sample_04_thum-1.jpg" alt="Product 2">
-                        </div>
-                        <p class="product-text">Nike Blue shoe • 60% off</p>
-                    </div>
-                    
-                    <div class="col-5 col-md-4 col-lg-3">
-                        <div class="product-card" id="product3" onclick="productClicked(3)">
-                            <img src="https://fujifilm-x.com/wp-content/uploads/2021/01/gfx100s_sample_04_thum-1.jpg" alt="Product 3">
-                        </div>
-                        <p class="product-text">Nike Blue shoe • 60% off</p>
-                    </div>
-                    
-                    <div class="col-5 col-md-4 col-lg-3">
-                        <div class="product-card" id="product4" onclick="productClicked(4)">
-                            <img src="https://fujifilm-x.com/wp-content/uploads/2021/01/gfx100s_sample_04_thum-1.jpg" alt="Product 4">
-                        </div>
-                        <p class="product-text">Nike Blue shoe • 60% off</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="carousel-item">
-            <div class="container py-5">
-                <div class="row col-12">
-                    <div class="col-5 col-md-4 col-lg-3">
-                        <div class="product-card" id="product1" onclick="productClicked(1)">
-                            <img src="https://static.remove.bg/sample-gallery/graphics/bird-thumbnail.jpg" alt="Product 1">
-                        </div>
-                        <p class="product-text">Nike Blue shoe • 60% off</p>
-                    </div>
-                
-                    <div class="col-5 col-md-4 col-lg-3">
-                        <div class="product-card" id="product2" onclick="productClicked(2)">
-                            <img src="https://static.remove.bg/sample-gallery/graphics/bird-thumbnail.jpg" alt="Product 2">
-                        </div>
-                        <p class="product-text">Nike Blue shoe • 60% off</p>
-                    </div>
-                    
-                    <div class="col-5 col-md-4 col-lg-3">
-                        <div class="product-card" id="product3" onclick="productClicked(3)">
-                            <img src="https://fujifilm-x.com/wp-content/uploads/2021/01/gfx100s_sample_04_thum-1.jpg" alt="Product 3">
-                        </div>
-                        <p class="product-text">Nike Blue shoe • 60% off</p>
-                    </div>
-                    
-                    <div class="col-5 col-md-4 col-lg-3">
-                        <div class="product-card" id="product4" onclick="productClicked(4)">
-                            <img src="https://fujifilm-x.com/wp-content/uploads/2021/01/gfx100s_sample_04_thum-1.jpg" alt="Product 4">
-                        </div>
-                        <p class="product-text">Nike Blue shoe • 60% off</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="carousel-item">
-            <div class="container py-5">
-                <div class="row col-12">
-                    <div class="col-5 col-md-4 col-lg-3">
-                        <div class="product-card" id="product1" onclick="productClicked(1)">
-                            <img src="https://fujifilm-x.com/wp-content/uploads/2021/01/gfx100s_sample_04_thum-1.jpg" alt="Product 1">
-                        </div>
-                        <p class="product-text">Nike Blue shoe • 60% off</p>
-                    </div>
-                
-                    <div class="col-5 col-md-4 col-lg-3">
-                        <div class="product-card" id="product2" onclick="productClicked(2)">
-                            <img src="data:image/jpeg;base64,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" alt="Product 2">
-                        </div>
-                        <p class="product-text">Nike Blue shoe • 60% off</p>
-                    </div>
-                    
-                    <div class="col-5 col-md-4 col-lg-3">
-                        <div class="product-card" id="product3" onclick="productClicked(3)">
-                            <img src="https://static.remove.bg/sample-gallery/graphics/bird-thumbnail.jpg" alt="Product 3">
-                        </div>
-                        <p class="product-text">Nike Blue shoe • 60% off</p>
-                    </div>
-                    
-                    <div class="col-5 col-md-4 col-lg-3">
-                        <div class="product-card" id="product4" onclick="productClicked(4)">
-                            <img src="https://fujifilm-x.com/wp-content/uploads/2021/01/gfx100s_sample_04_thum-1.jpg" alt="Product 4">
-                        </div>
-                        <p class="product-text">Nike Blue shoe • 60% off</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Add content for other carousel items as needed -->
-        <!-- Use the same structure as the active item -->
+    <div class="container mt-5">
+        <canvas id="myPieChart" width="400" height="400"></canvas>
     </div>
-    <a class="carousel-control-prev" href="#carouselExampleIndicators" role="button" data-slide="prev">
-        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-        <span class="sr-only">Previous</span>
+
+    <a href="https://facebook.com" target="_blank" class="svg-link">
+        <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="blue" class="bi bi-facebook" viewBox="0 0 16 16">
+            <path d="M16 8.049c0-4.446-3.582-8.05-8-8.05C3.58 0-.002 3.603-.002 8.05c0 4.017 2.926 7.347 6.75 7.951v-5.625h-2.03V8.05H6.75V6.275c0-2.017 1.195-3.131 3.022-3.131.876 0 1.791.157 1.791.157v1.98h-1.009c-.993 0-1.303.621-1.303 1.258v1.51h2.218l-.354 2.326H9.25V16c3.824-.604 6.75-3.934 6.75-7.951"/>
+        </svg>
     </a>
-    <a class="carousel-control-next" href="#carouselExampleIndicators" role="button" data-slide="next">
-        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-        <span class="sr-only">Next</span>
-    </a>
-</div>
-<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
-<script>
-    // Add your custom banner click functionality here
-    function bannerClicked() {
-        alert('Banner Clicked!');
-    }
 
-    // Add your custom product click functionality here
-    function productClicked(productId) {
-        alert('Product ' + productId + ' Clicked!');
-    }
-    
-        // JavaScript for auto-sliding the carousel
-        $(document).ready(function(){
-            // Set the interval (in milliseconds) for auto-sliding
-            var interval = 5000; // 5000 milliseconds = 5 seconds
+    <!-- Bootstrap JS with Popper.js and jQuery -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 
-            // Function to move to the next slide
-            function nextSlide() {
-                $('.carousel').carousel('next');
-            }
+    <script>
+        // Your chart data with two labels
+        var data = {
+            labels: ['Label 1', 'Label 2'],
+            datasets: [{
+                data: [250, 750], // Adjust the data percentages as needed
+                backgroundColor: ['#FF6384', '#36A2EB']
+            }]
+        };
 
-            // Set up the interval to call the nextSlide function
-            setInterval(nextSlide, interval);
+        // Chart options
+        var options = {
+            cutoutPercentage: 0, // Set to 0 for a full circle
+            responsive: true,
+            maintainAspectRatio: false
+        };
+
+        // Get the canvas element
+        var ctx = document.getElementById('myPieChart').getContext('2d');
+
+        // Create the pie chart
+        var myPieChart = new Chart(ctx, {
+            type: 'pie',
+            data: data,
+            options: options
         });
-    
-</script>
-
-
-
+    </script>
 </body>
 </html>

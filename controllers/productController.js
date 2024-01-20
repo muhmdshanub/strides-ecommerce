@@ -241,6 +241,9 @@ const productSingleLoader = async (req, res, next) => {
         const productData = await Products.findById(productId).populate('category');
         const categories = await getAllCategories();
         if (productData) {
+
+            await Products.updateOne({ _id: productId }, { $inc: { popularity: 0.01 } });
+
             res.render('./user/product-single.ejs', { product: productData, categories });
         } else {
             const genericErrorMessage = 'Invalid user details:';
@@ -563,9 +566,13 @@ const productEditHandlerAdmin = async (req, res, next) => {
             return res.redirect('/admin/products-edit/' + productId);
         }
 
+        
+
 
         // Fetch category information
         const categoryInfo = await Category.findById(category);
+
+        
 
         if (!categoryInfo) {
             req.flash('error', 'Invalid category.');

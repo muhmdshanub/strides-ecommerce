@@ -84,6 +84,11 @@
                                                             <div class="d-inline-block" style="position: absolute; bottom: 20px; right: 20px;">
                                                                 <button type="button" class="btn btn-warning" id="returnOrderButton-<%=order._id%>"  onclick="returnOrder('<%= order._id %>')">Return Order</button>
                                                             </div>
+                                                        <% } else if (order.status === 'Delivered' && daysDifference > 10 ) { %>
+                                                            <!-- Show Generate Invoice button -->
+                                                            <div class="d-inline-block" style="position: absolute; bottom: 20px; right: 20px;">
+                                                                <button type="button" class="btn btn-dark" id="generateInvoiceButton-<%=order._id%>" onclick="generateInvoice('<%= order._id %>')">Generate Invoice</button>
+                                                            </div>
                                                         <% } %>
                                                     </div>
                                                     
@@ -123,7 +128,7 @@
 
 <script>
 
-  
+
     // Function to handle canceling an order
     const cancelOrder = async (orderId) => {
         try {
@@ -143,7 +148,7 @@
                 document.getElementById(`status-${orderId}`).innerText = 'Cancelled';
                 // Remove the buttons
                 document.getElementById(`cancelOrderButton-${orderId}`).remove();
-                
+
             } else {
                 console.error('Failed to cancel the order');
             }
@@ -180,6 +185,36 @@
     };
 
 
+    //handle the generate invoice button
+
+    async function generateInvoice(orderId) {
+        try {
+            // Send a request to the server to generate the invoice
+            const response = await fetch('generate-invoice-for-order', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ orderId: orderId }), // Pass the orderId parameter
+            });
+
+            // Handle the response (e.g., trigger download)
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `invoice_${orderId}.pdf`; // Set the desired filename, including orderId
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            } else {
+                console.error('Failed to generate invoice');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
 
 
 

@@ -57,6 +57,7 @@ const addToWishlistHandler = async (req, res, next) => {
             throw genericError;
 
         }
+        await Products.updateOne({ _id: productId }, { $inc: { popularity: 0.05 } });
 
         // Check if at least one size has available stock greater than 0
         const isAnySizeAvailable = ['small', 'medium', 'large', 'extraLarge'].some(size => {
@@ -226,6 +227,7 @@ const moveFromWishlistToCartHandler = async (req, res, next) => {
             throw genericError;
         }
         
+        await Products.updateOne({ _id: productId }, { $inc: { popularity: 0.1 } });
 
         const selectedQuantity = 1;
 

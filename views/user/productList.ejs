@@ -372,6 +372,14 @@
                                                             All Products
                                                         </h4>
                                                         <% } %>
+                                                <% if (Object.keys(selectedFilters).length > 0 && !searchQuery) { %>
+                                                    <h4 class="card-title text-left">
+                                                        Filter results : 
+                                                        
+                                                        <a href="/products" class="btn btn-warning ml-3">Clear</a>
+                                                    </h4>
+                                                    <% } %>
+                                                    
                                             </div>
                                         </div>
                                     </div>

@@ -26,7 +26,8 @@ adminRoute.post('/login',adminController.loginHandler);
 adminRoute.get('/logout',auth.isLogin,adminController.logoutHandler);
 
 adminRoute.get('/dashboard',auth.isLogin,adminController.dashboardLoader);
-
+adminRoute.get('/user-creation-statistics',auth.isLogin,adminController.userCreationStatisticsgraphLoader)
+adminRoute.get('/monthly-spend-statistics',auth.isLogin,adminController.userMonthlySpendStatisticsGraphLoader)
 
 adminRoute.get('/products-list',auth.isLogin,productController.productListLoaderAdmin);
 adminRoute.get('/products-add',auth.isLogin,productController.productAddLoaderAdmin);
