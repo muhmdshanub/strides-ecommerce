@@ -1,5 +1,6 @@
 const otpGenerator = require('otp-generator');
 const mongoose = require('mongoose');
+const { ObjectId } = require('mongoose').Types;
 const User = require('../models/userModel');
 const OTP = require('../models/otpModel');
 const Address = require('../models/addressModel');
@@ -9,6 +10,7 @@ const Cart = require('../models/cartModel');
 const Wishlist = require('../models/wishlistModel');
 const Order = require('../models/orderModel');
 const sendOtpEmail = require('../utils/sendEmail'); // Your function to send OTP via email
+const discountAndPricingUtils = require('../utils/discountAndPricingCalculator');
 
 
 const bcrypt = require('bcrypt');
@@ -16,12 +18,12 @@ const bcrypt = require('bcrypt');
 
 async function getAllCategories() {
     try {
-      const categories = await Category.find();
-      return categories;
+        const categories = await Category.find();
+        return categories;
     } catch (error) {
-      throw error;
+        throw error;
     }
-  }
+}
 
 const getFilterOptions = async () => {
     try {
@@ -99,9 +101,14 @@ const productListLoader = async (req, res, next) => {
             filterObject.category = { $in: categoryFilter };
         }
 
+
+        //for the second filter based on percentage and finalPrice
+
+        let secondFilterObject = {};
+
         // Add discount filter if not null
         if (!isNaN(discountFilter) && discountFilter !== null) {
-            filterObject.discountPercentage = { $gte: discountFilter };
+            secondFilterObject.maxDiscountPercentage = { $gte: discountFilter };
         }
 
         // Add colors filter if not empty
@@ -139,18 +146,18 @@ const productListLoader = async (req, res, next) => {
 
         // Adding min and max price filters if provided
         if ((!isNaN(minPriceFilter) && minPriceFilter !== null) || (!isNaN(maxPriceFilter) && maxPriceFilter !== null)) {
-            filterObject.finalPrice = {}; // Initialize finalPrice as an empty object
+            secondFilterObject.finalPrice = {}; // Initialize finalPrice as an empty object
 
             if (!isNaN(minPriceFilter)) {
-                filterObject.finalPrice.$gte = minPriceFilter;
+                secondFilterObject.finalPrice.$gte = minPriceFilter;
             }
             if (!isNaN(maxPriceFilter)) {
-                filterObject.finalPrice.$lte = maxPriceFilter;
+                secondFilterObject.finalPrice.$lte = maxPriceFilter;
             }
         }
 
         // Extracting sorting parameter from the query
-        const sortOption = req.query.sort || 'craetedAt'; // Default to sorting by creation date if not provided
+        const sortOption = req.query.sort || 'Latest Products'; // Default to sorting by creation date if not provided
 
         // Constructing the sort object based on the query parameter
         const sortObject = {};
@@ -167,7 +174,7 @@ const productListLoader = async (req, res, next) => {
         //search logic
         if (typeof searchQuery === 'string' && searchQuery.trim().length > 0) {
             const searchWords = searchQuery.trim().split(/\s+/); // Split the search query into words
-        
+
             // Construct an array of regex conditions for each word
             const regexConditions = searchWords.map(word => ({
                 $or: [
@@ -178,13 +185,121 @@ const productListLoader = async (req, res, next) => {
                     { gender: { $regex: new RegExp(word, 'i') } }, // Case-insensitive gender match
                 ],
             }));
-        
+
             // Combine the regex conditions with $and
             filterObject.$and = regexConditions;
         }
 
+        //aggregation pipline logic
 
-        const result = await Products.paginate(filterObject, { page: page, limit: pageSize, sort: sortObject });
+        const currentDate = new Date();
+
+        const pipeline = [
+            // Match stage to filter products based on isDeleted
+            {
+                $match: filterObject,
+            },
+            // Lookup stage to populate the category field
+            {
+                $lookup: {
+                    from: 'categories',
+                    localField: 'category',
+                    foreignField: '_id',
+                    as: 'category',
+                },
+            },
+            // Unwind stage to destructure the array created by $lookup
+            {
+                $unwind: '$category',
+            },
+            // Lookup stage to join with the offers collection
+            {
+                $lookup: {
+                    from: 'offers',
+                    let: { categoryId: '$category._id', productId: '$_id' },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        { $or: [{ $eq: ['$product', '$$productId'] }, { $eq: ['$category', '$$categoryId'] }] },
+                                        { $lte: ['$validFrom', currentDate] },
+                                        { $gte: ['$validUpto', currentDate] },
+                                        { $eq: ['$isActive', true] },
+                                    ],
+                                },
+                            },
+                        },
+                        {
+                            $group: {
+                                _id: null,
+                                maxDiscount: { $max: '$percentageDiscount' },
+                            },
+                        },
+                    ],
+                    as: 'offersData',
+                },
+            },
+            // Add fields stage to calculate max discount
+            {
+                $addFields: {
+                    maxDiscountPercentage: {
+                        $ifNull: [{ $max: '$offersData.maxDiscount' }, 0],
+                    },
+                },
+            },
+            // Add fields stage to calculate final price
+            {
+                $addFields: {
+                    finalPrice: {
+                        $cond: {
+                            if: { $gt: ['$maxDiscountPercentage', 0] },
+                            then: {
+                                $multiply: [
+                                    '$initialPrice',
+                                    { $subtract: [1, { $divide: ['$maxDiscountPercentage', 100] }] },
+                                ],
+                            },
+                            else: '$initialPrice',
+                        },
+                    },
+                },
+            },
+            // Project stage to remove unnecessary fields
+            {
+                $project: {
+                    offersData: 0,
+                    // Add other fields that you want to keep
+                },
+            },
+            // Match stage to filter based on maxDiscountPercentage and finalPrice
+            {
+                $match: secondFilterObject,
+            },
+            // Count stage to get the total number of documents
+            {
+                $count: 'totalDocuments',
+            },
+            // Sorting and Pagination stages
+            { $sort: sortObject },
+            { $skip: (page - 1) * pageSize },
+            { $limit: pageSize },
+        ];
+
+        //to get the products and total page count
+        // Separate pipelines for paginated result and count
+        const paginatedPipeline = [...pipeline.slice(0, -4), ...pipeline.slice(-3)]; // Remove the 4th stage from the end
+        const countPipeline = [...pipeline.slice(0, -3)]; // Remove the last 3 stages for count
+
+        // Execute both promises concurrently
+        const [result, countResult] = await Promise.all([
+            Products.aggregate(paginatedPipeline),
+            Products.aggregate(countPipeline),
+        ]);
+
+        
+
+        const totalDocuments = countResult.length > 0 ? countResult[0].totalDocuments : 0;
 
         const filterOptions = await getFilterOptions();
 
@@ -208,12 +323,12 @@ const productListLoader = async (req, res, next) => {
 
         //getting wishlist document
         const userWishlist = await Wishlist.findOne({ user: userId });
-        const categories = await  getAllCategories();
+        const categories = await getAllCategories();
 
         res.render('./user/productList.ejs', {
-            products: result.docs,
-            currentPage: result.page,
-            totalPages: result.totalPages,
+            products: result,
+            currentPage: page,
+            totalPages: Math.ceil(totalDocuments / pageSize),
             filterOptions: filterOptions,
             selectedFilters: selectedFilters,
             userWishlist: userWishlist,
@@ -238,13 +353,104 @@ const productSingleLoader = async (req, res, next) => {
             throw genericError;
         }
 
-        const productData = await Products.findById(productId).populate('category');
+        const currentDate = new Date();
+
+        const pipeline = [
+            // Match stage to filter products based on productId
+            {
+                $match: {
+                    _id: new ObjectId(productId),
+                },
+            },
+            // Lookup stage to populate the category field
+            {
+                $lookup: {
+                    from: 'categories',
+                    localField: 'category',
+                    foreignField: '_id',
+                    as: 'category',
+                },
+            },
+            // Unwind stage to destructure the array created by $lookup
+            {
+                $unwind: '$category',
+            },
+            // Lookup stage to join with the offers collection
+            {
+                $lookup: {
+                    from: 'offers',
+                    let: { categoryId: '$category._id', productId: '$_id' },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        { $or: [{ $eq: ['$product', '$$productId'] }, { $eq: ['$category', '$$categoryId'] }] },
+                                        { $lte: ['$validFrom', currentDate] },
+                                        { $gte: ['$validUpto', currentDate] },
+                                        { $eq: ['$isActive', true] },
+                                    ],
+                                },
+                            },
+                        },
+                        {
+                            $group: {
+                                _id: null,
+                                maxDiscount: { $max: '$percentageDiscount' },
+                            },
+                        },
+                    ],
+                    as: 'offersData',
+                },
+            },
+            // Add fields stage to calculate max discount and final price
+            // Add fields stage to calculate max discount
+            {
+                $addFields: {
+                    maxDiscountPercentage: {
+                        $ifNull: [{ $max: '$offersData.maxDiscount' }, 0],
+                    },
+                },
+            },
+
+            // Add fields stage to calculate final price
+            {
+                $addFields: {
+                    finalPrice: {
+                        $cond: {
+                            if: { $gt: ['$maxDiscountPercentage', 0] },
+                            then: {
+                                $multiply: [
+                                    '$initialPrice',
+                                    { $subtract: [1, { $divide: ['$maxDiscountPercentage', 100] }] },
+                                ],
+                            },
+                            else: '$initialPrice',
+                        },
+                    },
+                },
+            },
+            // Project stage to remove unnecessary fields
+            {
+                $project: {
+                    offersData: 0,
+                    // Add other fields that you want to keep
+                },
+            },
+        ];
+
+        const productData = await Products.aggregate(pipeline);
+
+
+
         const categories = await getAllCategories();
         if (productData) {
 
             await Products.updateOne({ _id: productId }, { $inc: { popularity: 0.01 } });
 
-            res.render('./user/product-single.ejs', { product: productData, categories });
+
+
+            res.render('./user/product-single.ejs', { product: productData[0], categories });
         } else {
             const genericErrorMessage = 'Invalid user details:';
             const genericError = new Error(genericErrorMessage);
@@ -262,21 +468,99 @@ const productListLoaderAdmin = async (req, res, next) => {
         const page = parseInt(req.query.page) || 1;
         const pageSize = 10; // Set the number of products to display per page
 
-        const options = {
-            page: page,
-            limit: pageSize,
-            populate: {
-                path: 'category',
-                select: 'name', // Specify the fields to populate (only 'name' in this case)
+
+
+        const currentDate = new Date();
+
+        const pipeline = [
+            // Match stage to filter products based on isDeleted
+            {
+                $match: { isDeleted: false },
             },
-        };
+            // Lookup stage to populate the category field
+            {
+                $lookup: {
+                    from: 'categories',
+                    localField: 'category',
+                    foreignField: '_id',
+                    as: 'category',
+                },
+            },
+            // Unwind stage to destructure the array created by $lookup
+            {
+                $unwind: '$category',
+            },
+            // Lookup stage to join with the offers collection
+            {
+                $lookup: {
+                    from: 'offers',
+                    let: { categoryId: '$category._id', productId: '$_id' },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        { $or: [{ $eq: ['$product', '$$productId'] }, { $eq: ['$category', '$$categoryId'] }] },
+                                        { $lte: ['$validFrom', currentDate] },
+                                        { $gte: ['$validUpto', currentDate] },
+                                        { $eq: ['$isActive', true] },
+                                    ],
+                                },
+                            },
+                        },
+                        {
+                            $group: {
+                                _id: null,
+                                maxDiscount: { $max: '$percentageDiscount' },
+                            },
+                        },
+                    ],
+                    as: 'offersData',
+                },
+            },
+            // Add fields stage to calculate max discount
+            {
+                $addFields: {
+                    maxDiscountPercentage: {
+                        $ifNull: [{ $max: '$offersData.maxDiscount' }, 0],
+                    },
+                },
+            },
+            // Add fields stage to calculate final price
+            {
+                $addFields: {
+                    finalPrice: {
+                        $cond: {
+                            if: { $gt: ['$maxDiscountPercentage', 0] },
+                            then: {
+                                $multiply: [
+                                    '$initialPrice',
+                                    { $subtract: [1, { $divide: ['$maxDiscountPercentage', 100] }] },
+                                ],
+                            },
+                            else: '$initialPrice',
+                        },
+                    },
+                },
+            },
+            // Project stage to remove unnecessary fields
+            {
+                $project: {
+                    offersData: 0,
+                    // Add other fields that you want to keep
+                },
+            },
+            // Sorting and Pagination stages
+            { $sort: { createdAt: -1 } },
+            { $skip: (page - 1) * pageSize },
+            { $limit: pageSize },
+        ];
 
-        const productsData = await Products.paginate({ isDeleted: false }, options);
-
+        const productsData = await Products.aggregate(pipeline);
         res.render('./admin/productList.ejs', {
-            products: productsData.docs,
-            currentPage: productsData.page,
-            totalPages: productsData.totalPages,
+            products: productsData,
+            currentPage: page,
+            totalPages: Math.ceil(productsData.length / pageSize),
         });
     } catch (error) {
         console.log(error.message);
@@ -566,13 +850,13 @@ const productEditHandlerAdmin = async (req, res, next) => {
             return res.redirect('/admin/products-edit/' + productId);
         }
 
-        
+
 
 
         // Fetch category information
         const categoryInfo = await Category.findById(category);
 
-        
+
 
         if (!categoryInfo) {
             req.flash('error', 'Invalid category.');
@@ -659,8 +943,8 @@ const productEditHandlerAdmin = async (req, res, next) => {
     }
 };
 
-const autoCompleteProductsHandler = async (req, res , next) =>{
-    try{
+const autoCompleteProductsHandler = async (req, res, next) => {
+    try {
         const term = req.query.term;
 
         // Use a MongoDB regex to perform a case-insensitive search
@@ -683,7 +967,7 @@ const autoCompleteProductsHandler = async (req, res , next) =>{
 
         // Send the suggestions as JSON response
         res.json(suggestions);
-    }catch(error){
+    } catch (error) {
         console.log(error.message);
         next(error)
     }

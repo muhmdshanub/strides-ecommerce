@@ -50,7 +50,7 @@ const addToWishlistHandler = async (req, res, next) => {
         const product = await Products.findOne({ _id: productId, isDeleted: false });
 
         if (!product) {
-            console.log("no corresponding product is available on product ");
+            console.log("no corresponding product is available on productId ");
             const genericErrorMessage = 'product Not found: ' + error.message;
             const genericError = new Error(genericErrorMessage);
             genericError.status = 404;
@@ -162,19 +162,126 @@ const wishlistLoader = async (req, res, next) => {
 
         const userId = req.session.userId;
 
-        // Find the user's cart
-        let wishlist = await Wishlist.findOne({ user: userId }).populate({
-            path: 'products.product',
-            match: { isDeleted: false }, // Only populate products that are not deleted
-        });
+        
 
-        if (!wishlist) {
+
+         // Aggregation pipeline to fetch wishlist with product details, category, maxDiscountPercentage, and finalPrice
+         const wishlistPipeline = [
+            {
+                $match: { user: new mongoose.Types.ObjectId(userId) },
+            },
+            {
+                $lookup: {
+                    from: 'products',
+                    localField: 'products.product',
+                    foreignField: '_id',
+                    as: 'productsData',
+                },
+            },
+            {
+                $unwind: '$productsData',
+            },
+            {
+                $lookup: {
+                    from: 'categories',
+                    localField: 'productsData.category',
+                    foreignField: '_id',
+                    as: 'productsData.category',
+                },
+            },
+            {
+                $unwind: '$productsData.category',
+            },
+            {
+                $project: {
+                    products: {
+                        product: '$productsData',
+                        addedDate: '$products.addedDate',
+                    },
+                },
+            },
+            {
+                $lookup: {
+                    from: 'offers',
+                    let: {
+                        productId: '$products.product._id',
+                        categoryId: '$products.product.category._id',
+                    },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        { $or: [{ $eq: ['$product', '$$productId'] }, { $eq: ['$category', '$$categoryId'] }] },
+                                        { $lte: ['$validFrom', new Date()] },
+                                        { $gte: ['$validUpto', new Date()] },
+                                        { $eq: ['$isActive', true] },
+                                    ],
+                                },
+                            },
+                        },
+                        {
+                            $group: {
+                                _id: null,
+                                maxDiscount: { $max: '$percentageDiscount' },
+                            },
+                        },
+                    ],
+                    as: 'offersData',
+                },
+            },
+            {
+                $addFields: {
+                    'products.product.maxDiscountPercentage': {
+                        $ifNull: [{ $max: '$offersData.maxDiscount' }, 0],
+                    },
+                },
+            },
+            {
+                $addFields: {
+                    'products.product.finalPrice': {
+                        $cond: {
+                            if: { $gt: ['$products.product.maxDiscountPercentage', 0] },
+                            then: {
+                                $multiply: [
+                                    {
+                                        $toDouble: {
+                                            $arrayElemAt: ['$products.product.initialPrice', 0],
+                                        },
+                                    },
+                                    {
+                                        $subtract: [
+                                            1,
+                                            {
+                                                $divide: [{ $arrayElemAt: ['$products.product.maxDiscountPercentage', 0] }, 100],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            else: {
+                                $toDouble: {
+                                    $arrayElemAt: ['$products.product.initialPrice', 0],
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        ];
+
+        // Execute the wishlist aggregation pipeline
+        const wishlistResult = await Wishlist.aggregate(wishlistPipeline);
+
+
+        if (!wishlistResult) {
             // No wishlist available for the user, redirect to home
             return res.redirect('/home'); // Adjust the home route as needed
         }
 
+
         // Filter out products with no available sizes
-        wishlist.products = wishlist.products.filter(product => {
+        wishlistResult[0].products = wishlistResult[0].products.filter(product => {
             const isAnySizeAvailable = ['small', 'medium', 'large', 'extraLarge'].some(size => {
                 return product.product.sizes[0][size].availableStock > 0;
             });
@@ -184,7 +291,7 @@ const wishlistLoader = async (req, res, next) => {
 
         const categories = await getAllCategories()
         // Render the wishlist page with the populated wishlist data
-        return res.render('./user/wishlist', { wishlist, categories });
+        return res.render('./user/wishlist', { wishlist:wishlistResult[0], categories });
 
     } catch (error) {
         console.error('Error loading wishlist:', error);

@@ -32,7 +32,7 @@ const offerAddHandlerAdmin = async(req, res, next) => {
 
         const { name, description, percentage, offerType, selectedProductId, category, validFrom, validUpto } = req.body;
 
-        console.log("offerType is " + offerType)
+        
         // Validate each field separately
         if (!name) {
             return res.status(400).send('Name is required.');

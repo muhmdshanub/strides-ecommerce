@@ -96,7 +96,7 @@
                 <div class="row">
                     <div class="col-md-10 offset-md-1 offset-sm-0 border rounded mt-3 p-2">
                         <div class=" bg-primary text-light py-3 px-0 border rounded">
-                            <h3 class="d-inline">My Wishlist</h3>
+                            <h3 class="d-inline pl-3">My Wishlist</h3>
                             <p class="d-inline ml-3" style="font-size: larger;" id="productsCount">
                                 <%=wishlist.products.length %>
                             </p>
@@ -177,8 +177,8 @@
                                                     </div>
                                                     <div class="col-4 pl-0">
                                                         <!-- Offer Badge -->
-                                                        <span class="badge badge-success">-
-                                                            <%= product.product.discountPercentage %>%
+                                                        <span class="badge badge-success p-2">-
+                                                            <%= product.product.maxDiscountPercentage %>%
                                                         </span>
                                                     </div>
                                                 </div>
