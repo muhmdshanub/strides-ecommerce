@@ -97,13 +97,17 @@
                     <!-- Discount Section -->
                     <div class="amount-row d-flex justify-content-between my-1">
                         <span>Discount</span>
-                        <span id="discount"><%= cart.totalDiscountAmount  %>Rs.</span>
+                        <span id="discount"><%= cart.totalInitialAmount - cart.totalAmount + " "   %>Rs.</span>
                     </div>
-    
+                    <!--  Coupon Section -->
+                    <div class="amount-row d-flex justify-content-between my-1">
+                      <span>Coupon deduction</span>
+                      <span id="deductableAmount"><%= (cart.coupon?.amount || "0") + " " %>Rs.</span>
+                  </div>
                     <!-- Amount To Pay Section -->
                     <div class="amount-row d-flex justify-content-between mt-3 mb-5">
                         <span>Amount To Pay</span>
-                        <span id="amountToPay"><%= cart.totalAmount - cart.coupon?.amount %>Rs.</span>
+                        <span id="amountToPay"><%= cart.totalAmount - cart.coupon?.amount + " " %>Rs.</span>
                       </div></span>
                     </div>
     

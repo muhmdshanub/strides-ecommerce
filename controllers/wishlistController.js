@@ -15,12 +15,12 @@ const bcrypt = require('bcrypt');
 
 async function getAllCategories() {
     try {
-      const categories = await Category.find();
-      return categories;
+        const categories = await Category.find();
+        return categories;
     } catch (error) {
-      throw error;
+        throw error;
     }
-  }
+}
 
 
 const addToWishlistHandler = async (req, res, next) => {
@@ -136,7 +136,7 @@ const removeFromWishlistHandler = async (req, res, next) => {
         if (productIndex === -1) {
             const genericErrorMessage = 'product is not available on the wishlist : ' + error.message;
             const genericError = new Error(genericErrorMessage);
-            genericError.status = 404 ;
+            genericError.status = 404;
             throw genericError;
         }
 
@@ -162,128 +162,138 @@ const wishlistLoader = async (req, res, next) => {
 
         const userId = req.session.userId;
 
-        
 
 
-         // Aggregation pipeline to fetch wishlist with product details, category, maxDiscountPercentage, and finalPrice
-         const wishlistPipeline = [
+
+        const wishlistPipeline = [
             {
-                $match: { user: new mongoose.Types.ObjectId(userId) },
+              $match: { user: new mongoose.Types.ObjectId(userId) },
             },
             {
-                $lookup: {
-                    from: 'products',
-                    localField: 'products.product',
-                    foreignField: '_id',
-                    as: 'productsData',
+              $addFields: {
+                products: { $ifNull: ['$products', []] },
+              },
+            },
+            {
+              $unwind: '$products',
+            },
+            {
+              $lookup: {
+                from: 'products',
+                localField: 'products.product',
+                foreignField: '_id',
+                as: 'products.product',
+              },
+            },
+            {
+              $unwind: '$products.product',
+            },
+            {
+              $lookup: {
+                from: 'categories',
+                localField: 'products.product.category',
+                foreignField: '_id',
+                as: 'products.product.category',
+              },
+            },
+            {
+              $unwind: '$products.product.category',
+            },
+            {
+              $lookup: {
+                from: 'offers',
+                let: {
+                  productId: '$products.product._id',
+                  categoryId: '$products.product.category._id',
                 },
-            },
-            {
-                $unwind: '$productsData',
-            },
-            {
-                $lookup: {
-                    from: 'categories',
-                    localField: 'productsData.category',
-                    foreignField: '_id',
-                    as: 'productsData.category',
-                },
-            },
-            {
-                $unwind: '$productsData.category',
-            },
-            {
-                $project: {
-                    products: {
-                        product: '$productsData',
-                        addedDate: '$products.addedDate',
+                pipeline: [
+                  {
+                    $match: {
+                      $expr: {
+                        $and: [
+                          { $or: [{ $eq: ['$product', '$$productId'] }, { $eq: ['$category', '$$categoryId'] }] },
+                          { $lte: ['$validFrom', new Date()] },
+                          { $gte: ['$validUpto', new Date()] },
+                          { $eq: ['$isActive', true] },
+                        ],
+                      },
                     },
-                },
+                  },
+                  {
+                    $group: {
+                      _id: null,
+                      maxDiscount: { $max: '$percentageDiscount' },
+                    },
+                  },
+                ],
+                as: 'products.product.offersData',
+              },
             },
             {
-                $lookup: {
-                    from: 'offers',
-                    let: {
-                        productId: '$products.product._id',
-                        categoryId: '$products.product.category._id',
-                    },
-                    pipeline: [
+              $addFields: {
+                'products.product.maxDiscountPercentage': {
+                  $ifNull: [{ $arrayElemAt: ['$products.product.offersData.maxDiscount', 0] }, 0],
+                },
+              },
+            },
+            {
+              $addFields: {
+                'products.product.finalPrice': {
+                  $cond: {
+                    if: { $gt: ['$products.product.maxDiscountPercentage', 0] },
+                    then: {
+                      $multiply: [
+                        '$products.product.initialPrice',
                         {
-                            $match: {
-                                $expr: {
-                                    $and: [
-                                        { $or: [{ $eq: ['$product', '$$productId'] }, { $eq: ['$category', '$$categoryId'] }] },
-                                        { $lte: ['$validFrom', new Date()] },
-                                        { $gte: ['$validUpto', new Date()] },
-                                        { $eq: ['$isActive', true] },
-                                    ],
-                                },
+                          $subtract: [
+                            1,
+                            {
+                              $divide: ['$products.product.maxDiscountPercentage', 100],
                             },
+                          ],
                         },
-                        {
-                            $group: {
-                                _id: null,
-                                maxDiscount: { $max: '$percentageDiscount' },
-                            },
-                        },
-                    ],
-                    as: 'offersData',
+                      ],
+                    },
+                    else: '$products.product.initialPrice',
+                  },
                 },
+              },
             },
             {
-                $addFields: {
-                    'products.product.maxDiscountPercentage': {
-                        $ifNull: [{ $max: '$offersData.maxDiscount' }, 0],
-                    },
-                },
+              $group: {
+                _id: '$_id',
+                user: { $first: '$user' },
+                addedDate: { $first: '$addedDate' },
+                products: { $push: '$products' },
+              },
             },
-            {
-                $addFields: {
-                    'products.product.finalPrice': {
-                        $cond: {
-                            if: { $gt: ['$products.product.maxDiscountPercentage', 0] },
-                            then: {
-                                $multiply: [
-                                    {
-                                        $toDouble: {
-                                            $arrayElemAt: ['$products.product.initialPrice', 0],
-                                        },
-                                    },
-                                    {
-                                        $subtract: [
-                                            1,
-                                            {
-                                                $divide: [{ $arrayElemAt: ['$products.product.maxDiscountPercentage', 0] }, 100],
-                                            },
-                                        ],
-                                    },
-                                ],
-                            },
-                            else: {
-                                $toDouble: {
-                                    $arrayElemAt: ['$products.product.initialPrice', 0],
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-        ];
+          ];
+          
+          const wishlistAggregationResult = await Wishlist.aggregate(wishlistPipeline);
+          
+          let wishListResult;
 
-        // Execute the wishlist aggregation pipeline
-        const wishlistResult = await Wishlist.aggregate(wishlistPipeline);
+        if (wishlistAggregationResult.length > 0) {
+            // If the cart exists in the aggregation result
+            wishListResult = wishlistAggregationResult[0];
+        } else {
+            // If the cart doesn't exist, find it using mongoose
+            wishListResult = await Wishlist.findOne({ user: userId });
+        }
 
-
-        if (!wishlistResult) {
+          
+          
+        if (!wishListResult) {
             // No wishlist available for the user, redirect to home
             return res.redirect('/home'); // Adjust the home route as needed
         }
 
+       
 
         // Filter out products with no available sizes
-        wishlistResult[0].products = wishlistResult[0].products.filter(product => {
+        wishListResult.products = wishListResult.products?.filter(productSingle => {
             const isAnySizeAvailable = ['small', 'medium', 'large', 'extraLarge'].some(size => {
-                return product.product.sizes[0][size].availableStock > 0;
+                return productSingle.product.sizes[0][size].availableStock > 0;
             });
 
             return isAnySizeAvailable;
@@ -291,7 +301,10 @@ const wishlistLoader = async (req, res, next) => {
 
         const categories = await getAllCategories()
         // Render the wishlist page with the populated wishlist data
-        return res.render('./user/wishlist', { wishlist:wishlistResult[0], categories });
+
+        console.log(wishListResult)
+
+        return res.render('./user/wishlist', { wishlist:wishListResult, categories });
 
     } catch (error) {
         console.error('Error loading wishlist:', error);
@@ -333,13 +346,13 @@ const moveFromWishlistToCartHandler = async (req, res, next) => {
             genericError.status = 404;
             throw genericError;
         }
-        
+
         await Products.updateOne({ _id: productId }, { $inc: { popularity: 0.1 } });
 
         const selectedQuantity = 1;
 
         const selectedSize = (product.sizes[0]['small'].availableStock > 0) ? "small" : (product.sizes[0]['medium'].availableStock > 0) ? "medium" : (product.sizes[0]['large'].availableStock > 0) ? "large" : (product.sizes[0]['extraLarge'].availableStock > 0) ? "extraLarge" : null;
-        
+
         if (selectedSize === null) {
             // Handle out of stock case
             const genericErrorMessage = 'Item out of stock : ' + error.message;
@@ -364,12 +377,11 @@ const moveFromWishlistToCartHandler = async (req, res, next) => {
                 product: product._id,
                 size: selectedSize,
                 quantity: 1,
-                totalAmount: 1 * product.finalPrice,
             };
 
             cart.items.push(newItem);
             cart.totalItems = cart.items.length;
-            cart.totalAmount = cart.items.reduce((total, item) => total + item.totalAmount, 0);
+
 
 
             // Rest COupon details of cart
@@ -377,7 +389,7 @@ const moveFromWishlistToCartHandler = async (req, res, next) => {
                 amount: 0,
                 code: "",
             };
-            
+
             // Save the cart
             await cart.save();
 
@@ -386,10 +398,10 @@ const moveFromWishlistToCartHandler = async (req, res, next) => {
             // Check if the product is in the wishlist
             const productIndex = wishlist.products.findIndex(product => product.product.equals(product._id));
 
-             // Remove the product from the products array
-             wishlist.products.splice(productIndex, 1);
+            // Remove the product from the products array
+            wishlist.products.splice(productIndex, 1);
 
-             await wishlist.save();
+            await wishlist.save();
 
             return res.json({
                 message: `Only ${availableStock} items available for this size. Product added to cart successfully.`,
@@ -405,12 +417,11 @@ const moveFromWishlistToCartHandler = async (req, res, next) => {
             if (canAddQuantity > 0) {
                 // Update quantity and totalAmount
                 cart.items[existingItemIndex].quantity += 1;
-                cart.items[existingItemIndex].totalAmount =
-                    cart.items[existingItemIndex].quantity * product.finalPrice;
+
 
                 // Update totalItems and totalAmount in the cart
                 cart.totalItems = cart.items.length;
-                cart.totalAmount = cart.items.reduce((total, item) => total + item.totalAmount, 0);
+
 
                 // Save the cart
                 await cart.save();
@@ -449,7 +460,7 @@ const moveFromWishlistToCartHandler = async (req, res, next) => {
 
             cart.items.push(newItem);
             cart.totalItems = cart.items.length;
-            cart.totalAmount = cart.items.reduce((total, item) => total + item.totalAmount, 0);
+
 
             // Save the cart
             await cart.save();
@@ -478,12 +489,11 @@ const moveFromWishlistToCartHandler = async (req, res, next) => {
             if (canAddQuantity > 0) {
                 // Update quantity and totalAmount
                 cart.items[existingItemIndex].quantity += 1;
-                cart.items[existingItemIndex].totalAmount =
-                    cart.items[existingItemIndex].quantity * product.finalPrice;
+
 
                 // Update totalItems and totalAmount in the cart
                 cart.totalItems = cart.items.length;
-                cart.totalAmount = cart.items.reduce((total, item) => total + item.totalAmount, 0);
+
 
                 // Save the cart
                 await cart.save();

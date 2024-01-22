@@ -652,11 +652,8 @@ const paymentSelectionLoader = async (req, res, next) => {
             return res.status(403).json({ message: 'User not authenticated' });
         }
 
-        // Fetch user's cart details
-        let cart = await Cart.findOne({ user: userId }).populate({
-            path: 'items.product',
-            match: { isDeleted: false }, // Only populate products that are not deleted
-        });
+        // Fetch the cart data for the current user
+        const cart = await getUpdatedCartPrice(userId);
 
         // Check for invalidated items in the cart
         const invalidItems = [];
@@ -705,14 +702,7 @@ const paymentSelectionLoader = async (req, res, next) => {
         // Get the first address from the addresses array
         const firstAddress = user.addresses.length > 0 ? user.addresses[0] : null;
 
-        // Calculate total price details for the cart
-        cart.items.forEach(item => {
-            item.totalAmount = item.quantity * item.product.finalPrice;
-            item.totalInitialAmount = item.quantity * item.product.initialPrice;
-        });
-        cart.totalAmount = parseFloat(cart.items.reduce((total, item) => total + item.totalAmount, 0)).toFixed(2);
-        cart.totalInitialAmount = parseFloat(cart.items.reduce((total, item) => total + item.totalInitialAmount, 0)).toFixed(2);
-        cart.totalDiscountAmount = parseFloat(cart.totalInitialAmount - cart.totalAmount).toFixed(2);
+        
 
         const categories = await getAllCategories();
 
@@ -723,14 +713,19 @@ const paymentSelectionLoader = async (req, res, next) => {
             // If the coupon is not valid, reset it in the cart
             if (!isValidCoupon) {
                 console.log('Invalid coupon. Resetting cart coupon.');
-                cart.coupon.amount = 0;
-                cart.coupon.code = "";
-
-                const cartData = await cart.save();
+                const couponUpdate = {
+                    $set: {
+                        'coupon.amount': 0,
+                        'coupon.code': "",
+                    }
+                };
+        
+                // Save the updated cart with the applied coupon
+                await Cart.updateOne({ user: userId }, couponUpdate);
 
                 // If there are invalid coupons
-                req.flash('error', "You have some invalid items in your cart. Please click On the MOVE TO ADDDRESS button to know more.")
-                return res.render('./user/cart', { cart: cartData, categories });
+                req.flash('error', "You have some invalid coupon in your cart. We have removed it.")
+                return res.redirect('/cart');
             }
         }
 
@@ -915,7 +910,145 @@ async function isCouponValidForUser(coupon, userId, userCart) {
     return true;
 }
 
+async function getUpdatedCartPrice(userId) {
+    const cartPipeline = [
+        {
+            $match: { user: new mongoose.Types.ObjectId(userId) },
+        },
+        {
+            $addFields: {
+                items: { $ifNull: ['$items', []] },
+            },
+        },
+        {
+            $unwind: '$items',
+        },
+        {
+            $lookup: {
+                from: 'products',
+                localField: 'items.product',
+                foreignField: '_id',
+                as: 'items.product',
+            },
+        },
+        {
+            $unwind: '$items.product',
+        },
+        {
+            $lookup: {
+                from: 'categories',
+                localField: 'items.product.category',
+                foreignField: '_id',
+                as: 'items.product.category',
+            },
+        },
+        {
+            $unwind: '$items.product.category',
+        },
+        {
+            $lookup: {
+                from: 'offers',
+                let: {
+                    productId: '$items.product._id',
+                    categoryId: '$items.product.category._id',
+                },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $and: [
+                                    { $or: [{ $eq: ['$product', '$$productId'] }, { $eq: ['$category', '$$categoryId'] }] },
+                                    { $lte: ['$validFrom', new Date()] },
+                                    { $gte: ['$validUpto', new Date()] },
+                                    { $eq: ['$isActive', true] },
+                                ],
+                            },
+                        },
+                    },
+                    {
+                        $group: {
+                            _id: null,
+                            maxDiscount: { $max: '$percentageDiscount' },
+                        },
+                    },
+                ],
+                as: 'items.product.offersData',
+            },
+        },
+        {
+            $addFields: {
+                'items.product.maxDiscountPercentage': {
+                    $ifNull: [{ $arrayElemAt: ['$items.product.offersData.maxDiscount', 0] }, 0],
+                },
+            },
+        },
+        {
+            $addFields: {
+                'items.product.finalPrice': {
+                    $cond: {
+                        if: { $gt: ['$items.product.maxDiscountPercentage', 0] },
+                        then: {
+                            $multiply: [
+                                '$items.product.initialPrice',
+                                {
+                                    $subtract: [
+                                        1,
+                                        {
+                                            $divide: ['$items.product.maxDiscountPercentage', 100],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        else: '$items.product.initialPrice',
+                    },
+                },
+            },
+        },
+        {
+            $group: {
+                _id: '$_id',
+                user: { $first: '$user' },
+                createdAt: { $first: '$createdAt' },
+                totalItems: { $first: '$totalItems' },
+                coupon: { $first: '$coupon' },
+                items: { $push: '$items' },
+            },
+        },
+    ];
 
+    const cartAggregationResult = await Cart.aggregate(cartPipeline);
+
+    let cartResult;
+
+    if (cartAggregationResult.length > 0) {
+        // If the cart exists in the aggregation result
+        cartResult = cartAggregationResult[0];
+    } else {
+        // If the cart doesn't exist, find it using mongoose
+        cartResult = await Cart.findOne({ user: userId });
+
+        if (!cartResult) {
+            // If still not found, create a new cart with an empty items array
+            cartResult = new Cart({ user: userId, items: [] });
+        }
+    }
+
+    // Calculate total prices for each item
+    cartResult.items.forEach(item => {
+        item.totalAmount = item.quantity * item.product.finalPrice;
+        item.totalInitialAmount = item.quantity * item.product.initialPrice;
+    });
+
+    // Calculate total price for the entire cart
+    cartResult.totalAmount = cartResult.items.length > 0 ?
+        parseFloat(cartResult.items.reduce((total, item) => total + item.totalAmount, 0)).toFixed(2) : 0;
+    cartResult.totalInitialAmount = cartResult.items.length > 0 ?
+        parseFloat(cartResult.items.reduce((total, item) => total + item.totalInitialAmount, 0)).toFixed(2) : 0;
+
+
+    return cartResult;
+}
 module.exports = {
     signupLoader,
     signupHandler,

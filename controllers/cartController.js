@@ -71,12 +71,11 @@ const addToCartHandler = async (req, res, next) => {
                 product: product._id,
                 size,
                 quantity: Math.min(quantity, availableStock),
-                totalAmount: Math.min(quantity, availableStock) * product.finalPrice,
             };
 
             cart.items.push(newItem);
             cart.totalItems = cart.items.length;
-            cart.totalAmount = cart.items.reduce((total, item) => total + item.totalAmount, 0);
+
 
             // Save the cart
 
@@ -101,12 +100,11 @@ const addToCartHandler = async (req, res, next) => {
             if (canAddQuantity > 0) {
                 // Update quantity and totalAmount
                 cart.items[existingItemIndex].quantity += Math.min(quantity, canAddQuantity);
-                cart.items[existingItemIndex].totalAmount =
-                    cart.items[existingItemIndex].quantity * product.finalPrice;
+
 
                 // Update totalItems and totalAmount in the cart
                 cart.totalItems = cart.items.length;
-                cart.totalAmount = cart.items.reduce((total, item) => total + item.totalAmount, 0);
+
 
                 // Save the cart
                 await cart.save();
@@ -123,12 +121,12 @@ const addToCartHandler = async (req, res, next) => {
                 product: product._id,
                 size,
                 quantity: Math.min(quantity, 10), // Add 10 quantities only
-                totalAmount: Math.min(quantity, 10) * product.finalPrice,
+
             };
 
             cart.items.push(newItem);
             cart.totalItems = cart.items.length;
-            cart.totalAmount = cart.items.reduce((total, item) => total + item.totalAmount, 0);
+
 
             // Save the cart
             await cart.save();
@@ -146,12 +144,11 @@ const addToCartHandler = async (req, res, next) => {
             if (canAddQuantity > 0) {
                 // Update quantity and totalAmount
                 cart.items[existingItemIndex].quantity += Math.min(quantity, canAddQuantity);
-                cart.items[existingItemIndex].totalAmount =
-                    cart.items[existingItemIndex].quantity * product.finalPrice;
+
 
                 // Update totalItems and totalAmount in the cart
                 cart.totalItems = cart.items.length;
-                cart.totalAmount = cart.items.reduce((total, item) => total + item.totalAmount, 0);
+
 
                 // Save the cart
                 await cart.save();
@@ -177,27 +174,7 @@ const cartLoader = async (req, res, next) => {
         // Extract userId from the session
         const userId = req.session.userId;
 
-        // Find the user's cart
-        let cart = await Cart.findOne({ user: userId }).populate({
-            path: 'items.product',
-            match: { isDeleted: false }, // Only populate products that are not deleted
-        });
-
-        // Check if the cart exists; if not, create a new empty cart
-        if (!cart) {
-            cart = new Cart({ user: userId, items: [] });
-            await cart.save();
-        }
-
-        // Calculate total price for each item
-        cart.items.forEach(item => {
-            item.totalAmount = item.quantity * item.product.finalPrice;
-            item.totalInitialAmount = item.quantity * item.product.initialPrice;
-        });
-
-        // Calculate total price for the entire cart
-        cart.totalAmount = parseFloat(cart.items.reduce((total, item) => total + item.totalAmount, 0)).toFixed(2);
-        cart.totalInitialAmount = parseFloat(cart.items.reduce((total, item) => total + item.totalInitialAmount, 0)).toFixed(2);
+        cartResult = await getUpdatedCartPrice(userId);
 
         const categoriesData = await getAllCategories();
 
@@ -214,9 +191,10 @@ const cartLoader = async (req, res, next) => {
             }
         }
 
+        
         // Render the cart page with cart details
         res.render('./user/cart.ejs', {
-            cart,
+            cart: cartResult,
             categories: categoriesData,
             coupons: allCoupons,
         });
@@ -263,8 +241,7 @@ const cartItemDeleteHandler = async (req, res, next) => {
             return res.status(404).json({ message: 'Item not found in the cart' });
         }
 
-        // Update totalAmount by subtracting the totalAmount of the deleted item
-        cart.totalAmount -= cart.items[itemIndex].totalAmount;
+
 
         // Remove the item from the items array
         cart.items.splice(itemIndex, 1);
@@ -280,7 +257,9 @@ const cartItemDeleteHandler = async (req, res, next) => {
         // Save the updated cart
         const updatedCart = await cart.save();
 
-        return res.status(200).json({ message: 'Item deleted successfully', cart: updatedCart });
+        cartResult = await getUpdatedCartPrice(userId);
+
+        return res.status(200).json({ message: 'Item deleted successfully', cart: cartResult });
     } catch (error) {
         console.error('Error deleting item:', error);
         next(error)
@@ -291,6 +270,7 @@ const cartItemDeleteHandler = async (req, res, next) => {
 const cartItemQuantityUpdateHandler = async (req, res, next) => {
     try {
 
+        
         const itemId = req.query.itemId;
         const operation = parseInt(req.query.operation);
         const userId = req.session.userId;
@@ -344,14 +324,13 @@ const cartItemQuantityUpdateHandler = async (req, res, next) => {
                 // Now you can access the initialPrice
 
 
-                const finalPrice = product.finalPrice;
+                
 
                 //calculating the price of single product
-                const finalPriceChange = parseFloat(finalPrice * operation);
+                
 
                 cartData.items[itemIndex].quantity = parseInt(cartData.items[itemIndex].quantity) + operation;
-                cartData.items[itemIndex].totalAmount = parseFloat(cartData.items[itemIndex].totalAmount + finalPriceChange);
-                cartData.totalAmount = parseFloat(cartData.totalAmount + finalPriceChange);
+                
 
                 // Rest COupon details of cart
                 cartData.coupon = {
@@ -361,9 +340,11 @@ const cartItemQuantityUpdateHandler = async (req, res, next) => {
 
                 const updatedItem = await cartData.save();
 
-                if (updatedItem) {
+                cartResult = await getUpdatedCartPrice(userId);
+
+                if (updatedItem && cartResult) {
                     // Send a JSON response with a success message
-                    return res.status(200).json({ message: 'Quantity updated successfully', cart: updatedItem });
+                    return res.status(200).json({ message: 'Quantity updated successfully', cart: cartResult });
                 }
 
 
@@ -415,12 +396,6 @@ const cartItemSizeUpdateHandler = async (req, res, next) => {
         if (existingItemIndex !== -1) {
             // If an item with the same product ID and newSize exists, append quantity and total amount
             cartData.items[existingItemIndex].quantity = parseFloat(cartData.items[existingItemIndex].quantity) + parseFloat(cartData.items[itemIndex].quantity);
-            cartData.items[existingItemIndex].totalAmount = parseFloat(cartData.items[existingItemIndex].totalAmount) + parseFloat(cartData.items[itemIndex].totalAmount);
-
-            singleQuantityAmount = cartData.items[existingItemIndex].totalAmount / cartData.items[existingItemIndex].quantity;
-
-            cartData.items[existingItemIndex].totalAmount -= (cartData.items[existingItemIndex].quantity > 10) ? ((cartData.items[existingItemIndex].quantity - 10) * singleQuantityAmount) : 0;
-
             cartData.items[existingItemIndex].quantity = 10;
 
             // Delete the old item
@@ -433,7 +408,7 @@ const cartItemSizeUpdateHandler = async (req, res, next) => {
 
         // Recalculate totalItems and totalAmount
         cartData.totalItems = cartData.items.reduce((total, item) => total + item.quantity, 0);
-        cartData.totalAmount = cartData.items.reduce((total, item) => total + item.totalAmount, 0);
+        
 
 
         // Rest COupon details of cart
@@ -443,11 +418,11 @@ const cartItemSizeUpdateHandler = async (req, res, next) => {
         };
 
         const updatedItem = await cartData.save();
-
-        if (updatedItem) {
+        cartResult = await getUpdatedCartPrice(userId);
+        if (updatedItem && cartResult) {
             // Send a JSON response with a success message
-            console.log("size updated");
-            return res.status(200).json({ message: 'Size updated successfully', cart: updatedItem });
+            
+            return res.status(200).json({ message: 'Size updated successfully', cart: cartResult });
         }
 
     } catch (error) {
@@ -465,7 +440,7 @@ const cartToAddressHandler = async (req, res, next) => {
         const userId = req.session.userId;
 
         // Find the user's cart in the Cart collection
-        const cart = await Cart.findOne({ user: userId });
+        const cart = await getUpdatedCartPrice(userId);
 
         if (!cart) {
             const genericErrorMessage = 'No cart found for user : ';
@@ -482,7 +457,7 @@ const cartToAddressHandler = async (req, res, next) => {
             if (!isValidCoupon) {
                 console.log('Invalid coupon. Resetting cart coupon.');
                 cart.coupon.amount = 0;
-                cart.coupon.code="";
+                cart.coupon.code = "";
                 await cart.save();
                 return res.status(400).json({ error: 'Invalid coupon. Cart coupon has been reset.' });
             }
@@ -585,6 +560,146 @@ async function isCouponValidForUser(coupon, userId, userCart) {
 
     // If all conditions pass, the coupon is valid
     return true;
+}
+
+async function getUpdatedCartPrice(userId) {
+    const cartPipeline = [
+        {
+            $match: { user: new mongoose.Types.ObjectId(userId) },
+        },
+        {
+            $addFields: {
+                items: { $ifNull: ['$items', []] },
+            },
+        },
+        {
+            $unwind: '$items',
+        },
+        {
+            $lookup: {
+                from: 'products',
+                localField: 'items.product',
+                foreignField: '_id',
+                as: 'items.product',
+            },
+        },
+        {
+            $unwind: '$items.product',
+        },
+        {
+            $lookup: {
+                from: 'categories',
+                localField: 'items.product.category',
+                foreignField: '_id',
+                as: 'items.product.category',
+            },
+        },
+        {
+            $unwind: '$items.product.category',
+        },
+        {
+            $lookup: {
+                from: 'offers',
+                let: {
+                    productId: '$items.product._id',
+                    categoryId: '$items.product.category._id',
+                },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $and: [
+                                    { $or: [{ $eq: ['$product', '$$productId'] }, { $eq: ['$category', '$$categoryId'] }] },
+                                    { $lte: ['$validFrom', new Date()] },
+                                    { $gte: ['$validUpto', new Date()] },
+                                    { $eq: ['$isActive', true] },
+                                ],
+                            },
+                        },
+                    },
+                    {
+                        $group: {
+                            _id: null,
+                            maxDiscount: { $max: '$percentageDiscount' },
+                        },
+                    },
+                ],
+                as: 'items.product.offersData',
+            },
+        },
+        {
+            $addFields: {
+                'items.product.maxDiscountPercentage': {
+                    $ifNull: [{ $arrayElemAt: ['$items.product.offersData.maxDiscount', 0] }, 0],
+                },
+            },
+        },
+        {
+            $addFields: {
+                'items.product.finalPrice': {
+                    $cond: {
+                        if: { $gt: ['$items.product.maxDiscountPercentage', 0] },
+                        then: {
+                            $multiply: [
+                                '$items.product.initialPrice',
+                                {
+                                    $subtract: [
+                                        1,
+                                        {
+                                            $divide: ['$items.product.maxDiscountPercentage', 100],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        else: '$items.product.initialPrice',
+                    },
+                },
+            },
+        },
+        {
+            $group: {
+                _id: '$_id',
+                user: { $first: '$user' },
+                createdAt: { $first: '$createdAt' },
+                totalItems: { $first: '$totalItems' },
+                coupon: { $first: '$coupon' },
+                items: { $push: '$items' },
+            },
+        },
+    ];
+
+    const cartAggregationResult = await Cart.aggregate(cartPipeline);
+
+    let cartResult;
+
+    if (cartAggregationResult.length > 0) {
+        // If the cart exists in the aggregation result
+        cartResult = cartAggregationResult[0];
+    } else {
+        // If the cart doesn't exist, find it using mongoose
+        cartResult = await Cart.findOne({ user: userId });
+
+        if (!cartResult) {
+            // If still not found, create a new cart with an empty items array
+            cartResult = new Cart({ user: userId, items: [] });
+        }
+    }
+
+    // Calculate total prices for each item
+    cartResult.items.forEach(item => {
+        item.totalAmount = item.quantity * item.product.finalPrice;
+        item.totalInitialAmount = item.quantity * item.product.initialPrice;
+    });
+
+    // Calculate total price for the entire cart
+    cartResult.totalAmount = cartResult.items.length > 0 ?
+        parseFloat(cartResult.items.reduce((total, item) => total + item.totalAmount, 0)).toFixed(2) : 0;
+    cartResult.totalInitialAmount = cartResult.items.length > 0 ?
+        parseFloat(cartResult.items.reduce((total, item) => total + item.totalInitialAmount, 0)).toFixed(2) : 0;
+
+
+    return cartResult;
 }
 module.exports = {
     addToCartHandler,

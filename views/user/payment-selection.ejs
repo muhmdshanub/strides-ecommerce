@@ -41,6 +41,7 @@
         <!-- Dynamic Addresses (Use EJS to iterate through addresses) -->
         <% user.addresses.forEach((address, index)=> { %>
           <div class="card mb-2" onclick="selectAddress('<%= address._id %>')">
+            <h2><%= address._id %></h2>
             <div class="card-body">
               <div class="form-check">
                 <input type="radio" class="form-check-input" name="addressRadio" id="address_<%= address._id %>" <%= address.id.toString() === firstAddress._id.toString() ? 'checked' : '' %>>
@@ -115,11 +116,17 @@
                         <span id="totalMRP"><%= cart.totalInitialAmount  %>Rs.</span>
                     </div>
     
+                    
                     <!-- Discount Section -->
-                    <div class="amount-row d-flex justify-content-between my-1" style="font-size: larger;">
-                        <span>Discount</span>
-                        <span id="discount"><%= cart.totalDiscountAmount  %>Rs.</span>
-                    </div>
+                    <div class="amount-row d-flex justify-content-between my-1">
+                      <span>Discount</span>
+                      <span id="discount"><%= cart.totalInitialAmount - cart.totalAmount + " "   %>Rs.</span>
+                  </div>
+                  <!--  Coupon Section -->
+                  <div class="amount-row d-flex justify-content-between my-1">
+                    <span>Coupon deduction</span>
+                    <span id="deductableAmount"><%= (cart.coupon?.amount || "0") + " " %>Rs.</span>
+                </div>
                     <hr>
                     <!-- Amount To Pay Section -->
                     <div class="amount-row d-flex justify-content-between mt-3 mb-5" style="font-size: larger; font-weight: 900;">
@@ -158,18 +165,27 @@
   </div>
 </div>
 
-
+<input type="hidden" id="walletBalance" value="<%= JSON.stringify(wallet.balance) %>">
+<input type="hidden" id="cartTotal" value="<%= JSON.stringify(cart.totalAmount) %>">
 
 
 <!--Inside index.html -->
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <script>
+// Access walletBalance and cartTotal from hidden input elements
+const walletBalance = JSON.parse(document.getElementById('walletBalance').value);
+const cartTotal = JSON.parse(document.getElementById('cartTotal').value);
 
-const walletBalance = <%= JSON.stringify(wallet.balance) %>;
-const cartTotal = <%= JSON.stringify(cart.totalAmount) %>;
 
+function selectAddress(index) {
+    console.log("selectAdress function called")
+    // Get the radio button corresponding to the clicked card
+    const radioButton = document.getElementById(`address_${index}`);
 
+    // Check the radio button
+    radioButton.checked = true;
+  }
 
 
 function showAlert(message) {
@@ -458,13 +474,7 @@ function showAlert(message) {
 });
 
 
-  function selectAddress(index) {
-    // Get the radio button corresponding to the clicked card
-    const radioButton = document.getElementById(`address_${index}`);
-
-    // Check the radio button
-    radioButton.checked = true;
-  }
+  
 
 
 

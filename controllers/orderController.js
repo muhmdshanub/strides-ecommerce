@@ -315,11 +315,8 @@ const codPlaceOrderHandler = async (req, res, next) => {
         }
 
 
-        // Fetch user's cart details
-        let cart = await Cart.findOne({ user: userId }).populate({
-            path: 'items.product',
-            match: { isDeleted: false }, // Only populate products that are not deleted
-        });
+        // Fetch the cart data for the current user
+        const cart = await getUpdatedCartPrice(userId);
 
         // Check if the cart has a coupon
         if (cart.coupon) {
@@ -328,10 +325,15 @@ const codPlaceOrderHandler = async (req, res, next) => {
             // If the coupon is not valid, reset it in the cart
             if (!isValidCoupon) {
                 console.log('Invalid coupon. Resetting cart coupon.');
-                cart.coupon.amount = 0;
-                cart.coupon.code = "";
-
-                const cart = await cart.save();
+                const couponUpdate = {
+                    $set: {
+                        'coupon.amount': 0,
+                        'coupon.code': "",
+                    }
+                };
+        
+                // Save the updated cart with the applied coupon
+                await Cart.updateOne({ user: userId }, couponUpdate);
 
                 // If there are invalid coupons
                 req.flash('error', "You have some invalid coupon atatched to cart. We have resetted it for you.")
@@ -378,13 +380,7 @@ const codPlaceOrderHandler = async (req, res, next) => {
             }
         }
 
-        // Calculate total price details for the cart
-        cart.items.forEach(item => {
-            item.totalAmount = item.quantity * item.product.finalPrice;
-            item.totalInitialAmount = item.quantity * item.product.initialPrice;
-        });
-        cart.totalAmount = parseFloat(cart.items.reduce((total, item) => total + item.totalAmount, 0)).toFixed(2);
-        cart.totalInitialAmount = parseFloat(cart.items.reduce((total, item) => total + item.totalInitialAmount, 0)).toFixed(2);
+        
         cart.totalDiscountAmount = parseFloat(cart.totalInitialAmount - cart.totalAmount).toFixed(2);
 
         if (invalidItems.length > 0) {
@@ -485,13 +481,19 @@ const codPlaceOrderHandler = async (req, res, next) => {
 
         if (orderUpdates && productUpdate && paymentUpdate) {
             // If all updates are successful, remove the cart items
-            cart.items = [];
-            cart.totalItems = 0;
-            cart.totalAmount = 0;
-            cart.coupon.code = "";
-            cart.coupon.amount = 0;
+           
 
-            cartUpdate = await cart.save();
+            const cartEmptyUpdate = {
+                $set: {
+                    'items': [],
+                    'totalItems': 0,
+                    'coupon.code' : "",
+                    'coupon.amount' : 0,
+                }
+            };
+    
+            // Save the updated cart with the applied coupon
+            cartUpdate = await Cart.updateOne({ user: userId }, cartEmptyUpdate);
         }
 
         if (cartUpdate) {
@@ -577,10 +579,7 @@ const placeOrderByWalletHandler = async (req, res, next) => {
 
 
         // Fetch user's cart details
-        let cart = await Cart.findOne({ user: userId }).populate({
-            path: 'items.product',
-            match: { isDeleted: false }, // Only populate products that are not deleted
-        });
+        const cart = await getUpdatedCartPrice(userId);
 
 
         // Check if the cart has a coupon
@@ -590,10 +589,15 @@ const placeOrderByWalletHandler = async (req, res, next) => {
             // If the coupon is not valid, reset it in the cart
             if (!isValidCoupon) {
                 console.log('Invalid coupon. Resetting cart coupon.');
-                cart.coupon.amount = 0;
-                cart.coupon.code = "";
-
-                const cart = await cart.save();
+                const couponUpdate = {
+                    $set: {
+                        'coupon.amount': 0,
+                        'coupon.code': "",
+                    }
+                };
+        
+                // Save the updated cart with the applied coupon
+                await Cart.updateOne({ user: userId }, couponUpdate);
 
                 // If there are invalid coupons
                 req.flash('error', "You have some invalid coupon atatched to cart. We have resetted it for you.")
@@ -641,12 +645,6 @@ const placeOrderByWalletHandler = async (req, res, next) => {
         }
 
         // Calculate total price details for the cart
-        cart.items.forEach(item => {
-            item.totalAmount = item.quantity * item.product.finalPrice;
-            item.totalInitialAmount = item.quantity * item.product.initialPrice;
-        });
-        cart.totalAmount = parseFloat(cart.items.reduce((total, item) => total + item.totalAmount, 0)).toFixed(2);
-        cart.totalInitialAmount = parseFloat(cart.items.reduce((total, item) => total + item.totalInitialAmount, 0)).toFixed(2);
         cart.totalDiscountAmount = parseFloat(cart.totalInitialAmount - cart.totalAmount).toFixed(2);
 
         if (invalidItems.length > 0) {
@@ -774,13 +772,17 @@ const placeOrderByWalletHandler = async (req, res, next) => {
 
         if (orderUpdates && productUpdate && paymentUpdate && walletUpdate) {
             // If all updates are successful, remove the cart items
-            cart.items = [];
-            cart.totalItems = 0;
-            cart.totalAmount = 0;
-            cart.coupon.code = "";
-            cart.coupon.amount = 0;
-
-            cartUpdate = await cart.save();
+            const cartEmptyUpdate = {
+                $set: {
+                    'items': [],
+                    'totalItems': 0,
+                    'coupon.code' : "",
+                    'coupon.amount' : 0,
+                }
+            };
+    
+            // Save the updated cart with the applied coupon
+            cartUpdate = await Cart.updateOne({ user: userId }, cartEmptyUpdate);
         }
 
         if (cartUpdate) {
@@ -853,10 +855,7 @@ const razorpayPlaceOrderHandler = async (req, res, next) => {
 
 
         // Fetch user's cart details
-        let cart = await Cart.findOne({ user: userId }).populate({
-            path: 'items.product',
-            match: { isDeleted: false }, // Only populate products that are not deleted
-        });
+        let cart = await getUpdatedCartPrice(userId);
 
         // Check if the cart has a coupon
         if (cart.coupon) {
@@ -865,10 +864,15 @@ const razorpayPlaceOrderHandler = async (req, res, next) => {
             // If the coupon is not valid, reset it in the cart
             if (!isValidCoupon) {
                 console.log('Invalid coupon. Resetting cart coupon.');
-                cart.coupon.amount = 0;
-                cart.coupon.code = "";
-
-                const cart = await cart.save();
+                const couponUpdate = {
+                    $set: {
+                        'coupon.amount': 0,
+                        'coupon.code': "",
+                    }
+                };
+        
+                // Save the updated cart with the applied coupon
+                await Cart.updateOne({ user: userId }, couponUpdate);
 
                 // If there are invalid coupons
                 req.flash('error', "You have some invalid coupon atatched to cart. We have resetted it for you.")
@@ -916,12 +920,6 @@ const razorpayPlaceOrderHandler = async (req, res, next) => {
         }
 
         // Calculate total price details for the cart
-        cart.items.forEach(item => {
-            item.totalAmount = item.quantity * item.product.finalPrice;
-            item.totalInitialAmount = item.quantity * item.product.initialPrice;
-        });
-        cart.totalAmount = parseFloat(cart.items.reduce((total, item) => total + item.totalAmount, 0)).toFixed(2);
-        cart.totalInitialAmount = parseFloat(cart.items.reduce((total, item) => total + item.totalInitialAmount, 0)).toFixed(2);
         cart.totalDiscountAmount = parseFloat(cart.totalInitialAmount - cart.totalAmount).toFixed(2);
 
         if (invalidItems.length > 0) {
@@ -1117,10 +1115,7 @@ const razorpayVerifyPaymentHandler = async (req, res) => {
             const paymentUpdate = await payment.save();
 
             // Fetch user's cart details
-            let cart = await Cart.findOne({ user: userId }).populate({
-                path: 'items.product',
-                match: { isDeleted: false }, // Only populate products that are not deleted
-            });
+            const cart = await getUpdatedCartPrice(userId);
 
             // Update product quantities based on the items in the cart
             for (const item of cart.items) {
@@ -1156,13 +1151,17 @@ const razorpayVerifyPaymentHandler = async (req, res) => {
 
             if (orderUpdates && productUpdate && paymentUpdate) {
                 // If all updates are successful, remove the cart items
-                cart.items = [];
-                cart.totalItems = 0;
-                cart.totalAmount = 0;
-                cart.coupon.code = "";
-                cart.coupon.amount = 0;
-
-                cartUpdate = await cart.save();
+                const cartEmptyUpdate = {
+                    $set: {
+                        'items': [],
+                        'totalItems': 0,
+                        'coupon.code' : "",
+                        'coupon.amount' : 0,
+                    }
+                };
+        
+                // Save the updated cart with the applied coupon
+                cartUpdate = await Cart.updateOne({ user: userId }, cartEmptyUpdate);
             }
 
             if (cartUpdate) {
@@ -1515,6 +1514,146 @@ async function isCouponValidForUser(coupon, userId, userCart) {
 
     // If all conditions pass, the coupon is valid
     return true;
+}
+
+async function getUpdatedCartPrice(userId) {
+    const cartPipeline = [
+        {
+            $match: { user: new mongoose.Types.ObjectId(userId) },
+        },
+        {
+            $addFields: {
+                items: { $ifNull: ['$items', []] },
+            },
+        },
+        {
+            $unwind: '$items',
+        },
+        {
+            $lookup: {
+                from: 'products',
+                localField: 'items.product',
+                foreignField: '_id',
+                as: 'items.product',
+            },
+        },
+        {
+            $unwind: '$items.product',
+        },
+        {
+            $lookup: {
+                from: 'categories',
+                localField: 'items.product.category',
+                foreignField: '_id',
+                as: 'items.product.category',
+            },
+        },
+        {
+            $unwind: '$items.product.category',
+        },
+        {
+            $lookup: {
+                from: 'offers',
+                let: {
+                    productId: '$items.product._id',
+                    categoryId: '$items.product.category._id',
+                },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $and: [
+                                    { $or: [{ $eq: ['$product', '$$productId'] }, { $eq: ['$category', '$$categoryId'] }] },
+                                    { $lte: ['$validFrom', new Date()] },
+                                    { $gte: ['$validUpto', new Date()] },
+                                    { $eq: ['$isActive', true] },
+                                ],
+                            },
+                        },
+                    },
+                    {
+                        $group: {
+                            _id: null,
+                            maxDiscount: { $max: '$percentageDiscount' },
+                        },
+                    },
+                ],
+                as: 'items.product.offersData',
+            },
+        },
+        {
+            $addFields: {
+                'items.product.maxDiscountPercentage': {
+                    $ifNull: [{ $arrayElemAt: ['$items.product.offersData.maxDiscount', 0] }, 0],
+                },
+            },
+        },
+        {
+            $addFields: {
+                'items.product.finalPrice': {
+                    $cond: {
+                        if: { $gt: ['$items.product.maxDiscountPercentage', 0] },
+                        then: {
+                            $multiply: [
+                                '$items.product.initialPrice',
+                                {
+                                    $subtract: [
+                                        1,
+                                        {
+                                            $divide: ['$items.product.maxDiscountPercentage', 100],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        else: '$items.product.initialPrice',
+                    },
+                },
+            },
+        },
+        {
+            $group: {
+                _id: '$_id',
+                user: { $first: '$user' },
+                createdAt: { $first: '$createdAt' },
+                totalItems: { $first: '$totalItems' },
+                coupon: { $first: '$coupon' },
+                items: { $push: '$items' },
+            },
+        },
+    ];
+
+    const cartAggregationResult = await Cart.aggregate(cartPipeline);
+
+    let cartResult;
+
+    if (cartAggregationResult.length > 0) {
+        // If the cart exists in the aggregation result
+        cartResult = cartAggregationResult[0];
+    } else {
+        // If the cart doesn't exist, find it using mongoose
+        cartResult = await Cart.findOne({ user: userId });
+
+        if (!cartResult) {
+            // If still not found, create a new cart with an empty items array
+            cartResult = new Cart({ user: userId, items: [] });
+        }
+    }
+
+    // Calculate total prices for each item
+    cartResult.items.forEach(item => {
+        item.totalAmount = item.quantity * item.product.finalPrice;
+        item.totalInitialAmount = item.quantity * item.product.initialPrice;
+    });
+
+    // Calculate total price for the entire cart
+    cartResult.totalAmount = cartResult.items.length > 0 ?
+        parseFloat(cartResult.items.reduce((total, item) => total + item.totalAmount, 0)).toFixed(2) : 0;
+    cartResult.totalInitialAmount = cartResult.items.length > 0 ?
+        parseFloat(cartResult.items.reduce((total, item) => total + item.totalInitialAmount, 0)).toFixed(2) : 0;
+
+
+    return cartResult;
 }
 
 module.exports = {

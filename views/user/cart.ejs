@@ -50,7 +50,7 @@
                                                 <div class="d-flex flex-row">
                                                     <h3 class="mx-2"><%= item.product.finalPrice %></h3>
                                                     <h3 class="muted mx-2"><del><%= item.product.initialPrice %></del></h3>
-                                                    <p class="badge badge-success mx-2 p-3" style="font-size: medium;"><%= item.product.discountPercentage %>%</p>
+                                                    <p class="badge badge-success mx-2 p-3" style="font-size: medium;"><%= item.product.maxDiscountPercentage %>%</p>
                                                 </div>
                                                
                                                 <div class="row d-flex flex-row">
@@ -88,7 +88,7 @@
                                                               id="minusBtn<%=item._id%>">-</button>
                                                       </div>
                                                       <input type="text" class="form-control text-center rounded-pill quantity-input"
-                                                          value="<%= item.quantity  %>" min="1" max="10" id="quantityInput<%=item.id  %>" readonly>
+                                                          value="<%= item.quantity  %>" min="1" max="10" id="quantityInput<%=item._id%>" readonly>
                                                       <div class="input-group-append">
                                                           <button  onclick="updateQuantity( '<%= JSON.stringify(item._id) %>' ,'add')"
                                                           class="btn btn-outline-danger rounded-pill" type="button"
@@ -355,285 +355,294 @@
 
 <script>
 
-function hideCouponWarnings() {
+    function hideCouponWarnings() {
         // Assuming you have a class to hide the coupon warnings
         document.querySelector('.coupon-warnings').style.display = 'none';
-}
+    }
 
-async function applyCoupon() {
-    try {
-        // Get the selected coupon ID
-        const selectedCouponId = document.querySelector('input[name="selectedCoupon"]:checked');
+    async function applyCoupon() {
+        try {
+            // Get the selected coupon ID
+            const selectedCouponId = document.querySelector('input[name="selectedCoupon"]:checked');
 
-        // Check if a coupon is selected
-        if (!selectedCouponId) {
-            // Display an error alert if no coupon is selected
-            showAlert('Please select a coupon before applying.');
+            // Check if a coupon is selected
+            if (!selectedCouponId) {
+                // Display an error alert if no coupon is selected
+                showAlert('Please select a coupon before applying.');
+                return;
+            }
+
+            // Prepare the data for the fetch request
+            const couponId = selectedCouponId.value;
+
+            // Send a fetch request to apply the coupon
+            const response = await fetch(`/apply-coupon/${couponId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            } else {
+                const data = await response.json();
+                // Update UI with new cart information
+                const totalAmountElement = document.getElementById('amountToPay');
+                const deductableAmountElement = document.getElementById('deductableAmount');
+
+                // Assuming 'data.cart' contains the updated cart information
+                totalAmountElement.textContent = `${data.cart.totalAmount - data.cart.coupon.amount} Rs.`;
+                deductableAmountElement.textContent = `${data.cart.coupon.amount} Rs.`;
+
+
+
+                hideCouponModal();
+
+            }
+
+        } catch (error) {
+            console.error('Error applying coupon:', error.message);
+            // Show error on the alert modal
+            showAlert(`Error applying coupon: ${error.message}`);
+        }
+    }
+
+    function hideCouponModal() {
+        // Assuming you have a modal element with the ID 'applyCouponModal'
+        const couponModal = $('#applyCouponModal');
+
+        // Hide the modal using jQuery
+        couponModal.modal('hide');
+    }
+
+
+    function checkCouponValidity(coupons, cart) {
+        // Convert the user input to uppercase
+        const userInput = document.getElementById('couponCodeInput').value.toUpperCase();
+
+        // Check if any coupon in the array has a name or code matching the userInput
+        const matchingCoupon = coupons.find(coupon =>
+            coupon.name.toUpperCase() === userInput || coupon.code.toUpperCase() === userInput
+        );
+
+        // Get the failure message element
+        const failureMessageElement = document.getElementById('couponFailureMessage');
+
+        // If a matching coupon is found
+        if (matchingCoupon) {
+
+            // Check if the coupon is active
+            let isCouponActive;
+            if (matchingCoupon.validUpto) {
+                isCouponActive = cart.totalAmount >= matchingCoupon.minimumPurchaseLimit &&
+                    new Date(matchingCoupon.validFrom) <= new Date() &&
+                    new Date(matchingCoupon.validUpto) >= new Date();
+            } else {
+                isCouponActive = cart.totalAmount >= matchingCoupon.minimumPurchaseLimit &&
+                    new Date(matchingCoupon.validFrom) <= new Date();
+            }
+
+            // If the coupon is active, select the corresponding card's radio button
+            if (isCouponActive) {
+                const radioButton = document.getElementById(matchingCoupon._id);
+                radioButton.checked = true;
+                console.log('Active Coupon Match Found:', matchingCoupon.name);
+                // Scroll to the selected coupon card
+                radioButton.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                console.log('Inactive Coupon Match Found:', matchingCoupon.name);
+                failureMessageElement.textContent = 'This coupon is currently unavailable for you.';
+                return;
+            }
+
+            // Clear any previous failure message
+            failureMessageElement.textContent = '';
+        } else {
+            // If no matching coupon is found, display the failure message
+            console.log('No matching coupon found.');
+            failureMessageElement.textContent = 'Invalid coupon. Please try again.';
             return;
         }
+    }
 
-        // Prepare the data for the fetch request
-        const couponId = selectedCouponId.value;
 
-        // Send a fetch request to apply the coupon
-        const response = await fetch(`/apply-coupon/${couponId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            
+
+    function selectCoupon(index) {
+        // Get the radio button corresponding to the clicked card
+        const radioButton = document.getElementById(`${index}`);
+
+        // Check the radio button
+        radioButton.checked = true;
+    }
+
+
+    function validateAndRedirect() {
+        // Send a GET request to the server endpoint
+        fetch('/cart-to-address', {
+            method: 'GET',
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Check if there are invalid items in the response
+                if (data.invalidItems && data.invalidItems.length > 0) {
+                    // If there are invalid items, show the custom popup
+                    showInvalidItemsPopup(data.invalidItems);
+                } else {
+                    // If no invalid items, redirect to the address page
+                    window.location.href = '/address';
+                }
+            })
+            .catch(error => {
+                console.error('Error validating cart:', error.message);
+                // Handle the error if needed
+            });
+    }
+
+    function showInvalidItemsPopup(invalidItems) {
+        // Get the modal and its body
+        const modal = document.getElementById('invalidItemsModal');
+        const modalBody = document.getElementById('invalidItemsModalBody');
+
+        // Clear previous content
+        modalBody.innerHTML = '';
+
+        // Add details of invalid items to the modal body
+        invalidItems.forEach(item => {
+            const itemDetails = document.createElement('p');
+            itemDetails.textContent = `Brand: ${item.brandName}, Product: ${item.productName}, Size: ${item.size}, Quantity: ${item.selectedQuantity}, Reason: ${item.reason}`;
+            modalBody.appendChild(itemDetails);
         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        } else {
-            const data = await response.json();
-            // Update UI with new cart information
-            const totalAmountElement = document.getElementById('amountToPay');
-            const deductableAmountElement = document.getElementById('deductableAmount');
-
-            // Assuming 'data.cart' contains the updated cart information
-            totalAmountElement.textContent = `${data.cart.totalAmount - data.cart.coupon.amount} Rs.`;
-            deductableAmountElement.textContent = `${data.cart.coupon.amount} Rs.`;
-
-            
-
-            hideCouponModal();
-            
-        }
-
-    } catch (error) {
-        console.error('Error applying coupon:', error.message);
-        // Show error on the alert modal
-        showAlert(`Error applying coupon: ${error.message}`);
+        // Show the modal
+        $(modal).modal('show');
     }
-}
-
-function hideCouponModal() {
-    // Assuming you have a modal element with the ID 'applyCouponModal'
-    const couponModal = $('#applyCouponModal');
-
-    // Hide the modal using jQuery
-    couponModal.modal('hide');
-}
 
 
-function checkCouponValidity(coupons, cart) {
-    // Convert the user input to uppercase
-    const userInput = document.getElementById('couponCodeInput').value.toUpperCase();
+    function deleteCartItem(itemId, cartDetails, deletedItemDetails) {
 
-    // Check if any coupon in the array has a name or code matching the userInput
-    const matchingCoupon = coupons.find(coupon =>
-        coupon.name.toUpperCase() === userInput || coupon.code.toUpperCase() === userInput
-    );
+        //const { totalAmount, totalInitialAmount,coupon } = cartDetails;
+        var totalAmountText = document.getElementById('amountToPay').textContent;
+        var totalAmount = parseFloat(totalAmountText.replace(" Rs.", ""));
 
-    // Get the failure message element
-    const failureMessageElement = document.getElementById('couponFailureMessage');
+        var totalInitialAmountText = document.getElementById('totalMRP').textContent;
+        var totalInitialAmount = parseFloat(totalAmountText.replace(" Rs.", ""));
 
-    // If a matching coupon is found
-    if (matchingCoupon) {
-        
-        // Check if the coupon is active
-        let isCouponActive;
-        if (matchingCoupon.validUpto) {
-            isCouponActive = cart.totalAmount >= matchingCoupon.minimumPurchaseLimit &&
-                new Date(matchingCoupon.validFrom) <= new Date() &&
-                new Date(matchingCoupon.validUpto) >= new Date();
-        } else {
-            isCouponActive = cart.totalAmount >= matchingCoupon.minimumPurchaseLimit &&
-                new Date(matchingCoupon.validFrom) <= new Date();
-        }
+        const { deletedItemTotalAmount, deletedItemTotalInitialAmount } = deletedItemDetails;
 
-        // If the coupon is active, select the corresponding card's radio button
-        if (isCouponActive) {
-            const radioButton = document.getElementById(matchingCoupon._id);
-            radioButton.checked = true;
-            console.log('Active Coupon Match Found:', matchingCoupon.name);
-            // Scroll to the selected coupon card
-            radioButton.scrollIntoView({ behavior: 'smooth' });
-        } else {
-            console.log('Inactive Coupon Match Found:', matchingCoupon.name);
-            failureMessageElement.textContent = 'This coupon is currently unavailable for you.';
-            return;
-        }
+        // Send DELETE request to server
+        fetch(`/cart-item-delete/${itemId}`, {
+            method: 'DELETE',
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Assuming the server response contains only the deleted item's ID
 
-        // Clear any previous failure message
-        failureMessageElement.textContent = '';
-    } else {
-        // If no matching coupon is found, display the failure message
-        console.log('No matching coupon found.');
-        failureMessageElement.textContent = 'Invalid coupon. Please try again.';
-        return;
+                // Remove the deleted item from the page
+                const deletedItemElement = document.getElementById(`item-${itemId}`);
+                if (deletedItemElement) {
+                    deletedItemElement.remove();
+                }
+
+                // Update total amount, total discount, and amount to pay based on the current page values
+                const currentFinalTotalAmount = parseFloat(totalAmount - deletedItemTotalAmount).toFixed(2);
+                const currentInitialAmountToPay = parseFloat(totalInitialAmount - deletedItemTotalInitialAmount).toFixed(2);
+
+                // Update total amount, total discount, and amount to pay
+                document.getElementById('totalMRP').textContent = `${currentInitialAmountToPay} Rs.`;
+                document.getElementById('discount').textContent = `${currentInitialAmountToPay - currentFinalTotalAmount} Rs.`;
+                document.getElementById('amountToPay').textContent = `${currentFinalTotalAmount} Rs.`;
+                document.getElementById('deductableAmount').textContent = "0 Rs.";
+            })
+            .catch(error => {
+                console.error('Error deleting item:', error);
+                // Handle error, show a message to the user, etc.
+            });
     }
-}
 
 
-
-function selectCoupon(index) {
-    // Get the radio button corresponding to the clicked card
-    const radioButton = document.getElementById(`${index}`);
-
-    // Check the radio button
-    radioButton.checked = true;
-  }
-
-
-function validateAndRedirect() {
-    // Send a GET request to the server endpoint
-    fetch('/cart-to-address', {
-        method: 'GET',
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        return response.json();
-    })
-    .then(data => {
-        // Check if there are invalid items in the response
-        if (data.invalidItems && data.invalidItems.length > 0) {
-            // If there are invalid items, show the custom popup
-            showInvalidItemsPopup(data.invalidItems);
-        } else {
-            // If no invalid items, redirect to the address page
-            window.location.href = '/address';
-        }
-    })
-    .catch(error => {
-        console.error('Error validating cart:', error.message);
-        // Handle the error if needed
-    });
-}
-
-  function showInvalidItemsPopup(invalidItems) {
-    // Get the modal and its body
-    const modal = document.getElementById('invalidItemsModal');
-    const modalBody = document.getElementById('invalidItemsModalBody');
-
-    // Clear previous content
-    modalBody.innerHTML = '';
-
-    // Add details of invalid items to the modal body
-    invalidItems.forEach(item => {
-        const itemDetails = document.createElement('p');
-        itemDetails.textContent = `Brand: ${item.brandName}, Product: ${item.productName}, Size: ${item.size}, Quantity: ${item.selectedQuantity}, Reason: ${item.reason}`;
-        modalBody.appendChild(itemDetails);
-    });
-
-    // Show the modal
-    $(modal).modal('show');
-}
-
-
-  function deleteCartItem(itemId, cartDetails, deletedItemDetails) {
-
-const { totalAmount, totalInitialAmount,coupon } = cartDetails;
-const { deletedItemTotalAmount, deletedItemTotalInitialAmount } = deletedItemDetails;
-
-// Send DELETE request to server
-fetch(`/cart-item-delete/${itemId}`, {
-  method: 'DELETE',
-})
-.then(response => {
-  if (!response.ok) {
-    throw new Error(`HTTP error! Status: ${response.status}`);
-  }
-  return response.json();
-})
-.then(data => {
-  // Assuming the server response contains only the deleted item's ID
-  
-  // Remove the deleted item from the page
-  const deletedItemElement = document.getElementById(`item-${itemId}`);
-  if (deletedItemElement) {
-    deletedItemElement.remove();
-  }
-  
-  // Update total amount, total discount, and amount to pay based on the current page values
-  const currentFinalTotalAmount = parseFloat(totalAmount - deletedItemTotalAmount).toFixed(2);
-  const currentInitialAmountToPay = parseFloat(totalInitialAmount - deletedItemTotalInitialAmount).toFixed(2);
-
-  // Update total amount, total discount, and amount to pay
-  document.getElementById('totalMRP').textContent = `${currentInitialAmountToPay} Rs.`;
-  document.getElementById('discount').textContent = `${currentInitialAmountToPay - currentFinalTotalAmount} Rs.`;
-  document.getElementById('amountToPay').textContent = `${currentFinalTotalAmount} Rs.`;
-  document.getElementById('deductableAmount').textContent = "0 Rs.";
-})
-.catch(error => {
-  console.error('Error deleting item:', error);
-  // Handle error, show a message to the user, etc.
-});
-}
-
-
-function updateQuantity(itemId, operation) {
-  const parsedItemId = JSON.parse(itemId);
-  const displayInput = document.getElementById(`quantityInput${parsedItemId}`);
-
-  if (operation === "add" && displayInput.value >= 10 || operation === "minus" && displayInput.value <= 1) {
-    return console.log("Maximum or minimum quantity reached");
-  }
-
-  const updater = (operation === "add") ? 1 : -1;
-  
-
-  const URL = `/cart-item-quantity-update?itemId=${parsedItemId}&operation=${updater}`;
-
-  console.log('Sending request to:', URL);
-
-  fetch(URL, {
-    method: 'GET',
-  })
-    .then(response => {
-      if (!response.ok) {
+    function updateQuantity(itemId, operation) {
         
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      displayInput.value = parseInt(displayInput.value) + updater;
-      // Reload the page upon a successful update
-      location.reload();
-    })
-    .catch(error => {
-      console.error('Error updating quantity:', error.message);
-    });
-}
 
-
-function updateSize(itemId, newSize) {
-    // Get the current size before the change
-    const previousSize = document.querySelector(`[name="size${itemId}"]:checked`).value;
-
-    // Update the size on the client side
-    const sizeLabel = document.querySelector(`[name="size${itemId}"][value="${newSize}"]`);
-    sizeLabel.checked = true;
-
-    // Send a request to the server to update the size
-    const URL = `/cart-item-size-update?itemId=${itemId}&newSize=${newSize}&previousSize=${previousSize}`;
-
-    fetch(URL, {
-        method: 'GET', // You can use 'POST' or 'PUT' depending on your server route
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
+        
+        const parsedItemId = JSON.parse(itemId);
+        const displayInput = document.getElementById(`quantityInput${parsedItemId}`);
+        console.log(displayInput)
+        if (operation === "add" && displayInput.value >= 10 || operation === "minus" && displayInput.value <= 1) {
+            return console.log("Maximum or minimum quantity reached");
         }
-        // Handle the success response if needed
-        location.reload();
-    })
-    .catch(error => {
-        console.error('Error updating size:', error.message);
-        // Handle the error if needed
-    });
-}
+
+        const updater = (operation === "add") ? 1 : -1;
 
 
-function showAlert(message) {
-  // Set the modal text
-  document.getElementById('modalTextAlert').innerText = message;
+        const URL = `/cart-item-quantity-update?itemId=${parsedItemId}&operation=${updater}`;
 
-  // Show the modal
-  $('#customModalAlert').modal('show');
-}
+        console.log('Sending request to:', URL);
+
+        fetch(URL, {
+            method: 'GET',
+        })
+            .then(response => {
+                if (!response.ok) {
+
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                displayInput.value = parseInt(displayInput.value) + updater;
+                // Reload the page upon a successful update
+                location.reload();
+            })
+            .catch(error => {
+                console.error('Error updating quantity:', error.message);
+            });
+    }
+
+
+    function updateSize(itemId, newSize) {
+        // Get the current size before the change
+        const previousSize = document.querySelector(`[name="size${itemId}"]:checked`).value;
+
+        // Update the size on the client side
+        const sizeLabel = document.querySelector(`[name="size${itemId}"][value="${newSize}"]`);
+        sizeLabel.checked = true;
+
+        // Send a request to the server to update the size
+        const URL = `/cart-item-size-update?itemId=${itemId}&newSize=${newSize}&previousSize=${previousSize}`;
+
+        fetch(URL, {
+            method: 'GET', // You can use 'POST' or 'PUT' depending on your server route
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                // Handle the success response if needed
+                location.reload();
+            })
+            .catch(error => {
+                console.error('Error updating size:', error.message);
+                // Handle the error if needed
+            });
+    }
+
+
+    function showAlert(message) {
+        // Set the modal text
+        document.getElementById('modalTextAlert').innerText = message;
+
+        // Show the modal
+        $('#customModalAlert').modal('show');
+    }
 
 
 </script>

@@ -280,7 +280,7 @@ const applyCouponInCartHandler = async (req, res, next) => {
         }
 
         // Fetch the cart data for the current user
-        const userCart = await Cart.findOne({ user: userId });
+        const userCart = await getUpdatedCartPrice(userId);
 
         // Check if the user has a cart
         if (!userCart) {
@@ -315,16 +315,21 @@ const applyCouponInCartHandler = async (req, res, next) => {
         }
 
         // Apply the coupon logic here and update the cart's coupon details
-        userCart.coupon = {
-            amount: coupon.amount,
-            code: coupon.code,
+        const couponUpdate = {
+            $set: {
+                'coupon.amount': coupon.amount,
+                'coupon.code': coupon.code,
+            }
         };
 
         // Save the updated cart with the applied coupon
-        await userCart.save();
+        await Cart.updateOne({ user: userId }, couponUpdate);
 
         
-
+        userCart.coupon = {
+            amount: coupon.amount,
+            code: coupon.code,
+        }
         // Send a success response or additional data as needed
         return res.status(200).json({ message: 'Coupon applied successfully.', data: coupon , cart: userCart});
 
@@ -336,7 +341,145 @@ const applyCouponInCartHandler = async (req, res, next) => {
     }
 };
 
+async function getUpdatedCartPrice(userId) {
+    const cartPipeline = [
+        {
+            $match: { user: new mongoose.Types.ObjectId(userId) },
+        },
+        {
+            $addFields: {
+                items: { $ifNull: ['$items', []] },
+            },
+        },
+        {
+            $unwind: '$items',
+        },
+        {
+            $lookup: {
+                from: 'products',
+                localField: 'items.product',
+                foreignField: '_id',
+                as: 'items.product',
+            },
+        },
+        {
+            $unwind: '$items.product',
+        },
+        {
+            $lookup: {
+                from: 'categories',
+                localField: 'items.product.category',
+                foreignField: '_id',
+                as: 'items.product.category',
+            },
+        },
+        {
+            $unwind: '$items.product.category',
+        },
+        {
+            $lookup: {
+                from: 'offers',
+                let: {
+                    productId: '$items.product._id',
+                    categoryId: '$items.product.category._id',
+                },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $and: [
+                                    { $or: [{ $eq: ['$product', '$$productId'] }, { $eq: ['$category', '$$categoryId'] }] },
+                                    { $lte: ['$validFrom', new Date()] },
+                                    { $gte: ['$validUpto', new Date()] },
+                                    { $eq: ['$isActive', true] },
+                                ],
+                            },
+                        },
+                    },
+                    {
+                        $group: {
+                            _id: null,
+                            maxDiscount: { $max: '$percentageDiscount' },
+                        },
+                    },
+                ],
+                as: 'items.product.offersData',
+            },
+        },
+        {
+            $addFields: {
+                'items.product.maxDiscountPercentage': {
+                    $ifNull: [{ $arrayElemAt: ['$items.product.offersData.maxDiscount', 0] }, 0],
+                },
+            },
+        },
+        {
+            $addFields: {
+                'items.product.finalPrice': {
+                    $cond: {
+                        if: { $gt: ['$items.product.maxDiscountPercentage', 0] },
+                        then: {
+                            $multiply: [
+                                '$items.product.initialPrice',
+                                {
+                                    $subtract: [
+                                        1,
+                                        {
+                                            $divide: ['$items.product.maxDiscountPercentage', 100],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        else: '$items.product.initialPrice',
+                    },
+                },
+            },
+        },
+        {
+            $group: {
+                _id: '$_id',
+                user: { $first: '$user' },
+                createdAt: { $first: '$createdAt' },
+                totalItems: { $first: '$totalItems' },
+                coupon: { $first: '$coupon' },
+                items: { $push: '$items' },
+            },
+        },
+    ];
 
+    const cartAggregationResult = await Cart.aggregate(cartPipeline);
+
+    let cartResult;
+
+    if (cartAggregationResult.length > 0) {
+        // If the cart exists in the aggregation result
+        cartResult = cartAggregationResult[0];
+    } else {
+        // If the cart doesn't exist, find it using mongoose
+        cartResult = await Cart.findOne({ user: userId });
+
+        if (!cartResult) {
+            // If still not found, create a new cart with an empty items array
+            cartResult = new Cart({ user: userId, items: [] });
+        }
+    }
+
+    // Calculate total prices for each item
+    cartResult.items.forEach(item => {
+        item.totalAmount = item.quantity * item.product.finalPrice;
+        item.totalInitialAmount = item.quantity * item.product.initialPrice;
+    });
+
+    // Calculate total price for the entire cart
+    cartResult.totalAmount = cartResult.items.length > 0 ?
+        parseFloat(cartResult.items.reduce((total, item) => total + item.totalAmount, 0)).toFixed(2) : 0;
+    cartResult.totalInitialAmount = cartResult.items.length > 0 ?
+        parseFloat(cartResult.items.reduce((total, item) => total + item.totalInitialAmount, 0)).toFixed(2) : 0;
+
+
+    return cartResult;
+}
 
 
 module.exports = {
