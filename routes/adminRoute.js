@@ -30,6 +30,8 @@ adminRoute.get('/dashboard',auth.isLogin,adminController.dashboardLoader);
 adminRoute.get('/user-creation-statistics',auth.isLogin,adminController.userCreationStatisticsgraphLoader)
 adminRoute.get('/monthly-spend-statistics',auth.isLogin,adminController.userMonthlySpendStatisticsGraphLoader)
 
+adminRoute.get('/category-wise-order-statistics',auth.isLogin,adminController.categoryWiseOrderStatisticsLoader)
+
 adminRoute.get('/products-list',auth.isLogin,productController.productListLoaderAdmin);
 adminRoute.get('/products-add',auth.isLogin,productController.productAddLoaderAdmin);
 adminRoute.post('/products-add',auth.isLogin,upload.array('images',4),productController.productAddHandlerAdmin);
@@ -66,5 +68,6 @@ adminRoute.get('/offers-add',auth.isLogin,offerController.offersAddLoader)
 adminRoute.post('/offers-add',auth.isLogin,offerController.offerAddHandlerAdmin);
 adminRoute.get('/autocomplete-products',auth.isLogin,productController.autoCompleteProductsHandler)
 adminRoute.get('/generate-sales-report',auth.isLogin,orderController.generateSalesReportHandler)
+
 
   module.exports =adminRoute;

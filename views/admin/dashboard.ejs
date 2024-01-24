@@ -163,7 +163,7 @@
                                     </div>
                                 </div>
                             </div>
-
+                
                             <!-- second Box -->
                             <div class="col-12 col-sm-6 mt-2 ">
                                 <div class="col-6 offset-3 dashboard-box bg-white p-3"
@@ -192,7 +192,7 @@
                                     </div>
                                 </div>
                             </div>
-
+                
                             <!-- fourth Box -->
                             <div class="col-12 col-sm-6 mt-5">
                                 <div class="col-6 offset-3 dashboard-box bg-white p-3"
@@ -200,7 +200,7 @@
                                     <div class="box-content"
                                         style="background-color: #ffffff46;border-radius: 70px;padding-top:20px;padding-bottom:20px;">
                                         <div class="box-number">
-                                            <%=totalRevenue %>
+                                            <%=parseFloat(totalRevenue).toFixed(2) %>
                                         </div>
                                         <div class="box-text">Total Revenue</div>
                                     </div>
@@ -208,7 +208,7 @@
                             </div>
                         </div>
                     </div>
-
+                
                     <!-- Section: user -->
                     <div id="userAnalytics" class="col-12 p-3 border rounded text-black ml-2" style="display: none;">
                         <!-- Content for the second horizontal section goes here -->
@@ -229,7 +229,7 @@
                                 <!--pie chart goes here-->
                                 <canvas id="myPieChart" width="400" height="400"></canvas>
                             </div>
-
+                
                             <div class="row col-10 offset-1 col-sm-6" style="position: absolute; bottom: -50px; right: 0px;">
                                 <div style="width: 50%;background-color: #FF6384;height:25px;">
                                     Non-Purchasing users
@@ -239,86 +239,111 @@
                                 </div>
                             </div>
                         </div>
-
+                
                         <div class="row col-12 mt-5">
-                            
-                            <div class="col-10 offset-1 mt-2 bg-light text-dark p-5 border rounded my-5" id="newUserCreationStatisticsGraphContainer" style="position:relative;">
+                
+                            <div class="col-10 offset-1 mt-2 bg-light text-dark p-5 border rounded my-5"
+                                id="newUserCreationStatisticsGraphContainer" style="position:relative;">
                                 <!--new user statistics graph goes exactly here-->
-                                <h2 class=" border rounded bg-primary text-light p-3 d-inline-block" style="position:absolute;left:10px;top:10px;">User Creation Statistics</h2>
-                                <select id="timeFrameOption" name="timeFrameOption" class="form-select p-2" style="background-image: linear-gradient( 90.2deg,  rgba(79,255,255,1) 0.3%, rgba(0,213,255,1) 99.8% );position:absolute;right:50px;top:50px;">
+                                <h2 class=" border rounded bg-primary text-light p-3 d-inline-block"
+                                    style="position:absolute;left:10px;top:10px;">User Creation Statistics</h2>
+                                <select id="timeFrameOption" name="timeFrameOption" class="form-select p-2"
+                                    style="background-image: linear-gradient( 90.2deg,  rgba(79,255,255,1) 0.3%, rgba(0,213,255,1) 99.8% );position:absolute;right:50px;top:50px;">
                                     <option value="thisYear" selected>This Year</option>
                                     <option value="thisMonth">This Month</option>
                                     <option value="thisWeek">This Week</option>
                                     <option value="today">Today</option>
                                 </select>
-
+                
                                 <!-- New user statistics graph canvas -->
                                 <canvas id="newUserCreationStatisticsGraph" width="400px" height="200px" class="mt-5"></canvas>
                             </div>
-
-                            
-                            <div class="col-10 offset-1 mt-2 bg-light text-dark p-5 border rounded my-5" id="monthlySpendingStatisticsGraphContainer" style="position:relative;">
-                                
-                            
+                
+                
+                            <div class="col-10 offset-1 mt-2 bg-light text-dark p-5 border rounded my-5"
+                                id="monthlySpendingStatisticsGraphContainer" style="position:relative;">
+                
+                
                                 <!-- Monthly Spending Statistics Graph -->
                                 <canvas id="monthlySpendingStatisticsGraph" width="400px" height="200px" class="mt-5"></canvas>
-
-                                <h2 class="align-center mt-5 border rounded bg-warning text-light p-3 d-inline-block" style="position: absolute; top: -30px;left:10px;">Monthly Spending Statistics</h2>
-                            
+                
+                                <h2 class="align-center mt-5 border rounded bg-warning text-light p-3 d-inline-block"
+                                    style="position: absolute; top: -30px;left:10px;">Monthly Spending Statistics</h2>
+                
                                 <!-- Year Selector at Top Right Corner -->
-                                <select id="yearSelector" class="p-2 form-select" style="background-image: linear-gradient(90.2deg, rgba(79,255,255,1) 0.3%, rgba(0,213,255,1) 99.8%); position: absolute; top: 50px; right: 50px;">
+                                <select id="yearSelector" class="p-2 form-select"
+                                    style="background-image: linear-gradient(90.2deg, rgba(79,255,255,1) 0.3%, rgba(0,213,255,1) 99.8%); position: absolute; top: 50px; right: 50px;">
                                     <!-- Options will be dynamically added using JavaScript -->
                                 </select>
                             </div>
                         </div>
                     </div>
-
+                
                     <!-- Section: product -->
                     <div id="productAnalytics" class="row col-12 mt-5" style="display: none;">
                         <div class="col-12 border rounded py-4 mt-4" style="background-color: rgb(227, 249, 250);">
                             <!-- Content for the first full-width div goes here -->
                         </div>
                     </div>
-
-                   <!-- Section: sales -->
-<div id="salesAnalytics" class="row col-12 mb-5" style="display: none;">
-    <div class="col-12 border rounded py-4 mt-4" style="background-color: rgb(227, 249, 250);">
-        <!-- Content for the first full-width div goes here -->
-        <h2>Sales Report</h2>
-
-        <!-- Sales Report Form -->
-        <form id="salesReportForm" novalidate>
-            <div class="form-row">
-                <!-- Start Date Input -->
-                <div class="form-group col-md-6 ">
-                    <label for="startDate" class="text-danger">Start Date</label>
-                    <input type="text" class="form-control date-input bg-light text-dark" id="startDate" placeholder="dd-mm-yyyy" required>
-                    <div class="invalid-feedback">
-                        Please enter a valid date in the format dd-mm-yyyy.
+                
+                    <!-- Section: sales -->
+                    <div id="salesAnalytics" class="row col-12 mb-5" style="display: none;">
+                        <div class="col-12 border rounded py-4 mt-4" style="background-color: rgb(227, 249, 250);">
+                            <!-- Content for the first full-width div goes here -->
+                            <h2>Sales Report</h2>
+                
+                            <!-- Sales Report Form -->
+                            <form id="salesReportForm" novalidate>
+                                <div class="form-row">
+                                    <!-- Start Date Input -->
+                                    <div class="form-group col-md-6 ">
+                                        <label for="startDate" class="text-danger">Start Date</label>
+                                        <input type="text" class="form-control date-input bg-light text-dark" id="startDate"
+                                            placeholder="dd-mm-yyyy" required>
+                                        <div class="invalid-feedback">
+                                            Please enter a valid date in the format dd-mm-yyyy.
+                                        </div>
+                                    </div>
+                
+                                    <!-- End Date Input -->
+                                    <div class="form-group col-md-6">
+                                        <label for="endDate" class="text-danger">End Date</label>
+                                        <input type="text" class="form-control date-input bg-light text-dark" id="endDate"
+                                            placeholder="dd-mm-yyyy" pattern="\d{2}-\d{2}-\d{4}" required>
+                                        <div class="invalid-feedback">
+                                            Please enter a valid date in the format dd-mm-yyyy.
+                                        </div>
+                                    </div>
+                                </div>
+                
+                                <!-- Submit Button -->
+                                <button type="button" class="btn btn-primary" onclick="fetchAndDisplaySalesData()">Generate
+                                    Report</button>
+                            </form>
+                
+                            <div class="col-10 offset-1 mt-2 bg-light text-dark p-5 border rounded my-5"
+                                id="categoryWiseOrderStatisticsGraphContainer" style="position:relative;">
+                
+                
+                                <!-- Monthly Spending Statistics Graph -->
+                                <canvas id="categoryWiseOrderStatisticsGraph" width="400px" height="200px" class="mt-5"></canvas>
+                
+                                <h2 class="align-center mt-5 border rounded bg-warning text-light p-3 d-inline-block"
+                                    style="position: absolute; top: -30px;left:10px;">Category Wise Order Statistics</h2>
+                
+                                <!-- Year Selector at Top Right Corner -->
+                                <select id="categoryWiseOrderGraphtimeFrame" name="categoryWiseOrderGraphtimeFrame" class="p-2 form-select"
+                                    style="background-image: linear-gradient(90.2deg, rgba(79,255,255,1) 0.3%, rgba(0,213,255,1) 99.8%); position: absolute; top: 50px; right: 50px;">
+                                    <!-- Options will be dynamically added using JavaScript -->
+                                    <option value="yearWise" >Last 10 year</option>
+                                    <option value="monthWise">Last 12 Months</option>
+                                    <option value="weekWise">Last 4 weeks</option>
+                                    <option value="daysWise" selected>last 7 days</option>
+                                    
+                                </select>
+                            </div>
+                        </div>
                     </div>
-                </div>
-
-                <!-- End Date Input -->
-                <div class="form-group col-md-6">
-                    <label for="endDate" class="text-danger">End Date</label>
-                    <input type="text" class="form-control date-input bg-light text-dark" id="endDate" placeholder="dd-mm-yyyy"
-                        pattern="\d{2}-\d{2}-\d{4}" required>
-                    <div class="invalid-feedback">
-                        Please enter a valid date in the format dd-mm-yyyy.
-                    </div>
-                </div>
-            </div>
-
-            <!-- Submit Button -->
-            <button type="button" class="btn btn-primary" onclick="fetchAndDisplaySalesData()">Generate Report</button>
-        </form>
-
-        <!-- Display Sales Data Here -->
-        <div id="salesDataContainer" class="mt-4">
-            <!-- Sales data will be displayed here -->
-        </div>
-    </div>
-</div>
                 </main>
             </div>
         </div>
@@ -636,218 +661,328 @@
                     const selectedYear = this.value;
                     await fetchMonthlySpendingData(selectedYear);
                 });
-            
-            
 
- 
-            
-            
-            });
-        
-        
-        // Function to validate date format
-        function isValidDateFormat(dateString) {
-            const regex = /^\d{2}-\d{2}-\d{4}$/;
-            return regex.test(dateString);
-        }
 
-async function fetchAndDisplaySalesData() {
-    const startDateInput = document.getElementById('startDate');
-    const endDateInput = document.getElementById('endDate');
 
-    const startDate = startDateInput.value;
-    const endDate = endDateInput.value;
 
-    // Validate dates
-    if (!isValidDateFormat(startDate)) {
-        startDateInput.classList.add('is-invalid');
-        
-        return;
+
+                // categoryWiseOrdev graph
+
+               // Function to create the category-wise order statistics line chart
+function createCategoryWiseOrderStatisticsGraph(responseData) {
+    const ctx = document.getElementById('categoryWiseOrderStatisticsGraph').getContext('2d');
+
+    const config = {
+        type: 'line',
+        data: {
+            labels: responseData[0].data.map(entry => entry.date), // Assuming all categories have the same labels
+            datasets: responseData.map((categoryData, index) => ({
+                label: categoryData.categoryName, // Category label
+                data: categoryData.data.map(entry => entry.count),
+                borderColor: getBorderColor(index), // Function to get different colors for each line
+                backgroundColor: 'rgba(0, 0, 0, 0)', // You can customize the background color here
+                borderWidth: 2,
+                pointStyle: 'rectRot', // You can customize the point style here
+                pointRadius: 5,
+                pointHoverRadius: 8,
+            })),
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    type: 'category',
+                    labels: responseData[0].data.map(entry => entry.date), // Assuming all categories have the same labels
+                    title: {
+                        display: true,
+                        text: 'Time Frame',
+                    },
+                },
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Number of Orders',
+                    },
+                },
+            },
+        },
+    };
+
+    // If the line chart already exists, destroy it before creating a new one
+    if (window.myLineChartOrders) {
+        window.myLineChartOrders.destroy();
     }
 
-    if ( !isValidDateFormat(endDate)) {
-        
-        endDateInput.classList.add('is-invalid');
-        return;
-    }
+    window.myLineChartOrders = new Chart(ctx, config);
+}
 
-    startDateInput.classList.remove('is-invalid');
-    endDateInput.classList.remove('is-invalid');
-
-    // Function to convert dd-mm-yyyy to ISO 8601 format
-    function convertToISODate(ddmmyyyy) {
-            const [day, month, year] = ddmmyyyy.split('-');
-            return new Date(`${year}-${month}-${day}T00:00:00.000Z`).toISOString();
-        }
-
-       // Convert start and end dates to ISO format
-        const isoStartDate = convertToISODate(startDate);
-        const isoEndDate = convertToISODate(endDate);
-
-        
-
-        // Parse the dates and check if they are valid
-        const updatedISOstartDate = new Date(isoStartDate);
-        const updatedISOendDate = new Date(isoEndDate);
-
-        const currentDate = new Date();
-
-    if(updatedISOstartDate > currentDate || updatedISOendDate > currentDate ){
-        alert("Enter a valid that not in the future.");
-        return;
-    }
-
-    if(updatedISOstartDate > updatedISOendDate ){
-        alert("Enter a valid date combination in the ascending order.");
-        return;
-    }
-
-    // Fetch data from the server
+// Function to fetch user creation statistics data based on the selected option
+async function fetchCategoryWiseOrderStatistics(option) {
+    console.log("entered the graph main function");
     try {
-        console.log(`startDate is ${updatedISOstartDate} and endDate is ${updatedISOendDate}`)
-        const response = await fetch(`/admin/generate-sales-report?startDate=${updatedISOstartDate}&endDate=${updatedISOendDate}`);
+        console.log("entered the try of graph main function");
+        const response = await fetch(`/admin/category-wise-order-statistics?option=${option}`);
+        console.log(response);
+
         if (!response.ok) {
-            
-
-            alert('Failed to fetch sales data')
+            console.log("response not ok");
+            // Display an alert for non-successful responses
+            alert('Failed here');
+            return;
         }
 
-        const data = await response.json();
-
-        // Set response values to the table body fields
-        document.getElementById('timePeriod').textContent = `${startDate} to ${endDate}`;
-        document.getElementById('totalOrders').textContent = data.totalOrders;
-        document.getElementById('successfulOrders').textContent = data.successfulOrders;
-        document.getElementById('cancelledOrders').textContent = data.cancelledOrders;
-        document.getElementById('returnedOrders').textContent = data.returnedOrders;
-        document.getElementById('ordersMens').textContent = data.mensOrders;
-        document.getElementById('ordersWomens').textContent = data.womensOrders;
-        document.getElementById('ordersUnisex').textContent = data.unisexOrders;
-        document.getElementById('totalRevenue').textContent = data.totalRevenue;
-
-        // Show the modal
-        // Get the modal element
-        const salesModal = document.getElementById('salesModal');
-
-        // Make the modal visible
-        salesModal.style.display = 'block';
-
-        // Optionally, you might want to add a class to handle modal styling (e.g., fade-in animation)
-        salesModal.classList.add('show');
-
-        
-        const modalCloseButton = salesModal.querySelector('.close');
-
-        // Add event listener to close button
-        modalCloseButton.addEventListener('click', function () {
-            // Hide the modal
-             salesModal.style.display = 'none';
-
-            // Optionally, remove the class for styling
-            salesModal.classList.remove('show');
-
-            
-        });
-
-        // Resize the modal based on the table size
-        updateModalSize();
-    
-
-        
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            // Call the function for successful JSON responses
+            createCategoryWiseOrderStatisticsGraph(data);
+        } else {
+            // Display an alert for invalid content type
+            alert('Invalid content type. Expected JSON.');
+            console.error('Invalid content type. Expected JSON.');
+        }
     } catch (error) {
-        console.error('Error fetching sales data:', error);
-        alert(error.message)
-        // Handle the error, show an alert, or handle it as needed
+        console.error(error);
     }
 }
 
-function updateModalSize() {
-    const modalBody = document.querySelector('#salesModal .modal-body');
-    const salesTable = document.getElementById('salesreportTable'); // Replace 'yourTableId' with the actual ID of your table
-
-    const newHeight = salesTable.offsetHeight;
-    const newWidth = salesTable.offsetWidth;
-
-    // Set modal body height to match the table height
-    modalBody.style.height = newHeight + 'px';
-
-    // Set modal content width to match the table width
-    modalBody.style.width = newWidth + 'px';
-
-    // Force the modal to recalculate its size
-    // Force the modal to recalculate its size using pure JavaScript
-    const salesModal = document.getElementById('salesModal');
-    const modal = new bootstrap.Modal(salesModal);
-    modal.handleUpdate();
+// Assuming this is already defined in your code
+function getBorderColor(index) {
+    const colors = [
+        'rgba(75, 192, 192, 1)',
+        'rgba(255, 99, 132, 1)',
+        'rgba(54, 162, 235, 1)',
+        'rgba(255, 205, 86, 1)',
+        'rgba(153, 102, 255, 1)',
+        'rgba(255, 159, 64, 1)',
+        'rgba(220, 20, 60, 1)',
+        'rgba(0, 128, 0, 1)',
+        'rgba(128, 0, 128, 1)',
+        'rgba(255, 0, 0, 1)'
+    ];
+    return colors[index % colors.length];
 }
 
-        // Update the input value with hyphens as the user types
-    document.getElementById('endDate').addEventListener('input', function () {
-        const inputValue = this.value;
-        if (/^\d{2}\d?$/.test(inputValue)) {
-            this.value = inputValue + '-';
-        } else if (/^\d{2}-\d{2}\d?$/.test(inputValue)) {
-            this.value = inputValue + '-';
-        }
-    });
+// Fetch data on page load
+fetchCategoryWiseOrderStatistics("daysWise");
 
-
-    document.getElementById('startDate').addEventListener('input', function () {
-        const inputValue = this.value;
-        if (/^\d{2}\d?$/.test(inputValue)) {
-            this.value = inputValue + '-';
-        } else if (/^\d{2}-\d{2}\d?$/.test(inputValue)) {
-            this.value = inputValue + '-';
-        }
-    });
-
-
-    function showAlert(message) {
-        // Set the modal text
-        document.getElementById('modalTextAlert').innerText = message;
-
-        // Show the modal
-        $('#customModalAlert').modal('show');
+// Event listener for changing the option and updating the graph
+document.getElementById('categoryWiseOrderGraphtimeFrame').addEventListener('change', function (event) {
+    if (event.target.name === 'categoryWiseOrderGraphtimeFrame') {
+        const selectedOption = event.target.value;
+        fetchCategoryWiseOrderStatistics(selectedOption);
     }
-      
+});
 
-    function exportAsPDF() {
-    // Get the table element
-    const table = document.getElementById('salesreportTable');
 
-    // Use html2canvas to capture the table as an image
-    html2canvas(table).then((canvas) => {
-        const { jsPDF } = window.jspdf;
-        const imgData = canvas.toDataURL('image/png');
 
-        // Use jsPDF to create a PDF document
-        const pdf = new jsPDF();
-        const imgProps = pdf.getImageProperties(imgData);
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+            });
 
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-        
-        // Download the PDF file
-        pdf.save('sales_report.pdf');
-    });
-}
-    
 
-function exportAsExcel() {
-        // Table element
-        var table = document.getElementById('salesreportTable');
+            // Function to validate date format
+            function isValidDateFormat(dateString) {
+                const regex = /^\d{2}-\d{2}-\d{4}$/;
+                return regex.test(dateString);
+            }
 
-        // Convert table to worksheet
-        var ws = XLSX.utils.table_to_sheet(table);
+            async function fetchAndDisplaySalesData() {
+                const startDateInput = document.getElementById('startDate');
+                const endDateInput = document.getElementById('endDate');
 
-        // Create a workbook and add the worksheet
-        var wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'SalesReport');
+                const startDate = startDateInput.value;
+                const endDate = endDateInput.value;
 
-        // Save the workbook as an Excel file
-        XLSX.writeFile(wb, 'SalesReport.xlsx');
-    }
-       </script>
+                // Validate dates
+                if (!isValidDateFormat(startDate)) {
+                    startDateInput.classList.add('is-invalid');
+
+                    return;
+                }
+
+                if (!isValidDateFormat(endDate)) {
+
+                    endDateInput.classList.add('is-invalid');
+                    return;
+                }
+
+                startDateInput.classList.remove('is-invalid');
+                endDateInput.classList.remove('is-invalid');
+
+                // Function to convert dd-mm-yyyy to ISO 8601 format
+                function convertToISODate(ddmmyyyy) {
+                    const [day, month, year] = ddmmyyyy.split('-');
+                    return new Date(`${year}-${month}-${day}T00:00:00.000Z`).toISOString();
+                }
+
+                // Convert start and end dates to ISO format
+                const isoStartDate = convertToISODate(startDate);
+                const isoEndDate = convertToISODate(endDate);
+
+
+
+                // Parse the dates and check if they are valid
+                const updatedISOstartDate = new Date(isoStartDate);
+                const updatedISOendDate = new Date(isoEndDate);
+
+                const currentDate = new Date();
+
+                if (updatedISOstartDate > currentDate || updatedISOendDate > currentDate) {
+                    alert("Enter a valid that not in the future.");
+                    return;
+                }
+
+                if (updatedISOstartDate > updatedISOendDate) {
+                    alert("Enter a valid date combination in the ascending order.");
+                    return;
+                }
+
+                // Fetch data from the server
+                try {
+                    console.log(`startDate is ${updatedISOstartDate} and endDate is ${updatedISOendDate}`)
+                    const response = await fetch(`/admin/generate-sales-report?startDate=${updatedISOstartDate}&endDate=${updatedISOendDate}`);
+                    if (!response.ok) {
+
+
+                        alert('Failed to fetch sales data')
+                    }
+
+                    const data = await response.json();
+
+                    // Set response values to the table body fields
+                    document.getElementById('timePeriod').textContent = `${startDate} to ${endDate}`;
+                    document.getElementById('totalOrders').textContent = data.totalOrders;
+                    document.getElementById('successfulOrders').textContent = data.successfulOrders;
+                    document.getElementById('cancelledOrders').textContent = data.cancelledOrders;
+                    document.getElementById('returnedOrders').textContent = data.returnedOrders;
+                    document.getElementById('ordersMens').textContent = data.mensOrders;
+                    document.getElementById('ordersWomens').textContent = data.womensOrders;
+                    document.getElementById('ordersUnisex').textContent = data.unisexOrders;
+                    document.getElementById('totalRevenue').textContent = data.totalRevenue;
+
+                    // Show the modal
+                    // Get the modal element
+                    const salesModal = document.getElementById('salesModal');
+
+                    // Make the modal visible
+                    salesModal.style.display = 'block';
+
+                    // Optionally, you might want to add a class to handle modal styling (e.g., fade-in animation)
+                    salesModal.classList.add('show');
+
+
+                    const modalCloseButton = salesModal.querySelector('.close');
+
+                    // Add event listener to close button
+                    modalCloseButton.addEventListener('click', function () {
+                        // Hide the modal
+                        salesModal.style.display = 'none';
+
+                        // Optionally, remove the class for styling
+                        salesModal.classList.remove('show');
+
+
+                    });
+
+                    // Resize the modal based on the table size
+                    updateModalSize();
+
+
+
+                } catch (error) {
+                    console.error('Error fetching sales data:', error);
+                    alert(error.message)
+                    // Handle the error, show an alert, or handle it as needed
+                }
+            }
+
+            function updateModalSize() {
+                const modalBody = document.querySelector('#salesModal .modal-body');
+                const salesTable = document.getElementById('salesreportTable'); // Replace 'yourTableId' with the actual ID of your table
+
+                const newHeight = salesTable.offsetHeight;
+                const newWidth = salesTable.offsetWidth;
+
+                // Set modal body height to match the table height
+                modalBody.style.height = newHeight + 'px';
+
+                // Set modal content width to match the table width
+                modalBody.style.width = newWidth + 'px';
+
+                // Force the modal to recalculate its size
+                // Force the modal to recalculate its size using pure JavaScript
+                const salesModal = document.getElementById('salesModal');
+                const modal = new bootstrap.Modal(salesModal);
+                modal.handleUpdate();
+            }
+
+            // Update the input value with hyphens as the user types
+            document.getElementById('endDate').addEventListener('input', function () {
+                const inputValue = this.value;
+                if (/^\d{2}\d?$/.test(inputValue)) {
+                    this.value = inputValue + '-';
+                } else if (/^\d{2}-\d{2}\d?$/.test(inputValue)) {
+                    this.value = inputValue + '-';
+                }
+            });
+
+
+            document.getElementById('startDate').addEventListener('input', function () {
+                const inputValue = this.value;
+                if (/^\d{2}\d?$/.test(inputValue)) {
+                    this.value = inputValue + '-';
+                } else if (/^\d{2}-\d{2}\d?$/.test(inputValue)) {
+                    this.value = inputValue + '-';
+                }
+            });
+
+
+            function showAlert(message) {
+                // Set the modal text
+                document.getElementById('modalTextAlert').innerText = message;
+
+                // Show the modal
+                $('#customModalAlert').modal('show');
+            }
+
+
+            function exportAsPDF() {
+                // Get the table element
+                const table = document.getElementById('salesreportTable');
+
+                // Use html2canvas to capture the table as an image
+                html2canvas(table).then((canvas) => {
+                    const { jsPDF } = window.jspdf;
+                    const imgData = canvas.toDataURL('image/png');
+
+                    // Use jsPDF to create a PDF document
+                    const pdf = new jsPDF();
+                    const imgProps = pdf.getImageProperties(imgData);
+                    const pdfWidth = pdf.internal.pageSize.getWidth();
+                    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+                    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+
+                    // Download the PDF file
+                    pdf.save('sales_report.pdf');
+                });
+            }
+
+
+            function exportAsExcel() {
+                // Table element
+                var table = document.getElementById('salesreportTable');
+
+                // Convert table to worksheet
+                var ws = XLSX.utils.table_to_sheet(table);
+
+                // Create a workbook and add the worksheet
+                var wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'SalesReport');
+
+                // Save the workbook as an Excel file
+                XLSX.writeFile(wb, 'SalesReport.xlsx');
+            }
+        </script>
 
         <%- include('../layouts/admin-footer') -%>

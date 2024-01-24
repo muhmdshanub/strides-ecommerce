@@ -302,7 +302,7 @@ const wishlistLoader = async (req, res, next) => {
         const categories = await getAllCategories()
         // Render the wishlist page with the populated wishlist data
 
-        console.log(wishListResult)
+        
 
         return res.render('./user/wishlist', { wishlist:wishListResult, categories });
 

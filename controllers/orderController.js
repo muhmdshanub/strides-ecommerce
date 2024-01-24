@@ -31,7 +31,6 @@ async function getAllCategories() {
 
 const profileOrdersLoader = async (req, res, next) => {
     try {
-
         const userId = req.session.userId;
 
         if (!userId) {
@@ -39,26 +38,93 @@ const profileOrdersLoader = async (req, res, next) => {
             return res.status(403).json({ message: 'User not authenticated' });
         }
 
-        // Find orders for the current user and populate specific product fields
-        const orders = await Order.find({ user: userId })
-            .populate({
-                path: 'product',
-                model: 'Product',
-                select: '_id images.image1.name', // Include the fields you need
-            })
-            .sort({ orderDate: -1 })
-            .exec();
+        // Pagination parameters
+        const page = req.query.page || 1;
+        const pageSize = 5; // Set your desired page size
+
+        // Use aggregation to fetch orders with product and payment information
+        const orders = await Order.aggregate([
+            {
+                $match: { user: new mongoose.Types.ObjectId(userId) }
+            },
+            {
+                $lookup: {
+                    from: 'products',
+                    localField: 'product',
+                    foreignField: '_id',
+                    as: 'productInfo'
+                }
+            },
+            {
+                $unwind: '$productInfo'
+            },
+            {
+                $lookup: {
+                    from: 'payments',
+                    localField: '_id',
+                    foreignField: 'orders',
+                    as: 'paymentInfo'
+                }
+            },
+            {
+                $unwind: {
+                    path: '$paymentInfo',
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $set: {
+                    'product': {
+                        _id: '$productInfo._id',
+                        images: {
+                            image1: '$productInfo.images.image1.name'
+                        },
+                        // Add other product fields as needed
+                    },
+                    'payment': {
+                        paymentMethod: '$paymentInfo.paymentMethod',
+                        
+                    }
+                }
+            },
+            {
+                $unset: ['productInfo', 'paymentInfo']
+            },
+            {
+                $sort: { orderDate: -1 }
+            },
+        ]);
+
+        const totalOrdersCount = orders.length;
+
+        // Use a separate aggregation to count total orders (for efficiency)
+        const totalOrdersCountResult = await Order.aggregate([
+            {
+                $match: { user: new mongoose.Types.ObjectId(userId) }
+            },
+            {
+                $count: 'total'
+            }
+        ]);
+
+        const totalOrders = totalOrdersCountResult.length > 0 ? totalOrdersCountResult[0].total : 0;
 
         const categoriesData = await getAllCategories();
 
-        // Render the payment-selection page with the first address and cart details
-        res.render('./user/profile/orders.ejs', { orders, categories: categoriesData });
+        // Render the payment-selection page with the paginated orders, total pages, and current page
+        res.render('./user/profile/orders.ejs', {
+            orders: orders.slice((page - 1) * pageSize, page * pageSize),
+            categories: categoriesData,
+            currentPage: parseInt(page),
+            totalPages: Math.ceil(totalOrders / pageSize)
+        });
 
     } catch (error) {
         console.log(error.message);
         next(error)
     }
 }
+
 
 const profileOrdersCancelHandler = async (req, res, next) => {
 

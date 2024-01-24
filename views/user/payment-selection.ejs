@@ -41,7 +41,7 @@
         <!-- Dynamic Addresses (Use EJS to iterate through addresses) -->
         <% user.addresses.forEach((address, index)=> { %>
           <div class="card mb-2" onclick="selectAddress('<%= address._id %>')">
-            <h2><%= address._id %></h2>
+            
             <div class="card-body">
               <div class="form-check">
                 <input type="radio" class="form-check-input" name="addressRadio" id="address_<%= address._id %>" <%= address.id.toString() === firstAddress._id.toString() ? 'checked' : '' %>>

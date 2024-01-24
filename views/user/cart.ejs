@@ -525,16 +525,9 @@
     }
 
 
-    function deleteCartItem(itemId, cartDetails, deletedItemDetails) {
+    function deleteCartItem(itemId) {
 
-        //const { totalAmount, totalInitialAmount,coupon } = cartDetails;
-        var totalAmountText = document.getElementById('amountToPay').textContent;
-        var totalAmount = parseFloat(totalAmountText.replace(" Rs.", ""));
-
-        var totalInitialAmountText = document.getElementById('totalMRP').textContent;
-        var totalInitialAmount = parseFloat(totalAmountText.replace(" Rs.", ""));
-
-        const { deletedItemTotalAmount, deletedItemTotalInitialAmount } = deletedItemDetails;
+        
 
         // Send DELETE request to server
         fetch(`/cart-item-delete/${itemId}`, {
@@ -547,23 +540,7 @@
                 return response.json();
             })
             .then(data => {
-                // Assuming the server response contains only the deleted item's ID
-
-                // Remove the deleted item from the page
-                const deletedItemElement = document.getElementById(`item-${itemId}`);
-                if (deletedItemElement) {
-                    deletedItemElement.remove();
-                }
-
-                // Update total amount, total discount, and amount to pay based on the current page values
-                const currentFinalTotalAmount = parseFloat(totalAmount - deletedItemTotalAmount).toFixed(2);
-                const currentInitialAmountToPay = parseFloat(totalInitialAmount - deletedItemTotalInitialAmount).toFixed(2);
-
-                // Update total amount, total discount, and amount to pay
-                document.getElementById('totalMRP').textContent = `${currentInitialAmountToPay} Rs.`;
-                document.getElementById('discount').textContent = `${currentInitialAmountToPay - currentFinalTotalAmount} Rs.`;
-                document.getElementById('amountToPay').textContent = `${currentFinalTotalAmount} Rs.`;
-                document.getElementById('deductableAmount').textContent = "0 Rs.";
+                location.reload();
             })
             .catch(error => {
                 console.error('Error deleting item:', error);

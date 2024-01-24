@@ -303,7 +303,7 @@ const productListLoader = async (req, res, next) => {
 
         
         
-        console.log(JSON.stringify(result))
+        
 
         const totalDocuments = countResult.length > 0 ? countResult[0].totalDocuments : 0;
 

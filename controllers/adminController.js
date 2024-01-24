@@ -289,7 +289,7 @@ const userCreationStatisticsgraphLoader = async (req, res) => {
                 $match: {
                     createdAt: {
                         $gte: startDate,
-                        $lt: endDate,
+                        $lte: endDate,
                     },
                 },
             },
@@ -526,6 +526,197 @@ const userMonthlySpendStatisticsGraphLoader = async (req, res) => {
 };
 
 
+const categoryWiseOrderStatisticsLoader = async (req, res, next) => {
+    
+    try {
+        
+        const { option } = req.query;
+
+        if(!option){
+            console.log("option not present")
+            return;
+        }
+        console.log(option)
+        // Set the start and end dates based on the selected option
+        const { startDate, endDate } = getDatesForCategoryOrderOption(option);
+
+        console.log(startDate + "\t" + endDate)
+        // Fetch categories from the database
+        const categories = await Category.find({}, { _id: 1, name: 1 });
+
+        // Fetch category-wise order statistics data from the database based on the date range
+        const categoryWiseOrderData = await Order.aggregate([
+            {
+                $match: {
+                    orderDate: {
+                        $gte: startDate,
+                        $lte: endDate,
+                    },
+                },
+            },
+            {
+                $lookup: {
+                    from: 'products',
+                    localField: 'product',
+                    foreignField: '_id',
+                    as: 'productInfo',
+                },
+            },
+            {
+                $project: {
+                    category: '$productInfo.category',
+                    orderDate: 1,
+                },
+            },
+            {
+                $group: {
+                    _id: {
+                        category: '$category',
+                        date: { $dateToString: { format: getDateGroupFormatForCategoryOrder(option), date: '$orderDate' } },
+                    },
+                    count: { $sum: 1 },
+                },
+            },
+            {
+                $group: {
+                    _id: '$_id.category',
+                    data: {
+                        $push: {
+                            date: '$_id.date',
+                            count: '$count',
+                        },
+                    },
+                },
+            },
+        ]);
+
+        
+        // Create a set of labels based on the selected time frame
+        const allLabels = generateLabelsForCategoryOrder(option);
+
+        console.log(allLabels)
+
+        // Create an object to store data for each category
+        const categoryDataMap = new Map(categoryWiseOrderData.map(entry => [entry._id.toString(), entry.data]));
+
+        // Fill in zero counts for missing combinations
+        categories.forEach(category => {
+            const categoryId = category._id.toString();
+            const categoryData = categoryDataMap.get(categoryId) || [];
+
+            // Ensure all labels are present for this category
+            const categoryDataLabels = categoryData.map(data => data.date);
+            const missingLabels = allLabels.filter(label => !categoryDataLabels.includes(label));
+
+            // Fill in zero counts for missing labels
+            const missingData = missingLabels.map(label => ({ date: label, count: 0 }));
+            categoryDataMap.set(categoryId, categoryData.concat(missingData));
+        });
+
+        
+        // Create an array to hold the final result
+        const result = categories.map(category => ({
+            categoryId: category._id.toString(),
+            categoryName: category.name,
+            data: categoryDataMap.get(category._id.toString()) || [],
+        }));
+
+        // Sort the data array based on the date field in ascending order
+        result.forEach(categoryResult => {
+            categoryResult.data.sort((a, b) => new Date(a.date) - new Date(b.date));
+        });
+
+        console.log(JSON.stringify(result))
+        // Send the data to the client
+        res.json(result);
+    } catch (error) {
+        console.error(error + "error in the function");
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
+
+// Function to generate a complete set of labels based on the selected time frame for category-wise orders
+function generateLabelsForCategoryOrder(option) {
+    const { startDate, endDate } = getDatesForCategoryOrderOption(option);
+    const labels = [];
+    let currentDate = new Date(startDate);
+
+    while (currentDate <= endDate) {
+        let formattedDate;
+
+        switch (option) {
+            case 'yearWise':
+                formattedDate = currentDate.getFullYear().toString(); // Extract year
+                currentDate.setFullYear(currentDate.getFullYear() + 1); // Decrement by year
+                break;
+            case 'monthWise':
+                formattedDate = currentDate.toISOString().slice(0, 7); // Extract yyyy-mm
+                currentDate.setMonth(currentDate.getMonth() + 1); // Decrement by month
+                break;
+            case 'weekWise':
+            case 'daysWise':
+                formattedDate = currentDate.toISOString().split('T')[0]; // Extract yyyy-mm-dd
+                currentDate.setDate(currentDate.getDate() + 1); // Decrement by day
+                break;
+            default:
+                formattedDate = currentDate.toISOString().split('T')[0];
+                currentDate.setDate(currentDate.getDate() + 1); // Default to day increment
+        }
+
+        labels.push(formattedDate);
+    }
+
+    return labels.reverse(); // Reverse the array to have the labels in ascending order
+}
+
+// Helper function to get start and end dates based on the selected option for category-wise orders
+function getDatesForCategoryOrderOption(option) {
+    const now = new Date();
+    let startDate, endDate;
+
+    switch (option) {
+        case 'yearWise':
+            startDate = new Date(now.getFullYear() - 9, 0, 1); // Start from 10 years ago
+            endDate = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999); // End of this year
+            break;
+        case 'monthWise':
+            startDate = new Date(now.getFullYear(), now.getMonth() - 11, 1); // Start from 12 months ago
+            endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999); // End of this month
+            break;
+        case 'weekWise':
+            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 27); // Start from 4 weeks ago
+            endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999); // End of today
+            break;
+        case 'daysWise':
+            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6); // Start from 7 days ago
+            endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999); // End of today
+            break;
+        default:
+            // Default to daysWise for unknown options
+            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6); // Start from 7 days ago
+            endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999); // End of today
+    }
+
+    return { startDate, endDate };
+}
+
+// Helper function to get the date format for grouping in aggregation for category-wise orders
+function getDateGroupFormatForCategoryOrder(option) {
+    switch (option) {
+        case 'yearWise':
+            return '%Y'; // Monthly grouping for the whole year
+        case 'monthWise':
+            return '%Y-%m'; // Daily grouping for the whole month
+        case 'weekWise':
+            return '%Y-%m-%d'; // Daily grouping for the whole week
+        case 'daysWise':
+            return '%Y-%m-%d'; // Daily grouping for the whole week
+        default:
+            return '%Y-%m-%d';
+    }
+}
+
+
 module.exports = {
 
     loginLoader,
@@ -543,6 +734,7 @@ module.exports = {
 
     userCreationStatisticsgraphLoader,
     userMonthlySpendStatisticsGraphLoader,
+    categoryWiseOrderStatisticsLoader,
 
 
 }
