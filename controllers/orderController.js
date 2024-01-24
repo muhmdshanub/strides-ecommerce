@@ -331,7 +331,7 @@ const codPlaceOrderHandler = async (req, res, next) => {
                         'coupon.code': "",
                     }
                 };
-        
+
                 // Save the updated cart with the applied coupon
                 await Cart.updateOne({ user: userId }, couponUpdate);
 
@@ -380,7 +380,7 @@ const codPlaceOrderHandler = async (req, res, next) => {
             }
         }
 
-        
+
         cart.totalDiscountAmount = parseFloat(cart.totalInitialAmount - cart.totalAmount).toFixed(2);
 
         if (invalidItems.length > 0) {
@@ -481,17 +481,17 @@ const codPlaceOrderHandler = async (req, res, next) => {
 
         if (orderUpdates && productUpdate && paymentUpdate) {
             // If all updates are successful, remove the cart items
-           
+
 
             const cartEmptyUpdate = {
                 $set: {
                     'items': [],
                     'totalItems': 0,
-                    'coupon.code' : "",
-                    'coupon.amount' : 0,
+                    'coupon.code': "",
+                    'coupon.amount': 0,
                 }
             };
-    
+
             // Save the updated cart with the applied coupon
             cartUpdate = await Cart.updateOne({ user: userId }, cartEmptyUpdate);
         }
@@ -595,7 +595,7 @@ const placeOrderByWalletHandler = async (req, res, next) => {
                         'coupon.code': "",
                     }
                 };
-        
+
                 // Save the updated cart with the applied coupon
                 await Cart.updateOne({ user: userId }, couponUpdate);
 
@@ -776,11 +776,11 @@ const placeOrderByWalletHandler = async (req, res, next) => {
                 $set: {
                     'items': [],
                     'totalItems': 0,
-                    'coupon.code' : "",
-                    'coupon.amount' : 0,
+                    'coupon.code': "",
+                    'coupon.amount': 0,
                 }
             };
-    
+
             // Save the updated cart with the applied coupon
             cartUpdate = await Cart.updateOne({ user: userId }, cartEmptyUpdate);
         }
@@ -870,7 +870,7 @@ const razorpayPlaceOrderHandler = async (req, res, next) => {
                         'coupon.code': "",
                     }
                 };
-        
+
                 // Save the updated cart with the applied coupon
                 await Cart.updateOne({ user: userId }, couponUpdate);
 
@@ -1155,11 +1155,11 @@ const razorpayVerifyPaymentHandler = async (req, res) => {
                     $set: {
                         'items': [],
                         'totalItems': 0,
-                        'coupon.code' : "",
-                        'coupon.amount' : 0,
+                        'coupon.code': "",
+                        'coupon.amount': 0,
                     }
                 };
-        
+
                 // Save the updated cart with the applied coupon
                 cartUpdate = await Cart.updateOne({ user: userId }, cartEmptyUpdate);
             }
@@ -1241,23 +1241,23 @@ const orderStatusUpdateHandlerAdmin = async (req, res, next) => {
         //check if wrong status change requested by user
         const prevStatus = order.status;
 
-        if(prevStatus === "Cancelled" && newStatus === "Placed"){
+        if (prevStatus === "Cancelled" && newStatus === "Placed") {
             return res.status(404).json({ message: 'Invalid operation. Cannot Proceed with status change.' });
         }
 
-        if(prevStatus === "Delivered" && (newStatus === "Placed" || newStatus === "Cancelled")){
+        if (prevStatus === "Delivered" && (newStatus === "Placed" || newStatus === "Cancelled")) {
             return res.status(404).json({ message: 'Invalid operation. Cannot Proceed with status change.' });
         }
 
-        if(prevStatus === "Returned" && (newStatus === "Placed" || newStatus === "Cancelled" || newStatus === "Delivered")){
+        if (prevStatus === "Returned" && (newStatus === "Placed" || newStatus === "Cancelled" || newStatus === "Delivered")) {
             return res.status(404).json({ message: 'Invalid operation. Cannot Proceed with status change.' });
         }
 
-        if(prevStatus === "Return received" && (newStatus === "Placed" || newStatus === "Cancelled" || newStatus === "Delivered" || newStatus === "Returned")){
+        if (prevStatus === "Return received" && (newStatus === "Placed" || newStatus === "Cancelled" || newStatus === "Delivered" || newStatus === "Returned")) {
             return res.status(404).json({ message: 'Invalid operation. Cannot Proceed with status change.' });
         }
 
-        if(prevStatus === newStatus){
+        if (prevStatus === newStatus) {
             // Send back a success response with the updated order details
             res.status(200).json({ message: 'Order status updated successfully', order: order });
         }
@@ -1288,7 +1288,7 @@ const orderStatusUpdateHandlerAdmin = async (req, res, next) => {
                 { $inc: { totalAmount: -order.totalFinalAmount } },
                 { new: true }
             );
-    
+
             const productUpdate = await Products.findOneAndUpdate(
                 { _id: order.product },
                 {
@@ -1299,9 +1299,9 @@ const orderStatusUpdateHandlerAdmin = async (req, res, next) => {
                 },
                 { mongooseSession }
             );
-    
+
             let walletUpdate;
-    
+
             if (paymentUpdate.paymentMethod !== "Cash on Delivery") {
                 // Add the amount to the wallet balance
                 walletUpdate = await Wallet.findOneAndUpdate(
@@ -1333,45 +1333,45 @@ const orderStatusUpdateHandlerAdmin = async (req, res, next) => {
             mongooseSession.startTransaction(); // Start a transaction
 
 
-            
 
-                const paymentUpdate = await Payment.findOneAndUpdate(
-                    { orders: { $elemMatch: { $in: [orderId] } } },
-                    { $inc: { totalAmount: -order.totalFinalAmount } },
-                    { new: true, mongooseSession }
-                );
 
-                const productUpdate = await Products.findOneAndUpdate(
-                    { _id: order.product },
-                    {
-                        $inc: {
-                            [`sizes[0].${order.size}.availableStock`]: order.quantity,
-                            [`sizes[0].${order.size}.soldStock`]: -order.quantity,
+            const paymentUpdate = await Payment.findOneAndUpdate(
+                { orders: { $elemMatch: { $in: [orderId] } } },
+                { $inc: { totalAmount: -order.totalFinalAmount } },
+                { new: true, mongooseSession }
+            );
+
+            const productUpdate = await Products.findOneAndUpdate(
+                { _id: order.product },
+                {
+                    $inc: {
+                        [`sizes[0].${order.size}.availableStock`]: order.quantity,
+                        [`sizes[0].${order.size}.soldStock`]: -order.quantity,
+                    },
+                },
+                { mongooseSession }
+            );
+
+            // Add the amount to the wallet balance
+            const walletUpdate = await Wallet.findOneAndUpdate(
+                { user: userId },
+                {
+                    $inc: {
+                        balance: order.totalFinalAmount,
+                    },
+                    $push: {
+                        transactions: {
+                            type: 'credit',
+                            amount: order.totalFinalAmount,
+                            description: 'refund money received',
                         },
                     },
-                    { mongooseSession }
-                );
+                },
+                { new: true, mongooseSession }
+            );
 
-                // Add the amount to the wallet balance
-                const walletUpdate = await Wallet.findOneAndUpdate(
-                    { user: userId },
-                    {
-                        $inc: {
-                            balance: order.totalFinalAmount,
-                        },
-                        $push: {
-                            transactions: {
-                                type: 'credit',
-                                amount: order.totalFinalAmount,
-                                description: 'refund money received',
-                            },
-                        },
-                    },
-                    { new: true, mongooseSession }
-                );
-
-                await mongooseSession.commitTransaction();
-                mongooseSession.endSession();
+            await mongooseSession.commitTransaction();
+            mongooseSession.endSession();
         }
 
         // Send back a success response with the updated order details
@@ -1434,21 +1434,20 @@ const generateInvoiceHandler = async (req, res, next) => {
                 logo: fs.readFileSync('./public/images/logo.jpg', 'base64'),
             },
             information: {
-                
+
                 date: formatDate(new Date(order.deliveredDate)),
             },
             products: [
                 {
                     description: `${order.brandName}_${order.productName}, \t size : ${order.size}`,
                     quantity: order.quantity,
-                    price: parseFloat(order.totalFinalAmount/2),
+                    price: parseFloat(order.totalFinalAmount / order.quantity),
+                    "tax-rate": parseFloat(0),
                 }
             ],
             settings: {
                 currency: 'INR',
-                language: 'en',
-                taxNotation: 'vat',
-                tax: 0,
+
             }
         };
 
@@ -1483,6 +1482,178 @@ process.on('uncaughtException', (error) => {
     // Recommended: send the information to a service like Sentry
     // process.exit(1); // Ensure process exits after uncaught exception
 });
+
+const generateSalesReportHandler = async (req, res, next) => {
+    try {
+
+        // Check if both startDate and endDate are present
+        if (!req.query.startDate || !req.query.endDate) {
+            console.log("Both startDate and endDate are required.")
+            return res.status(400).json({ error: 'Both startDate and endDate are required.' });
+        }
+
+        const isoStartDate = req.query.startDate;
+        const isoEndDate = req.query.endDate;
+
+
+        
+
+        // // Function to validate ISO date format
+        // function isValidISODate(dateString) {
+        //     const regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/;
+        //     return regex.test(dateString);
+        // }
+
+
+        // // Validate ISO format for both dates
+        // if (!isValidISODate(isoStartDate) || !isValidISODate(isoEndDate)) {
+
+        //     console.log('Invalid date format. Please provide dates in ISO format.')
+        //     return res.status(400).json({ error: 'Invalid date format. Please provide dates in ISO format.' });
+        // }
+
+
+
+
+
+        // Parse the dates and check if they are valid
+        const updatedISOstartDate = new Date(isoStartDate);
+        const updatedISOendDate = new Date(isoEndDate);
+
+
+        
+
+        // Set time to the start of the day for startDate
+        updatedISOstartDate.setHours(0, 0, 0, 0);
+
+        // Set time to the end of the day for endDate
+        updatedISOendDate.setHours(23, 59, 59, 999);
+
+
+        const result = await Order.aggregate([
+            // Match orders within the date range
+            { $match: { orderDate: { $gte: updatedISOstartDate, $lte: updatedISOendDate } } },
+
+            // Lookup product details
+            {
+                $lookup: {
+                    from: 'products',
+                    localField: 'product',
+                    foreignField: '_id',
+                    as: 'productDetails',
+                },
+            },
+
+            // Unwind the productDetails array
+            { $unwind: '$productDetails' },
+
+            // Group and count orders by gender and category
+            {
+                $group: {
+                    _id: null,
+                    totalOrders: { $sum: 1 },
+                    successfulOrders: { $sum: { $cond: { if: { $eq: ['$status', 'Delivered'] }, then: 1, else: 0 } } },
+                    cancelledOrders: { $sum: { $cond: { if: { $eq: ['$status', 'Cancelled'] }, then: 1, else: 0 } } },
+                    returnedOrders: { $sum: { $cond: { if: { $in: ['$status', ['Returned', 'Return Received']] }, then: 1, else: 0 } } },
+                    mensOrders: { $sum: { $cond: { if: { $eq: ['$productDetails.gender', 'men'] }, then: 1, else: 0 } } },
+                    womensOrders: { $sum: { $cond: { if: { $eq: ['$productDetails.gender', 'women'] }, then: 1, else: 0 } } },
+                    unisexOrders: { $sum: { $cond: { if: { $eq: ['$productDetails.gender', 'unisex'] }, then: 1, else: 0 } } },
+                    totalRevenue: {
+                        $sum: {
+                            $cond: {
+                                if: { $eq: ['$status', 'Delivered'] },
+                                then: '$totalFinalAmount',
+                                else: 0,
+                            },
+                        },
+                    },
+                },
+            },
+
+            // Separate counts using $facet
+            {
+                $facet: {
+                    ordersCounts: [
+                        {
+                            $project: {
+                                _id: 0,
+                                totalOrders: 1,
+                                successfulOrders: 1,
+                                cancelledOrders: 1,
+                                returnedOrders: 1,
+                            }
+                        }
+                    ],
+                    productsCounts: [
+                        {
+                            $project: {
+                                _id: 0,
+                                mensOrders: 1,
+                                womensOrders: 1,
+                                unisexOrders: 1,
+                            }
+                        }
+                    ],
+                    revenueCount: [
+                        {
+                            $project: {
+                                _id: 0,
+                                totalRevenue: 1,
+                            }
+                        }
+                    ],
+                }
+            },
+
+            // Unwind and merge the results
+            {
+                $unwind: "$ordersCounts"
+            },
+            {
+                $unwind: "$productsCounts"
+            },
+            {
+                $unwind: "$revenueCount"
+            },
+
+            // Merge the results
+            {
+                $project: {
+                    _id: 0,
+                    totalOrders: "$ordersCounts.totalOrders",
+                    successfulOrders: "$ordersCounts.successfulOrders",
+                    cancelledOrders: "$ordersCounts.cancelledOrders",
+                    returnedOrders: "$ordersCounts.returnedOrders",
+                    mensOrders: "$productsCounts.mensOrders",
+                    womensOrders: "$productsCounts.womensOrders",
+                    unisexOrders: "$productsCounts.unisexOrders",
+                    totalRevenue: "$revenueCount.totalRevenue",
+                }
+            },
+        ]);
+
+        console.log(result)
+
+        res.json(result.length > 0 ? result[0] : 
+            
+            {
+                totalOrders: 0,
+                successfulOrders: 0,
+                cancelledOrders: 0,
+                returnedOrders: 0,
+                mensOrders: 0,
+                womensOrders: 0,
+                unisexOrders: 0,
+                totalRevenue: 0
+              }
+            
+            );
+
+    } catch (error) {
+        console.log(error.message)
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
 
 
 async function isCouponValidForUser(coupon, userId, userCart) {
@@ -1658,7 +1829,6 @@ async function getUpdatedCartPrice(userId) {
 
 module.exports = {
 
-
     codPlaceOrderHandler,
     placeOrderByWalletHandler,
     razorpayPlaceOrderHandler,
@@ -1669,4 +1839,5 @@ module.exports = {
     ordersListLoaderAdmin,
     orderStatusUpdateHandlerAdmin,
     generateInvoiceHandler,
+    generateSalesReportHandler,
 }

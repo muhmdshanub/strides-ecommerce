@@ -65,5 +65,6 @@ adminRoute.get('/offers-list',auth.isLogin,offerController.offerListLoader)
 adminRoute.get('/offers-add',auth.isLogin,offerController.offersAddLoader)
 adminRoute.post('/offers-add',auth.isLogin,offerController.offerAddHandlerAdmin);
 adminRoute.get('/autocomplete-products',auth.isLogin,productController.autoCompleteProductsHandler)
+adminRoute.get('/generate-sales-report',auth.isLogin,orderController.generateSalesReportHandler)
 
   module.exports =adminRoute;

@@ -60,6 +60,8 @@ const productListLoader = async (req, res, next) => {
         //const categoryFilter = req.query.category || [];
         const temp_categoryFilter = req.query.category ? (Array.isArray(req.query.category) ? req.query.category : [req.query.category]) : [];
         const categoryFilter = temp_categoryFilter.length === 1 ? temp_categoryFilter[0].split(',') : temp_categoryFilter;
+        // Convert all category ids to ObjectId format
+        const objectIdCategoryFilter = categoryFilter.map((categoryId) => new ObjectId(categoryId));
 
 
         const discountFilter = !isNaN(req.query.discount) ? parseInt(req.query.discount) : null;
@@ -96,11 +98,13 @@ const productListLoader = async (req, res, next) => {
             filterObject.gender = { $in: genderFilter };
         }
 
+        
         // Add category filter if not empty
-        if (categoryFilter.length > 0) {
-            filterObject.category = { $in: categoryFilter };
+        if (objectIdCategoryFilter.length > 0) {
+            filterObject.category= { $in: objectIdCategoryFilter };
         }
 
+        console.log("category filter is "+JSON.stringify(filterObject.category))
 
         //for the second filter based on percentage and finalPrice
 
@@ -248,7 +252,7 @@ const productListLoader = async (req, res, next) => {
                     },
                 },
             },
-            // Add fields stage to calculate final price
+            // // Add fields stage to calculate final price
             {
                 $addFields: {
                     finalPrice: {
@@ -298,6 +302,8 @@ const productListLoader = async (req, res, next) => {
         ]);
 
         
+        
+        console.log(JSON.stringify(result))
 
         const totalDocuments = countResult.length > 0 ? countResult[0].totalDocuments : 0;
 
