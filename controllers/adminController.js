@@ -536,11 +536,11 @@ const categoryWiseOrderStatisticsLoader = async (req, res, next) => {
             console.log("option not present")
             return;
         }
-        console.log(option)
+        
         // Set the start and end dates based on the selected option
         const { startDate, endDate } = getDatesForCategoryOrderOption(option);
 
-        console.log(startDate + "\t" + endDate)
+        
         // Fetch categories from the database
         const categories = await Category.find({}, { _id: 1, name: 1 });
 
@@ -594,7 +594,7 @@ const categoryWiseOrderStatisticsLoader = async (req, res, next) => {
         // Create a set of labels based on the selected time frame
         const allLabels = generateLabelsForCategoryOrder(option);
 
-        console.log(allLabels)
+        
 
         // Create an object to store data for each category
         const categoryDataMap = new Map(categoryWiseOrderData.map(entry => [entry._id.toString(), entry.data]));
@@ -626,7 +626,7 @@ const categoryWiseOrderStatisticsLoader = async (req, res, next) => {
             categoryResult.data.sort((a, b) => new Date(a.date) - new Date(b.date));
         });
 
-        console.log(JSON.stringify(result))
+       
         // Send the data to the client
         res.json(result);
     } catch (error) {

@@ -104,7 +104,7 @@ const productListLoader = async (req, res, next) => {
             filterObject.category= { $in: objectIdCategoryFilter };
         }
 
-        console.log("category filter is "+JSON.stringify(filterObject.category))
+        
 
         //for the second filter based on percentage and finalPrice
 
@@ -599,7 +599,6 @@ const productAddHandlerAdmin = async (req, res, next) => {
             category,
             description,
             price,
-            discount,
             available_stock_small,
             available_stock_medium,
             available_stock_large,
@@ -644,10 +643,7 @@ const productAddHandlerAdmin = async (req, res, next) => {
             return res.redirect('/admin/products-add');
         }
 
-        if (!discount) {
-            req.flash('error', 'Discount is required');
-            return res.redirect('/admin/products-add');
-        }
+        
 
         if (!available_stock_small || !available_stock_medium || !available_stock_large || !available_stock_extra_large) {
             req.flash('error', 'All stock fields are required');
@@ -679,7 +675,6 @@ const productAddHandlerAdmin = async (req, res, next) => {
             category: categoryInfo._id,
             description,
             initialPrice: parseFloat(price),
-            discountPercentage: parseFloat(discount),
             sizes: {
                 small: {
                     availableStock: parseInt(available_stock_small),
@@ -820,7 +815,6 @@ const productEditHandlerAdmin = async (req, res, next) => {
             category,
             description,
             price,
-            discount,
             available_stock_small,
             available_stock_medium,
             available_stock_large,
@@ -842,7 +836,6 @@ const productEditHandlerAdmin = async (req, res, next) => {
             !category ||
             !description ||
             !price ||
-            !discount ||
             !available_stock_small ||
             !available_stock_medium ||
             !available_stock_large ||
@@ -909,8 +902,7 @@ const productEditHandlerAdmin = async (req, res, next) => {
             category: categoryInfo._id,
             description,
             initialPrice: parseFloat(price),
-            discountPercentage: parseFloat(discount),
-            finalPrice: parseFloat(price) * (1 - parseFloat(discount) / 100),
+            
             sizes: {
                 small: {
                     availableStock: parseInt(available_stock_small),

@@ -136,7 +136,7 @@
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title">Block User</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="userBlock_closeModal()">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
@@ -153,12 +153,12 @@
                 </div>
             </div>
 
-            <div id="userUnblock-customModal" class="modal" tabindex="-1" role="dialog" style="z-index: 3000;">
+            <div id="userUnblock-customModal" class="modal" tabindex="-1" role="dialog" style="z-index: 3000;" >
                 <div class="modal-dialog" role="document">
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title">Unblock User</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="userUnblock_closeModal()">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
@@ -180,7 +180,7 @@
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title">Block Users</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="closeModalBulkBlock()">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
@@ -201,7 +201,7 @@
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title">Unblock Users</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="closeModalBulkUnblock()">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
@@ -273,7 +273,7 @@
 
                 function userUnblock_closeModal() {
                     // Hide the custom modal
-                    document.getElementById('userBlock-customModal').style.display = 'none';
+                    document.getElementById('userUnblock-customModal').style.display = 'none';
                 }
 
 

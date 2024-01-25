@@ -201,11 +201,7 @@
                                             <input id="price" name="price" type="text" class="form-control validate"
                                                 required />
                                         </div>
-                                        <div class="form-group mb-3">
-                                            <label for="discount">DISCOUNT</label>
-                                            <input id="discount" name="discount" type="text"
-                                                class="form-control validate" required />
-                                        </div>
+                                        
 
                                     </div>
 
@@ -373,7 +369,7 @@ function removeCroppedImage(imageNumber, event) {
                 const availableStockInputs = form.querySelectorAll('[name^="available_stock_"]');
 
                 const priceInput = form.elements['price'];
-                const discountInput = form.elements['discount'];
+                
 
                 const imageInputs = form.querySelectorAll('[name^="images"]');
 
@@ -479,16 +475,7 @@ function removeCroppedImage(imageNumber, event) {
                     }
                 }
 
-                function validateDiscount() {
-                    const discountValue = discountInput.value.trim();
-                    if (!/^\d+$/.test(discountValue)) {
-                        showPopover('discount', 'Please enter a valid numeric value for discount.');
-                        return false;
-                    } else {
-                        hidePopover('discount');
-                        return true;
-                    }
-                }
+                
 
                 function validateImages() {
                     let isValid = true;
@@ -602,7 +589,7 @@ function removeCroppedImage(imageNumber, event) {
 
 
                 form.addEventListener('submit', function (event) {
-                    if (!validateBrand() || !validateProductName() || !validateDescription() || !validateGender() || !validateColors() || !validateCategory() || !validateAvailableStock() || !validatePrice() || !validateDiscount() || !validateImages()) {
+                    if (!validateBrand() || !validateProductName() || !validateDescription() || !validateGender() || !validateColors() || !validateCategory() || !validateAvailableStock() || !validatePrice()  || !validateImages()) {
                         event.preventDefault();
                     }
                     // Add other form validations as needed
@@ -618,7 +605,7 @@ function removeCroppedImage(imageNumber, event) {
                     input.addEventListener('input', validateAvailableStock);
                 });
                 priceInput.addEventListener('input', validatePrice);
-                discountInput.addEventListener('input', validateDiscount);
+                
                 imageInputs.forEach((input, index) => {
                     input.addEventListener('input', function () {
                         validateImages();

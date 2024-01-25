@@ -240,12 +240,7 @@
                                             <input id="price" name="price" value="<%= product.initialPrice %>"
                                                 type="text" class="form-control validate" required />
                                         </div>
-                                        <div class="form-group mb-3">
-                                            <label for="discount">DISCOUNT</label>
-                                            <input id="discount" name="discount"
-                                                value="<%= product.discountPercentage %>" type="text"
-                                                class="form-control validate" required />
-                                        </div>
+                                        
 
                                     </div>
                                     <!-- Your existing HTML content -->
@@ -427,7 +422,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const availableStockInputs = form.querySelectorAll('[name^="available_stock_"]');
 
                 const priceInput = form.elements['price'];
-                const discountInput = form.elements['discount'];
+                
 
                 
 
@@ -533,16 +528,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }
 
-                function validateDiscount() {
-                    const discountValue = discountInput.value.trim();
-                    if (!/^\d+$/.test(discountValue)) {
-                        showPopover('discount', 'Please enter a valid numeric value for discount.');
-                        return false;
-                    } else {
-                        hidePopover('discount');
-                        return true;
-                    }
-                }
+                
 
                 
 
@@ -592,7 +578,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
                 form.addEventListener('submit', function (event) {
-                    if (!validateBrand() || !validateProductName() || !validateDescription() || !validateGender() || !validateColors() || !validateCategory() || !validateAvailableStock() || !validatePrice() || !validateDiscount() ) {
+                    if (!validateBrand() || !validateProductName() || !validateDescription() || !validateGender() || !validateColors() || !validateCategory() || !validateAvailableStock() || !validatePrice()  ) {
                         event.preventDefault();
                     }
                     // Add other form validations as needed
@@ -608,7 +594,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     input.addEventListener('input', validateAvailableStock);
                 });
                 priceInput.addEventListener('input', validatePrice);
-                discountInput.addEventListener('input', validateDiscount);
+                
                 
             });
 

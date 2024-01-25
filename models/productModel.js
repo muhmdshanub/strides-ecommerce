@@ -35,8 +35,6 @@ const stockSchema = new mongoose.Schema({
     productName: { type: String, required: true, text: true  },
     initialPrice: { type: Number, required: true },
     description: { type: String, required: true, text: true  },
-    discountPercentage: { type: Number, required: true },
-    finalPrice: { type: Number },
     category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
     gender: { type: String, required: true, text: true  },
     colors: [{ type: String, text: true  }],
@@ -53,13 +51,7 @@ function arrayLengthValidator(val) {
   return val.length === 4;
 }
 
-// Middleware to calculate the final price before saving
-productSchema.pre('save', function (next) {
-  
-  const discountMultiplier = 1 - this.discountPercentage / 100;
-  this.finalPrice = this.initialPrice * discountMultiplier;
-  next();
-});
+
 
 productSchema.plugin(mongoosePaginate);
 

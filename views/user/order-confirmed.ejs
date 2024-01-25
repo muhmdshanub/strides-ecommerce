@@ -3,17 +3,17 @@
 
     <%- include('../layouts/user-navbar') -%>
 
-        <main class="container">
+        <main class="container text-dark">
             <div class="row col-12">
                 <div class="col-md-8 offset-md-2 p-3">
                     <!-- Button to navigate to Orders -->
                     <a href="/list-profile-orders" class="btn btn-primary mt-3 w-100 mb-5">View details about all orders</a>
                     <!-- Congratulations Section -->
-                    <section class="border rounded">
+                    <section class="border rounded p-4 my-2">
                         <div class="d-flex justify-content-center">
                             <div class="tick-icon">&#10004;</div>
                         </div>
-                        <div>
+                        <div class="p-4">
                             <h3>Congratulations! Order Confirmed</h3>
                             <p style="background-color: rgb(229, 251, 251); padding: 5px;margin-top: 50px;">You will
                                 receive the items as
@@ -25,7 +25,7 @@
                     
             <% orders?.forEach(order => { %>
 
-                <section class="row border rounded p-3 ml-1">
+                <section class="row border rounded p-3 my-2">
                     <h5 class="col-md-12 pl-2 mb-3">Order Details : </h5>
                     <!-- Placeholder for order details content -->
                     <div class="col-md-5 mb-1 pb-1">
@@ -45,8 +45,8 @@
 
                 <% }); %>
                     <!-- Shipping Address Section -->
-                    <% if(orders?.address){ %>
-                    <section class="border rounded p-3">
+                    <% if(orders[0]?.address){ %>
+                    <section class="border rounded p-3 my-2 px-5">
                         <h5>Shipping Address : </h5>
                         <!-- Placeholder for address details content -->
                         <div class="content mt-4 p-2" style="background-color: rgb(229, 251, 251);">
@@ -54,7 +54,7 @@
                                 <%= orders[0].address.name %> | <%= orders[0].address.phoneNumber %>
                             </p>
                             <p class="py-0 my-0">
-                                <%= orders[0].address?.addressLine1 %>, <%= orders[0].address.city %>, <%= orders[0].address.state %>
+                                <%= orders[0].address?.street %>, <%= orders[0].address.city %>, <%= orders[0].address.state %>
                                             , <%= orders[0].address.zipCode %>
                             </p>
                             <!-- Add more address details as needed -->
