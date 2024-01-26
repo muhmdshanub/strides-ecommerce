@@ -4,12 +4,15 @@ const flash = require('express-flash');
 const {cacheBlock} = require('./middlewares/cacheBlock');
 const userRoute = require('./routes/userRoute');
 const adminRoute = require('./routes/adminRoute');
+const logger = require('./configs/logger');
 
 const Category = require('./models/categoryModel')
 
 const app = express ();
 
 app.set('view engine', 'ejs');
+
+app.set('logger', logger);
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/node_modules', express.static(path.join(__dirname, 'node_modules')));
