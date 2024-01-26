@@ -562,11 +562,27 @@ const productListLoaderAdmin = async (req, res, next) => {
             { $limit: pageSize },
         ];
 
-        const productsData = await Products.aggregate(pipeline);
+        const countPipeline = [
+            {
+                $match: { isDeleted: false },
+            },
+            {
+                $count: 'totalCount',
+            },
+        ];
+
+        // Execute the count pipeline and main pipeline in parallel
+        const [countResult, productsData] = await Promise.all([
+            Products.aggregate(countPipeline),
+            Products.aggregate(pipeline),
+        ]);
+
+        const totalCount = countResult.length > 0 ? countResult[0].totalCount : 0;
+        
         res.render('./admin/productList.ejs', {
             products: productsData,
             currentPage: page,
-            totalPages: Math.ceil(productsData.length / pageSize),
+            totalPages:Math.ceil(totalCount / pageSize),
         });
     } catch (error) {
         console.log(error.message);

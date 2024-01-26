@@ -132,7 +132,7 @@
                                             <td> <%= products[i].addedDate.toISOString().split(' T')[0] %>
                                                         </td>
                                                         <td>
-                                                            <%= products[i].popularity %>
+                                                            <%= parseFloat(products[i].popularity).toFixed(3) %>
                                                         </td>
                                                         <td>
                                                             <a href="#" class="tm-product-soft-delete-link"
