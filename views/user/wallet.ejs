@@ -1,0 +1,303 @@
+<%- include('../layouts/user-header') -%>
+<%- include('../layouts/user-navbar') -%>
+
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .balance-container {
+            position: relative;
+            padding: 20px;
+            border-radius: 15px;
+            background: linear-gradient(45deg, #4CAF50, #2196F3);
+            color: white;
+            text-align: center;
+            margin-bottom: 20px;
+            height: 60vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .balance-container h1 {
+            font-size: 3.5em; /* Increased size */
+            margin-bottom: 10px;
+            font-weight: bold; /* Added font-weight for emphasis */
+        }
+
+        .balance-container p {
+            font-size: 1.5em; /* Increased size */
+        }
+
+        .add-money-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        .history-section {
+            background-color: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .history-header {
+            color: #4CAF50;
+        }
+
+        .table th,
+        .table td {
+            text-align: center;
+        }
+    </style>
+
+
+    <div class="container mt-5">
+
+        <%- include('../layouts/_messages') -%>
+
+        <div class="balance-container justify-content-center align-items-center">
+          <h1 id="walletBalance" style="background-color: #fefefe51; color: white; padding: 10px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-align: center; width: 5em; height: 5em;"><%= parseFloat(wallet.balance).toFixed(2)  %></h1>
+           <h4 class="mt-3">Your current wallet balance</h4>
+            <button class="btn btn-danger add-money-btn" data-toggle="modal" data-target="#addMoneyModal" style="display: flex; align-items: center; justify-content: center; text-align: center; width: 8em; height: 4em;font-size: large;">Add Money</button>
+        </div>
+
+        <div class="history-section mt-4">
+            <h5 class="history-header">Transaction History</h5>
+            <table id="transactionTable" data-toggle="table" data-pagination="true" class="table table-hover text-black">
+                <thead>
+                    <tr>
+                        <th data-field="date" data-sortable="true">Date</th>
+                        <th data-field="description" data-sortable="true">Transaction Type</th>
+                        <th data-field="amount" data-sortable="true">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% const transactionsLength=wallet.transactions.length; for (let i=transactionsLength - 1; i>= 0; i--) {
+                        const transaction = wallet.transactions[i];
+                        %>
+                        <tr>
+                            <td>
+                                <%= transaction.date.toISOString().split('T')[0] %>
+                            </td>
+                            <td>
+                                <%= transaction.description %>
+                            </td>
+                            <td>
+                                <% if (transaction.type==='credit' ) { %>
+                                    <span class="badge badge-success">+ ₹<%= transaction.amount %></span>
+                                    <% } else { %>
+                                        <span class="badge badge-danger">- ₹<%= transaction.amount %></span>
+                                        <% } %>
+                            </td>
+                        </tr>
+                        <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add Money Modal -->
+<div class="modal fade" id="addMoneyModal" tabindex="-1" role="dialog" aria-labelledby="addMoneyModalLabel" aria-hidden="true" style="z-index: 2060;">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addMoneyModalLabel">Add Money to Wallet</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addMoneyForm">
+                    <div class="form-group">
+                        <label for="amount">Enter Amount</label>
+                        <input type="number" class="form-control" id="amount" placeholder="Enter amount" min="1">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="addMoneyBtn">Add Money</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Place this modal structure at the end of your HTML body -->
+<div class="modal" id="customModal" tabindex="-1" role="dialog" style="z-index: 2500;">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">ALERT</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p id="modalText"></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+<!--Inside index.html -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+
+function showAlert(message) {
+  // Set the modal text
+  document.getElementById('modalText').innerText = message;
+
+  // Show the modal
+  $('#customModal').modal('show');
+}
+
+    document.addEventListener("DOMContentLoaded", function () {
+        // Add click event listener to the "Add Money" button
+        document.getElementById("addMoneyBtn").addEventListener("click", async function () {
+            // Get the input amount
+            const amount = document.getElementById("amount").value;
+
+            // Validate that the amount is greater than 0
+            if (parseFloat(amount) > 0) {
+                try {
+                    // Send an AJAX request to the server using async/await
+                    const response = await fetch("/add-money-to-wallet", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ amount: parseFloat(amount) }),
+                    });
+
+                    const serverData = await response.json();
+
+                    if (serverData.success) {
+
+                        const rzp_key = '<%= process.env.RAZORPAY_KEY_ID %>'
+
+                        var options = {
+                            "key": rzp_key, // Enter the Key ID generated from the Dashboard
+                            "amount": serverData.order.amount, // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
+                            "currency": "INR",
+                            "name": "STRIDES", //your business name
+                            "description": "Test Transaction",
+                            "image": "./images/logo.jpg",
+                            "order_id": serverData.order.id, //This is a sample Order ID. Pass the `id` obtained in the response of Step 1
+                            "notes": {
+                                "address": "Strides "
+                            },
+                            "theme": {
+                                "color": "#3399cc"
+                            },
+                            "handler": function (response) {
+                                handleWalletPaymentSuccess(response);
+                            },
+                        };
+
+                        const razorpayObject = new Razorpay(options);
+
+                        // Define a function to handle payment success
+                        const handleWalletPaymentSuccess = async (response) => {
+                            try {
+
+                                // Make a request to your server to verify the payment
+                                const verificationResponse = await fetch(`/verify-razorpay-wallet-payment/${response.razorpay_order_id}`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+
+                                    body: JSON.stringify({
+                                        payment_id: response.razorpay_payment_id,
+                                        razorpay_signature: response.razorpay_signature,
+                                    }),
+                                });
+
+                                const verificationData = await verificationResponse.json();
+
+                                if (verificationData.success) {
+
+
+                                    const updatedAmount = verificationData.newTransaction.amount + parseFloat(document.getElementById('walletBalance').innerText);
+                                    console.log("updatedAmount is " + updatedAmount);
+                                    document.getElementById('walletBalance').innerText = parseFloat(updatedAmount).toFixed(2);
+
+                                    // Initialize or retrieve the DataTable instance
+                                    const newRowData = verificationData.newTransaction;
+                                    const table = $('#transactionTable');
+
+                                    // Parse the date string to create a Date object
+                                    const transactionDate = new Date(newRowData.date);
+
+                                    // Get the current data in the table
+                                    const currentData = table.bootstrapTable('getData');
+
+                                    // Add the new row data to the beginning of the current data array
+                                    currentData.unshift({
+                                        date: transactionDate.toISOString().split('T')[0],
+                                        description: newRowData.description,
+                                        amount: `<span class="badge badge-${newRowData.type === 'debit' ? 'danger' : 'success'}">₹${newRowData.amount}</span>`,
+                                    });
+
+                                    // Load the updated data into the table
+                                    table.bootstrapTable('load', currentData);
+
+                                    // Scroll to the top of the table to show the new row
+                                    table.bootstrapTable('scrollTo', 0);
+
+
+
+
+
+
+                                    } else {
+                                    // Payment verification failed
+                                    console.error('Payment verification failed:', verificationData.error);
+                                    showAlert('Payment verification failed. Please contact support.');
+                                }
+
+                            } catch (error) {
+                                console.error('Error during payment verification:', error);
+                                showAlert('Error during payment verification. Please contact support.');
+                            }
+                        };
+
+                        razorpayObject.on('payment.failed', function (response) {
+                                // Handle failure
+                                showAlert('Payment failed! Error: ' + response.error.description);
+                        });
+
+                        
+                        // Trigger the Razorpay checkout
+                        razorpayObject.open();
+
+                    } else {
+                        // Handle the case where the server data retrieval failed
+                        console.error('Failed to fetch server data:', serverData.error);
+                        showAlert('Failed to fetch server data. Please try again.');
+                    }
+
+                    // Close the modal
+                    $("#addMoneyModal").modal("hide");
+                } catch (error) {
+                    console.error("Error:", error);
+                }
+            } else {
+                // Alert the user that the amount must be greater than 0
+                showAlert("Please enter an amount greater than 0.");
+            }
+        });
+    });
+</script>
+
+    <%- include('../layouts/user-footer') -%>

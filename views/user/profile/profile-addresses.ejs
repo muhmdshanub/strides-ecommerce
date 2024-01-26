@@ -1,0 +1,329 @@
+
+
+
+<%- include('../../layouts/user-header') -%>
+
+<%- include('../../layouts/user-navbar') -%>
+
+<%- include('../../layouts/_messages') -%>
+<script src="/js/jquery-3.3.1.min.js"></script>
+<style>
+  /* Custom styles */
+  .address-container {
+    height: 700px; /* Fixed height for the container */
+    overflow-y: auto; /* Enable vertical scrolling */
+    background-color: rgba(216, 217, 218, 0.858);
+  }
+</style>
+
+<div class="container-fluid mb-5 pb-5">
+  <div class="row mt-4">
+    <!-- Left Part (7/12) -->
+    <div class="col-md-8 offset-md-2 border rounded pt-3" style="background-color: rgba(216, 217, 218, 0.858);">
+      <div class="address-container mb-5 pb-5">
+
+        <div class="d-flex justify-content-between mb-2">
+          <a href="/profile" class="btn btn-success ml-2">Back to Profile</a>
+          <button class="btn btn-primary" id="addAddressButton" data-toggle="modal" data-target="#addressModal" onclick="showAddAddressModal()">Add Address</button>
+          
+        </div>
+
+        
+        <!-- Dynamic Addresses (Use EJS to iterate through addresses) -->
+        <% user.addresses.forEach((address, index)=> { %>
+
+          <% if(address._id.toString() === firstAddress._id.toString()) {%>
+            <div class="card mb-2" onclick="handleCardClick(event, '<%= address._id %>')" style="background-color: black;color: bwhitelack;" >
+            <% }else{ %>
+              <div class="card mb-2" onclick="handleCardClick(event, '<%= address._id %>')" style="background-color: white;color: black;" >
+              <% } %>
+
+          
+
+            <div class="card-body">
+              <div class="form-check">
+                <input type="radio" class="form-check-input" name="addressRadio" id="address_<%=address._id %>" <%= address._id.toString() === firstAddress._id.toString() ? 'checked' : '' %>>
+                <label class="form-check-label" for="address_<%=address._id %>">
+                  <!-- Display address fields here -->
+                  <strong>
+                    <%= address.name %>
+                  </strong><br>
+                  <%= address.street %>, <%= address.city %>, <%= address.state %>
+                  <%= address.zipCode %><br><br>
+                  Phone Number: <%= address.phoneNumber %>
+                </label>
+              </div>
+              <!-- Include hidden input for _id -->
+              <input type="hidden" name="addressId" value="<%= address._id %>">
+              <div class="text-right mt-2">
+                <button class="btn btn-warning btn-sm editAddressButton" data-toggle="modal" data-target="#addressModal"
+                onclick="showEditAddressModal({addressId: '<%= address._id %>', name: '<%= address.name %>', street: '<%= address.street %>', city: '<%= address.city %>', state: '<%= address.state %>', zipCode: '<%= address.zipCode %>', phoneNumber: '<%= address.phoneNumber %>'})">Edit</button>
+                <button class="btn btn-danger btn-sm deleteAddressButton" onclick="deleteAddress('<%=address._id %>')">Remove</button>
+              </div>
+            </div>
+          </div>
+          <% })  %>
+          <% if(user.addresses.length === 0){ %>
+            <h6 class="p-5 m-5">You didn't add any address yet. Please add a valid address now.</h6>
+
+          <%}%>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Address Modal -->
+<div class="modal fade" id="addressModal" tabindex="-1" role="dialog" aria-labelledby="addressModalLabel" aria-hidden="true" style="z-index: 20250;">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addressModalLabel"></h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <!-- Address form goes here -->
+        <!-- You can customize the form based on your needs -->
+        <form id="addressForm" novalidate>
+          <!-- Form fields go here -->
+          <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" class="form-control" id="name" name="name" required>
+          </div>
+          <div class="form-group">
+            <label for="phoneNumber">Phone NUmber</label>
+            <input type="text" class="form-control" id="phoneNumber" name="phoneNumber" required>
+          </div>
+          <div class="form-group">
+            <label for="street">Street</label>
+            <input type="text" class="form-control" id="street" name="street" required>
+          </div>
+          <div class="form-group">
+            <label for="city">City</label>
+            <input type="text" class="form-control" id="city" name="city" required>
+          </div>
+          <div class="form-group">
+            <label for="state">State</label>
+            <input type="text" class="form-control" id="state" name="state" required>
+          </div>
+          <div class="form-group">
+            <label for="zipCode">Zip Code</label>
+            <input type="text" class="form-control" id="zipCode" name="zipCode" required>
+          </div>
+          <!-- Add any other fields you need -->
+
+          <!-- Close button and submit button -->
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="submit" class="btn btn-primary" id="submitAddressBtn"></button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+<script>
+
+function handleCardClick(event, addressId) {
+    // Check if the clicked element is not the edit or remove button
+    if (!event.target.classList.contains('editAddressButton') && !event.target.classList.contains('btn-danger')) {
+      // Check the radio button
+      document.getElementById(`address_${addressId}`).checked = true;
+
+      // Add your logic for sending a request to update the primary address
+      updatePrimaryAddress(addressId);
+
+      
+    }
+  }
+
+  // Function to update the primary address on the server
+  function updatePrimaryAddress(addressId) {
+    // Perform an AJAX request to update the primary address
+    $.ajax({
+      type: 'POST',
+      url: `/profile-primary-address-update/${addressId}`,
+      success: function (response) {
+        // Handle success response from the server
+        console.log('Update successful:', response);
+        // Reload the page or perform other actions as needed
+        location.reload();
+      },
+      error: function (error) {
+        // Handle error response from the server
+        console.error('Update failed:', error);
+        // Optionally display an error message to the user
+        alert('Update failed. Please try again.');
+      }
+    });
+  }
+
+function showAddAddressModal() {
+  $('#addressModalLabel').text('Add Address');
+  $('#submitAddressBtn').text('Submit');
+  // Clear the form when the modal is opened for adding an address
+  $('#addressForm')[0].reset();
+  // Clear hidden input for address ID
+  $('#addressId').val('');
+  $('#addressModal').modal('show');
+
+  // Event listener for the form submission
+  $('#addressForm').on('submit', function (event) {
+    event.preventDefault();
+    // Get the form data
+    const formData = {
+      name: $('#name').val(),
+      phoneNumber: $('#phoneNumber').val(),
+      street: $('#street').val(),
+      city: $('#city').val(),
+      state: $('#state').val(),
+      zipCode: $('#zipCode').val(),
+    };
+
+
+
+    // AJAX request
+    $.ajax({
+      type:'POST',
+      url: '/address-add',
+      data: formData,
+      success: function (response) {
+        // Handle success response
+        console.log('Address added successfully:', response);
+        // After successful submission, you can hide the modal using hideAddressModal()
+        // Reload the page after a successful response
+        location.reload();
+      },
+      error: function (error) {
+        // Handle error
+        console.error('Error:', error);
+      },
+    });
+  });
+
+
+
+}
+
+function showEditAddressModal(addressData) {
+
+  const {addressId,name,street,city,state,zipCode,phoneNumber} = addressData;
+
+  console.log(addressId,name,street,city,state,zipCode,phoneNumber)
+  
+  console.log("enetered in showEditAddressModal function")
+  $('#addressModalLabel').text('Edit Address');
+  $('#submitAddressBtn').text('Update');
+  // Fill the form fields with address details
+  $('#name').val(name);
+  $('#phoneNumber').val(phoneNumber);
+  $('#street').val(street);
+  $('#city').val(city);
+  $('#state').val(state);
+  $('#zipCode').val(zipCode);
+  // Set the address ID in a hidden input for later use
+  $('#addressId').val(addressId);
+  $('#addressModal').modal('show');
+
+
+  // Event listener for the Edit form submission
+  $('#addressForm').on('submit', function (event) {
+    event.preventDefault();
+    // Get the form data
+    const formData = {
+      name: $('#name').val(),
+      phoneNumber: $('#phoneNumber').val(),
+      street: $('#street').val(),
+      city: $('#city').val(),
+      state: $('#state').val(),
+      zipCode: $('#zipCode').val(),
+    };
+
+    
+
+    // AJAX request
+    $.ajax({
+      type: 'PUT',
+      url: `/address-edit/${addressId}`,
+      data: formData,
+      success: function (response) {
+        // Handle success response
+        console.log('Address  updated successfully:', response);
+        // After successful submission, you can hide the modal using hideAddressModal()
+        // Reload the page after a successful response
+        location.reload();
+      },
+      error: function (error) {
+        // Handle error
+        console.error('Error:', error);
+      },
+    });
+  });
+}
+
+ 
+
+function deleteAddress(addressId){
+
+  console.log("AddressId is " + addressId)
+
+  // AJAX request
+  $.ajax({
+      type: 'DELETE',
+      url: `/address-delete/${addressId}`,
+      success: function (response) {
+        // Handle success response
+        console.log('Address  updated successfully:', response);
+        // After successful submission, you can hide the modal using hideAddressModal()
+        // Reload the page after a successful response
+        location.reload();
+      },
+      error: function (error) {
+        // Handle error
+        console.error('Error:', error);
+      },
+    });
+}
+  
+
+  // Event listener for the Close button in the modal
+  $('#addressModal').on('hidden.bs.modal', function () {
+    // Clear the form when the modal is closed
+    $('#addressForm')[0].reset();
+  });
+
+
+   // Event listener for the "Continue To Payment" button
+   document.getElementById('placeOrderBtn').addEventListener('click', function() {
+
+    
+    // Find the selected address radio button
+    const selectedAddressRadioButton = document.querySelector('input[name="addressRadio"]:checked');
+
+    // Check if any address is selected
+    if (!selectedAddressRadioButton) {
+      alert('Please select an address before placing the order.');
+      return;
+    }
+
+    // Extract the addressId from the selected radio button
+    const addressId = selectedAddressRadioButton.id.split('_')[1];
+
+  
+  
+  });
+</script>
+
+<%- include('../../layouts/user-footer') -%>
+
+
+

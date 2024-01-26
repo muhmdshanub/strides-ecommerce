@@ -1,0 +1,627 @@
+<%- include('../layouts/user-header') -%>
+
+
+<%- include('../layouts/user-navbar') -%>
+
+<style>
+    #sticky-col {
+      position: -webkit-sticky;
+      position: sticky;
+      top: 40px;
+      z-index: 2100;
+      overflow: hidden;
+      background-color: rgb(132, 0, 255);
+      color:rgb(255, 255, 255);
+      font-weight: 700;
+  }
+</style>
+
+<div class="container-fluid">
+    <div class="row mt-4 col-12">
+      
+        <!-- First Section (7/12 width on medium screens) -->
+        <div class="col-7 border rounded mx-3 p-0 text-black">
+            
+          
+              <section style="background-color: #eee;" class="mx-0 px-1 my-2">
+                <div class="container-fluid py-3 mx-0 px-1">
+                    <% cart.items.forEach(item => { %>
+                        <div id="item-<%=item._id %>" class="row justify-content-center mb-1">
+                          
+                            <div class="col-md-12">
+                                <div class="card shadow-0 border rounded-3 position-relative">
+                                    <div class="card-body pr-0">
+                                        <div class="row pr-0 mr-0">
+                                            <div class="col-md-12 col-lg-6 col-xl-4 mb-4 mb-lg-0">
+                                                <div class="bg-image hover-zoom ripple border rounded ripple-surface">
+                                                    <img src="/images/productImages/<%= item.product.images.image1.name %>" class="w-100 rounded" />
+                                                    <a href="#!">
+                                                        <div class="hover-overlay">
+                                                            <div class="mask" style="background-color: rgba(253, 253, 253, 0.15);"></div>
+                                                        </div>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6 col-lg-6 col-xl-8">
+                                                <div>
+                                                    <h3><%= item.product.brandName %></h3>
+                                                    <p class="text-muted"><%= item.product.productName %></p>
+                                                </div>
+                                                <div class="d-flex flex-row">
+                                                    <h3 class="mx-2"><%= item.product.finalPrice %></h3>
+                                                    <h3 class="muted mx-2"><del><%= item.product.initialPrice %></del></h3>
+                                                    <p class="badge badge-success mx-2 p-3" style="font-size: medium;"><%= item.product.maxDiscountPercentage %>%</p>
+                                                </div>
+                                               
+                                                <div class="row d-flex flex-row">
+                                                  <div class="mx-2">
+                                                    <label class="btn btn-outline-danger rounded-pill">
+                                                        <input type="radio" name="size<%= item._id %>" value="small" <%= item.size == "small" ? 'checked' : '' %> onchange="updateSize('<%= item._id %>', 'small')" <% if (item.product.sizes[0].small.availableStock <= 0) { %>disabled data-bs-content="Out of Stock"<% } %>> S
+                                                    </label>
+                                                </div>
+                                                  
+                                                  <div class="mx-2">
+                                                    <label class="btn btn-outline-danger rounded-pill">
+                                                        <input type="radio" name="size<%= item._id %>" value="medium" <%= item.size == "medium" ? 'checked' : '' %> onchange="updateSize('<%= item._id %>', 'medium')" <% if (item.product.sizes[0].medium.availableStock <= 0) { %>disabled data-bs-content="Out of Stock"<% } %>> M
+                                                    </label>
+                                                </div>
+                                                  <div class="mx-2">
+                                                    <label class="btn btn-outline-danger rounded-pill">
+                                                        <input type="radio" name="size<%= item._id %>" value="large" <%= item.size == "large" ? 'checked' : '' %> onchange="updateSize('<%= item._id %>', 'large')" <% if (item.product.sizes[0].large.availableStock <= 0) { %>disabled data-bs-content="Out of Stock"<% } %>> L
+                                                    </label>
+                                                </div>
+                                                  <div class="mx-2">
+                                                      <label class="btn btn-outline-danger rounded-pill">
+                                                          <input type="radio" name="size<%= item._id %>" value="extraLarge" <%= item.size == "extraLarge" ? 'checked' : '' %> onchange="updateSize('<%= item._id %>', 'extraLarge')" <% if (item.product.sizes[0].extraLarge.availableStock <= 0) { %>disabled data-bs-content="Out of Stock"<% } %>> XL
+                                                      </label>
+                                                  </div>
+                                                </div>
+
+                                               
+
+                                                <div class="mt-5 ml-0 pl-0">
+                                                    <!-- Quantity selection with input group -->
+                                                    <div class="input-group mt-2 ml-0 pl-0" style="width:105px;">
+                                                      <div class="input-group-prepend ml-0 pl-0">
+                                                          <button  onclick="updateQuantity('<%= JSON.stringify(item._id) %>','minus')"
+                                                             class="btn btn-outline-danger rounded-pill" type="button"
+                                                              id="minusBtn<%=item._id%>">-</button>
+                                                      </div>
+                                                      <input type="text" class="form-control text-center rounded-pill quantity-input"
+                                                          value="<%= item.quantity  %>" min="1" max="10" id="quantityInput<%=item._id%>" readonly>
+                                                      <div class="input-group-append">
+                                                          <button  onclick="updateQuantity( '<%= JSON.stringify(item._id) %>' ,'add')"
+                                                          class="btn btn-outline-danger rounded-pill" type="button"
+                                                              id="plusBtn<%=item._id%>">+</button>
+                                                      </div>
+                                                  </div>
+                                                </div>
+                                                <div class="delete-icon" style="position: absolute; top: 5px; right: 20px;">
+                                                  
+                                                  <button
+                                                  
+                                                  onclick="deleteCartItem('<%= item._id %>', <%= JSON.stringify({ totalAmount: cart.totalAmount, totalInitialAmount: cart.totalInitialAmount }) %>, <%= JSON.stringify({ deletedItemTotalAmount: item.totalAmount, deletedItemTotalInitialAmount: item.totalInitialAmount }) %>)"
+                                                      type="button"
+                                                      style="text-decoration: none; border: none; background: none;"
+                                                      onmouseover="this.style.width='35px'; this.style.height='35px';"
+                                                      onmouseout="this.style.width='30px'; this.style.height='30px';"
+                                                  >
+                                                      <svg
+                                                          onclick="this.style.width='25px'; this.style.height='25px';"
+                                                          xmlns="http://www.w3.org/2000/svg"
+                                                          style="text-decoration: none;"
+                                                          onmouseover="this.style.width='35px'; this.style.height='35px';"
+                                                          onmouseout="this.style.width='30px'; this.style.height='30px';"
+                                                          color="red"
+                                                          width="30"
+                                                          height="30"
+                                                          fill="currentColor"
+                                                          viewBox="0 0 16 16"
+                                                      >
+                                                      <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                                                      <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+                                                      </svg>
+                                                  </button>
+                                              </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <% }); %>
+                    <% if(cart.items.length < 1 ){ %>
+                        <div style="margin:0;">
+                            <p>Your cart is empty. Please add some product.</p>
+                            <a href="/products" class="btn btn-success ml-2">Shop Now</a>
+                        </div>
+                        
+                    <% } %>
+                </div>
+            </section>
+            
+              
+              
+        </div>
+
+        <!-- Second Section (4/12 width on medium screens with margins) -->
+        <div class="col-4 mx-3 text-black">
+          <div class="container-fluid mt-4 border rounded p-5" id="sticky-col">
+            <div class="row">
+                <div class="col-md-10 offset-md-1">
+                    <div class="coupon-section">
+                        <h3>Coupon</h3>
+                        <div class="amount-row d-flex justify-content-between mt-3 mb-5">
+                            <span>Apply Coupon</span>
+                            <button class="btn  btn-danger" data-toggle="modal" data-target="#applyCouponModal">Apply Coupon</button>
+                        </div>
+                        <!-- Faded background box with warnings -->
+                        <div class="coupon-warnings"
+                            style="background-color: rgba(0, 0, 0, 0.2); padding: 10px; border-radius: 5px; position: relative;">
+                            <!-- Close button -->
+                            <button type="button btn-warning" class="close" aria-label="Close" onclick="hideCouponWarnings()"
+                                style="position: absolute; top: 0px; right: 5px;color: rgb(255, 30, 0);font-size:30px;">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                    
+                            <p>Please add coupons after selecting the products and size and quantity.</p>
+                            <p>Always utilize the welcome coupon on your first purchase.</p>
+                        </div>
+                    </div>
+                    <div class="total-amount-section">
+                        
+                        <h2>Total Amount</h2>
+        
+                        <!-- MRP Section -->
+                        <div class="amount-row d-flex justify-content-between mt-5 mb-1">
+                            <span>Total MRP</span>
+                            <span id="totalMRP"><%= cart.totalInitialAmount  + " " %>Rs.</span>
+                        </div>
+        
+                        <!-- Discount Section -->
+                        <div class="amount-row d-flex justify-content-between my-1">
+                            <span>Discount</span>
+                            <span id="discount"><%= parseFloat(cart.totalInitialAmount - cart.totalAmount).toFixed(2) + " "  %>Rs.</span>
+                        </div>
+        
+                        <!--  Coupon Section -->
+                        <div class="amount-row d-flex justify-content-between my-1">
+                            <span>Coupon deduction</span>
+                            <span id="deductableAmount"><%= (cart.coupon?.amount || "0") + " " %>Rs.</span>
+                        </div>
+                        
+                        
+                        <!-- Amount To Pay Section -->
+                        <div class="amount-row d-flex justify-content-between mt-5 mb-5">
+                            <span>Amount To Pay</span>
+                            <span id="amountToPay"><%= parseFloat(cart.totalAmount) - parseFloat(cart.coupon.amount) + " "  %>Rs.</span>
+                          </div></span>
+                        </div>
+        
+                        <!-- Separator Line -->
+                        <hr>
+                        <div class="mt-5">
+                          <!-- Place Order Button -->
+                            <!-- Assuming cart is passed as a variable to your template -->
+                            
+                            <% if (cart && cart.items.length >= 1) { %>
+                                <button id="placeOrderBtn" class="btn btn-primary btn-block mt-2" onclick="validateAndRedirect()">Place Order</button>
+                            <% } else { %>
+                                <button id="placeOrderBtn" class="btn btn-primary btn-block mt-2" >Place Order</button>
+                            <% } %>
+                          
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+            
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="invalidItemsModal" tabindex="-1" role="dialog" aria-labelledby="invalidItemsModalLabel" aria-hidden="true"  style="z-index: 2050;">
+  <div class="modal-dialog" role="document">
+      <div class="modal-content">
+          <div class="modal-header">
+              <h5 class="modal-title" id="invalidItemsModalLabel">Invalid Items</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+              </button>
+          </div>
+          <div class="modal-body" id="invalidItemsModalBody">
+              <!-- Invalid items details will be displayed here -->
+          </div>
+          <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+      </div>
+  </div>
+</div>
+
+
+
+<!-- Apply Coupon Modal -->
+<div class="modal fade" id="applyCouponModal" tabindex="-1" role="dialog" aria-labelledby="applyCouponModalLabel" aria-hidden="true" style="z-index: 2250;">
+    <div class="modal-dialog" role="document" style="max-width: 800px;">
+        <div class="modal-content" >
+            <div class="modal-header" style="background-color: rgb(255, 0, 123);color: rgb(251, 251, 251);">
+                <h5 class="modal-title" id="applyCouponModalLabel" >Apply Coupon</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Input field for coupon code -->
+                <div class="mb-3 position-relative">
+                    <label for="couponCodeInput" class="form-label" style="color:rgb(255, 0, 123);">Coupon Code</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="couponCodeInput">
+                        <!-- Check button -->
+                        <button class="btn  position-absolute translate-middle-y" style="bottom: 1px; right: 2px; color:rgb(255, 0, 123);"
+    onclick="checkCouponValidity(<%=JSON.stringify(coupons)%>,<%=JSON.stringify(cart)%>)">Check</button>
+                    </div>
+                    <!-- Failure message element -->
+                    <p id="couponFailureMessage" style="color: red; margin-top: 5px;"></p>
+                </div>
+
+                <!-- List of valid coupons -->
+                <div class="mt-3 border rounded p-2" style="max-height: 360px; overflow-y: auto;background-color: rgba(248, 87, 151, 0.225);">
+                    <!-- List of valid coupons will be dynamically generated here -->
+                    <p style="color:rgb(255, 0, 123)">Select a Coupon:</p>
+                    <div id="couponList">
+                        <% coupons.forEach(coupon => { %>
+                            <% if(coupon.validUpto){
+                                 isCouponActive = cart.totalAmount >= coupon.minimumPurchaseLimit &&new Date(coupon.validFrom) <= new Date() &&new Date(coupon.validUpto) >= new Date();
+                                }else{
+                                 isCouponActive = cart.totalAmount >= coupon.minimumPurchaseLimit &&new Date(coupon.validFrom) <= new Date()
+                                } %>
+                        
+                            <div class="card mb-2 cursor-pointer<%= isCouponActive ? '' : ' disabled' %>"
+                                 onclick="<%= isCouponActive ? `selectCoupon('${coupon._id}')` : '' %>">
+                                <div class="card-body">
+                                    <div style="border: 1px dotted #ccc; padding: 10px; margin-bottom: 10px;">
+                        
+                                        <!-- Radio Button -->
+                                        <div class="form-check mb-1">
+                                            <input class="form-check-input" type="radio" name="selectedCoupon" id="<%= coupon._id %>" value="<%= coupon._id %>"  <%= isCouponActive ? '' : 'disabled' %>   <%= coupon.code === cart.coupon.code ? 'checked' : '' %>>
+                                        </div>
+                                        <div class="pl-4">
+                                            <!-- Coupon Code -->
+                                            <div class="mt-3 d-inline-block" style="border: 1px dotted #ccc; padding: 10px;background-color:rgb(255, 0, 123);color:rgb(255, 255, 255);">
+                                                <%= coupon.code %>
+                                            </div>
+                        
+                                            <!-- Coupon Amount -->
+                                            <div>
+                                                <strong>You can save:</strong> <%= coupon.amount %>
+                                            </div>
+                        
+                                            <!-- Minimum Purchase Limit -->
+                                            <div>
+                                                <strong>On a minimum purchase of:</strong> <%= coupon.minimumPurchaseLimit %>
+                                            </div>
+                        
+                                            <!-- Valid From -->
+                                            <div>
+                                                <strong>Valid from:</strong> <%= coupon.validFrom?.toISOString().split('T')[0] || "N/A" %>
+                                            </div>
+                        
+                                            <!-- Valid Upto -->
+                                            <div>
+                                                <strong>Valid upto:</strong> <%= coupon.validUpto?.toISOString().split('T')[0] || "N/A" %>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }); %>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <!-- Apply button -->
+                <button type="button" class="btn btn-success" onclick="applyCoupon()">Apply</button>
+                <!-- Close button -->
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- modal structure for show alert -->
+<div class="modal" id="customModalAlert" tabindex="-1" role="dialog" style="z-index: 2500;">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">ALERT</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p id="modalTextAlert"></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal" >Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+
+    function hideCouponWarnings() {
+        // Assuming you have a class to hide the coupon warnings
+        document.querySelector('.coupon-warnings').style.display = 'none';
+    }
+
+    async function applyCoupon() {
+        try {
+            // Get the selected coupon ID
+            const selectedCouponId = document.querySelector('input[name="selectedCoupon"]:checked');
+
+            // Check if a coupon is selected
+            if (!selectedCouponId) {
+                // Display an error alert if no coupon is selected
+                showAlert('Please select a coupon before applying.');
+                return;
+            }
+
+            // Prepare the data for the fetch request
+            const couponId = selectedCouponId.value;
+
+            // Send a fetch request to apply the coupon
+            const response = await fetch(`/apply-coupon/${couponId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            } else {
+                const data = await response.json();
+                // Update UI with new cart information
+                const totalAmountElement = document.getElementById('amountToPay');
+                const deductableAmountElement = document.getElementById('deductableAmount');
+
+                // Assuming 'data.cart' contains the updated cart information
+                totalAmountElement.textContent = `${data.cart.totalAmount - data.cart.coupon.amount} Rs.`;
+                deductableAmountElement.textContent = `${data.cart.coupon.amount} Rs.`;
+
+
+
+                hideCouponModal();
+
+            }
+
+        } catch (error) {
+            console.error('Error applying coupon:', error.message);
+            // Show error on the alert modal
+            showAlert(`Error applying coupon: ${error.message}`);
+        }
+    }
+
+    function hideCouponModal() {
+        // Assuming you have a modal element with the ID 'applyCouponModal'
+        const couponModal = $('#applyCouponModal');
+
+        // Hide the modal using jQuery
+        couponModal.modal('hide');
+    }
+
+
+    function checkCouponValidity(coupons, cart) {
+        // Convert the user input to uppercase
+        const userInput = document.getElementById('couponCodeInput').value.toUpperCase();
+
+        // Check if any coupon in the array has a name or code matching the userInput
+        const matchingCoupon = coupons.find(coupon =>
+            coupon.name.toUpperCase() === userInput || coupon.code.toUpperCase() === userInput
+        );
+
+        // Get the failure message element
+        const failureMessageElement = document.getElementById('couponFailureMessage');
+
+        // If a matching coupon is found
+        if (matchingCoupon) {
+
+            // Check if the coupon is active
+            let isCouponActive;
+            if (matchingCoupon.validUpto) {
+                isCouponActive = cart.totalAmount >= matchingCoupon.minimumPurchaseLimit &&
+                    new Date(matchingCoupon.validFrom) <= new Date() &&
+                    new Date(matchingCoupon.validUpto) >= new Date();
+            } else {
+                isCouponActive = cart.totalAmount >= matchingCoupon.minimumPurchaseLimit &&
+                    new Date(matchingCoupon.validFrom) <= new Date();
+            }
+
+            // If the coupon is active, select the corresponding card's radio button
+            if (isCouponActive) {
+                const radioButton = document.getElementById(matchingCoupon._id);
+                radioButton.checked = true;
+                console.log('Active Coupon Match Found:', matchingCoupon.name);
+                // Scroll to the selected coupon card
+                radioButton.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                console.log('Inactive Coupon Match Found:', matchingCoupon.name);
+                failureMessageElement.textContent = 'This coupon is currently unavailable for you.';
+                return;
+            }
+
+            // Clear any previous failure message
+            failureMessageElement.textContent = '';
+        } else {
+            // If no matching coupon is found, display the failure message
+            console.log('No matching coupon found.');
+            failureMessageElement.textContent = 'Invalid coupon. Please try again.';
+            return;
+        }
+    }
+
+
+
+    function selectCoupon(index) {
+        // Get the radio button corresponding to the clicked card
+        const radioButton = document.getElementById(`${index}`);
+
+        // Check the radio button
+        radioButton.checked = true;
+    }
+
+
+    function validateAndRedirect() {
+        // Send a GET request to the server endpoint
+        fetch('/cart-to-address', {
+            method: 'GET',
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Check if there are invalid items in the response
+                if (data.invalidItems && data.invalidItems.length > 0) {
+                    // If there are invalid items, show the custom popup
+                    showInvalidItemsPopup(data.invalidItems);
+                } else {
+                    // If no invalid items, redirect to the address page
+                    window.location.href = '/address';
+                }
+            })
+            .catch(error => {
+                console.error('Error validating cart:', error.message);
+                // Handle the error if needed
+            });
+    }
+
+    function showInvalidItemsPopup(invalidItems) {
+        // Get the modal and its body
+        const modal = document.getElementById('invalidItemsModal');
+        const modalBody = document.getElementById('invalidItemsModalBody');
+
+        // Clear previous content
+        modalBody.innerHTML = '';
+
+        // Add details of invalid items to the modal body
+        invalidItems.forEach(item => {
+            const itemDetails = document.createElement('p');
+            itemDetails.textContent = `Brand: ${item.brandName}, Product: ${item.productName}, Size: ${item.size}, Quantity: ${item.selectedQuantity}, Reason: ${item.reason}`;
+            modalBody.appendChild(itemDetails);
+        });
+
+        // Show the modal
+        $(modal).modal('show');
+    }
+
+
+    function deleteCartItem(itemId) {
+
+        
+
+        // Send DELETE request to server
+        fetch(`/cart-item-delete/${itemId}`, {
+            method: 'DELETE',
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                location.reload();
+            })
+            .catch(error => {
+                console.error('Error deleting item:', error);
+                // Handle error, show a message to the user, etc.
+            });
+    }
+
+
+    function updateQuantity(itemId, operation) {
+        
+
+        
+        const parsedItemId = JSON.parse(itemId);
+        const displayInput = document.getElementById(`quantityInput${parsedItemId}`);
+        console.log(displayInput)
+        if (operation === "add" && displayInput.value >= 10 || operation === "minus" && displayInput.value <= 1) {
+            return console.log("Maximum or minimum quantity reached");
+        }
+
+        const updater = (operation === "add") ? 1 : -1;
+
+
+        const URL = `/cart-item-quantity-update?itemId=${parsedItemId}&operation=${updater}`;
+
+        console.log('Sending request to:', URL);
+
+        fetch(URL, {
+            method: 'GET',
+        })
+            .then(response => {
+                if (!response.ok) {
+
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                displayInput.value = parseInt(displayInput.value) + updater;
+                // Reload the page upon a successful update
+                location.reload();
+            })
+            .catch(error => {
+                console.error('Error updating quantity:', error.message);
+            });
+    }
+
+
+    function updateSize(itemId, newSize) {
+        // Get the current size before the change
+        const previousSize = document.querySelector(`[name="size${itemId}"]:checked`).value;
+
+        // Update the size on the client side
+        const sizeLabel = document.querySelector(`[name="size${itemId}"][value="${newSize}"]`);
+        sizeLabel.checked = true;
+
+        // Send a request to the server to update the size
+        const URL = `/cart-item-size-update?itemId=${itemId}&newSize=${newSize}&previousSize=${previousSize}`;
+
+        fetch(URL, {
+            method: 'GET', // You can use 'POST' or 'PUT' depending on your server route
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                // Handle the success response if needed
+                location.reload();
+            })
+            .catch(error => {
+                console.error('Error updating size:', error.message);
+                // Handle the error if needed
+            });
+    }
+
+
+    function showAlert(message) {
+        // Set the modal text
+        document.getElementById('modalTextAlert').innerText = message;
+
+        // Show the modal
+        $('#customModalAlert').modal('show');
+    }
+
+
+</script>
+
+<%- include('../layouts/user-footer') -%>

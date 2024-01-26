@@ -1,0 +1,292 @@
+
+
+
+<%- include('../layouts/admin-header') -%>
+
+
+   
+
+
+    <%- include('../layouts/admin-navbar') -%>
+        
+
+        <div class="container tm-mt-big tm-mb-big">
+            <div class="row">
+                <div class="col-xl-9 col-lg-10 col-md-12 col-sm-12 mx-auto">
+                    <div class="tm-bg-primary-dark tm-block tm-block-h-auto">
+                        <%- include('../layouts/_messages.ejs') -%>
+                            <div class="row">
+                                <div class="col-12">
+                                    <h2 class="tm-block-title d-inline-block">ADD OFFER</h2>
+                                </div>
+                            </div>
+
+                            <form action="" class="tm-edit-offer-form" method="post" 
+                                novalidate>
+                                <div class="row tm-edit-offer-row">
+                                    <div class="col-xl-6 col-lg-6 col-md-12">
+
+                                        <div class="form-group mb-3">
+                                            <label for="name">NAME</label>
+                                            <input id="name" name="name" type="text"
+                                                class="form-control validate" required />
+                                        </div>
+                                        <div class="form-group mb-3">
+                                            <label for="description">DESCRIPTION</label>
+                                            <input id="description" name="description" type="text"
+                                                class="form-control validate" required />
+                                        </div>
+                                        
+                                        <div class="form-group mb-3">
+                                            <label for="offerType" >OFFER TYPE</label>
+                                            <select id="offerType" name="offerType" class="form-control my-0" style="height: fit-content;" required>
+                                                <option value="" selected>Select Offer Type</option>
+                                                <option value="product">Product-based</option>
+                                                <option value="category">Category-based</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <!-- Category select box (initially hidden) -->
+                                        <div class="form-group mb-3" id="categorySelectBox" style="display: none;">
+                                            <label for="category">SELECT CATEGORY</label>
+                                            <select id="category" name="category" class="form-control" style="height: fit-content;">
+                                                <% for (const category of categories) { %>
+                                                    <option value="<%= category._id %>"><%= category.name %></option>
+                                                <% } %>
+                                            </select>
+                                        </div>
+
+                                        <!-- Product auto-complete input (initially hidden) -->
+                                        <div class="form-group mb-3" id="productAutoComplete" style="display: none;">
+                                            <label for="product">SELECT PRODUCT</label>
+                                            <input id="product" name="product" type="text" class="form-control autocomplete" />
+                                        </div>
+
+                                        <input type="hidden" id="selectedProductId" name="selectedProductId" />
+
+                                        <div class="form-group mb-3">
+                                            <label for="percentage">DISCOUNT PERCENTAGE</label>
+                                            <input id="percentage" name="percentage" type="number" class="form-control" required />
+                                        </div>
+            
+                                        
+            
+                                        <div class="form-group mb-3">
+                                            <label for="validFrom">Valid From</label>
+                                            <input id="validFrom" name="validFrom" type="date" class="form-control" />
+                                        </div>
+            
+                                        <div class="form-group mb-3">
+                                            <label for="validUpto">Valid Upto</label>
+                                            <input id="validUpto" name="validUpto" type="date" class="form-control" />
+                                        </div>
+
+                                    <div class="col-12">
+                                        <button type="submit" class="btn btn-primary btn-block text-uppercase">Add
+                                           Offer
+                                            Now</button>
+                                    </div>
+
+                                </div>
+                            </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- Your existing HTML code -->
+
+        <script defer>
+            document.addEventListener('DOMContentLoaded', function () {
+                console.log('DOM is loaded');
+
+                const form = document.querySelector('.tm-edit-offer-form');
+                const nameInput = form.elements['name'];
+                const descriptionInput = form.elements['description'];
+                const percentageInput = form.elements['percentage'];
+                const offerTypeSelect = form.elements['offerType'];
+                const validFromInput = form.elements['validFrom'];
+                const validUptoInput = form.elements['validUpto'];
+
+                function validateName() {
+                    const name = nameInput.value.trim();
+                    if (!name) {
+                        showPopover('name', 'Name cannot be empty.');
+                        return false;
+                    } else {
+                        hidePopover('name');
+                        return true;
+                    }
+                }
+
+
+
+                function validateDescription() {
+                    const description = descriptionInput.value.trim();
+                    if (!description) {
+                        showPopover('description', 'Description cannot be empty.');
+                        return false;
+                    } else {
+                        hidePopover('description');
+                        return true;
+                    }
+                }
+
+                function validatePercentage() {
+                    const percentage = parseFloat(percentageInput.value);
+                    if (isNaN(percentage) || percentage <= 0 || percentage >= 100) {
+                        showPopover('percentage', 'Amount must be a number between 0 and 100.');
+                        return false;
+                    } else {
+                        hidePopover('percentage');
+                        return true;
+                    }
+                }
+
+                function validateOfferType() {
+                    const offerTypeSelectValue = offerTypeSelect.value.trim();
+                    if (!offerTypeSelectValue) {
+                        showPopover('offerType', 'offerType cannot be empty.');
+                        return false;
+                    } else {
+                        hidePopover('offerType');
+                        return true;
+                    }
+                }
+
+                function validateValidFrom() {
+
+                    return true;
+                }
+
+                function validateValidUpto() {
+
+                    return true;
+                }
+
+                function showPopover(inputId, message) {
+                    hidePopover(inputId); // Remove existing popover if any
+
+                    const inputField = document.getElementsByName(inputId)[0];
+                    if (!inputField) {
+                        // If the input field is not found, exit the function
+                        return;
+                    }
+
+                    const popover = document.createElement('div');
+                    popover.className = 'custom-popover';
+                    popover.textContent = message;
+
+                    // Set styles for the popover
+                    popover.style.color = 'white'; // Text color
+                    popover.style.backgroundColor = 'red'; // Background color (you can change it as needed)
+
+                    const parentElement = inputField.parentElement;
+                    if (parentElement) {
+                        parentElement.appendChild(popover);
+                    }
+                }
+
+                function hidePopover(inputId) {
+                    const inputField = document.getElementsByName(inputId)[0];
+                    if (!inputField) {
+                        // If the input field is not found, exit the function
+                        return;
+                    }
+
+                    const existingPopover = inputField.parentElement.querySelector('.custom-popover');
+                    if (existingPopover) {
+                        existingPopover.remove();
+                    }
+                }
+
+                form.addEventListener('submit', function (event) {
+                    if (!validateName() || !validateDescription() || !validatePercentage() || !validateOfferType() || !validateValidFrom() || !validateValidUpto()) {
+                        event.preventDefault();
+                    }
+                    // Add other form validations as needed
+                });
+
+                nameInput.addEventListener('input', validateName);
+
+                descriptionInput.addEventListener('input', validateDescription);
+                percentage.addEventListener('input', validatePercentage);
+                offerTypeSelect.addEventListener('input', validateOfferType);
+                validFromInput.addEventListener('input', validateValidFrom);
+                validUptoInput.addEventListener('input', validateValidUpto);
+            });
+
+
+            document.getElementById('offerType').addEventListener('change', function () {
+                // Get the selected offer type
+                const offerType = this.value;
+
+                // Toggle visibility of the product select box based on the offer type
+                var productSelectBox = document.getElementById('productAutoComplete');
+                productSelectBox.style.display = (offerType === 'product') ? 'block' : 'none';
+
+                var categorySelectBox = document.getElementById('categorySelectBox');
+                categorySelectBox.style.display = (offerType === 'category') ? 'block' : 'none';
+
+                if (offerType === 'product') {
+                    initializeAutocomplete();
+                }
+            });
+
+            function initializeAutocomplete() {
+        $('#product').autocomplete({
+            source: function (request, response) {
+                // Send an AJAX request to the server to get product suggestions
+                $.ajax({
+                    url: '/admin/autocomplete-products',
+                    dataType: 'json',
+                    data: {
+                        term: request.term
+                    },
+                    success: function (data) {
+                        response(data); // Populate autocomplete suggestions
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error fetching product suggestions:', error);
+                    }
+                });
+            },
+            minLength: 2,
+            select: function (event, ui) {
+                // Handle selection of an item from the autocomplete suggestions
+                console.log('Selected Product:', ui.item);
+
+                // Add logic to set the selected product's ID in a hidden input field
+                $('#selectedProductId').val(ui.item.id);
+
+                // Add your logic to handle the selected product
+            },
+            focus: function (event, ui) {
+                // Prevent the input value from being updated when an item is focused
+                event.preventDefault();
+            }
+        }).autocomplete('instance')._renderItem = function (ul, item) {
+            // Customize the rendering of each item in the dropdown
+            return $('<li>')
+                .append('<div class="bg-light" style="width:80%;height:fit-content;">' +
+                    `<img src="/images/productImages/${item.thumbnail}" alt="${item.thumbnail}" style="width: 40px; height:40px ; margin-right: 10px;">` +
+                    `<span>${item.label}</span>` +
+                    '</div>')
+                .appendTo(ul);
+        };
+    }
+        
+        
+        
+        
+        </script>
+
+        <!-- Your existing HTML code -->
+
+
+
+
+
+        <%- include('../layouts/admin-footer') -%>

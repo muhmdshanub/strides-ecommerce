@@ -1,0 +1,375 @@
+<%- include('../layouts/admin-header') -%>
+
+    <body id="reportsPage">
+
+        <%- include('../layouts/admin-navbar') -%>
+
+            <div class="container-fluid mt-5">
+                <div class="row tm-content-row">
+                    <div class="col-12 tm-block-col">
+                        <div class="tm-bg-primary-dark tm-block tm-block-products">
+
+                            <%- include('../layouts/_messages') -%>
+
+
+
+                                <div class="tm-product-table-container">
+                                    <table class="table table-hover tm-table-small tm-product-table">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">&nbsp;</th>
+                                                <th scope="col">NAME</th>
+                                                <th scope="col">EMAIL</th>
+                                                <th scope="col">PHONE</th>
+                                                <th scope="col">DATE OF BIRTH</th>
+                                                <th scope="col">PRIMARY ADDRESS</th>
+                                                <th scope="col">ACTIVITY STATUS</th>
+                                                <th scope="col">ORDERS</th>
+                                                <th scope="col">TOTAL AMOUNT SPEND</th>
+                                                <th scope="col">AUTHENTICATION STATUS</th>
+                                                <th scope="col">Block</th>
+                                                <th scope="col">Unblock</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+
+
+                                            <% if(users.length>0){
+                                                for(let i=0; i<users.length; i++){ %>
+
+                                                    <tr style="background-color: rgb(255, 255, 255);color: black;">
+
+
+                                                        <th scope="row"><input type="checkbox" class="tm-user-checkbox"
+                                                                data-user-id="<%=users[i]._id %>" /></th>
+
+                                                        <td class="tm-user-name">
+                                                            <%= users[i].name %>
+                                                        </td>
+                                                        <td class="tm-user-email">
+                                                            <%= users[i].email %>
+                                                        </td>
+                                                        <td class="tm-user-phone">
+                                                            <%= users[i].phone %>
+                                                        </td>
+                                                        <td class="tm-user-dateOfBirth">
+                                                            <%= users[i].dateOfBirth %>
+                                                        </td>
+                                                        <td class="tm-user-address">
+                                                            <%= users[i].addresses[0] || "Address will be filled later"
+                                                                %>
+                                                        </td>
+                                                        <td class="tm-user-activityStatus">
+                                                            <%= users[i].activityStatus %>
+                                                        </td>
+                                                        <td class="tm-user-address">
+                                                            <%= users[i].oreders?.length
+                                                                || "Order count will be filled later" %>
+                                                        </td>
+                                                        <td class="tm-user-address">
+                                                            <%= users[i].amount
+                                                                || "Total spen damount will be filled later" %>
+                                                        </td>
+                                                        <td class="tm-user-authenticationStatus">
+                                                            <%= users[i].authenticationStatus %>
+                                                        </td>
+                                                        <td>
+                                                            <a href="#" class="tm-user-block"
+                                                                onclick="confirmBlock('<%= users[i]._id %>')">
+                                                                <img src="/admin/img/lock-solid.svg" alt="unblock">
+                                                            </a>
+                                                        </td>
+                                                        <td>
+                                                            <a href="#" class="tm-user-unblock"
+                                                                onclick="confirmUnblock('<%= users[i]._id %>')">
+                                                                <img src="/admin/img/lock-open-solid.svg" alt="unblock">
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+
+                                                    <% } } else { %>
+                                                        <tr>
+                                                            <td colspan="5">No Users found.</td>
+                                                        </tr>
+                                                        <% } %>
+
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- Pagination -->
+                                <div>
+                                    <% if (currentPage> 1) { %>
+                                        <a href="?page=<%= currentPage - 1 %>" class="border rounded p-2 m-1 bg-white"
+                                            style="color: rgb(255, 157, 0);">Previous</a>
+                                        <% } %>
+
+                                            <% for (let i=1; i <=totalPages; i++) { %>
+                                                <a href="?page=<%= i %>" <%=i===currentPage
+                                                    ? 'class="active text-black"' : '' %> class=" border rounded p-2 m-1
+                                                    bg-white" style="color: rgb(255, 157, 0);"><%= i %></a>
+
+                                                <% } %>
+
+                                                    <% if (currentPage < totalPages) { %>
+                                                        <a href="?page=<%= currentPage + 1 %>"
+                                                            class="border rounded p-2 m-1 bg-white"
+                                                            style="color: rgb(255, 157, 0);">Next</a>
+                                                        <% } %>
+                                </div>
+                                <!-- table container -->
+
+                                <button class="btn btn-danger btn-block text-uppercase mt-4" id="btnBulkBlock">
+                                    Block selected users
+                                </button>
+
+                                <button class="btn btn-primary btn-block text-uppercase mt-4" id="btnBulkUnblock">
+                                    Unblock selected users
+                                </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="userBlock-customModal" class="modal" tabindex="-1" role="dialog" style="z-index: 3000;">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Block User</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="userBlock_closeModal()">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Are you sure you want to to block this user ?</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal"
+                                onclick="userBlock_closeModal()">No</button>
+                            <button type="button" class="btn btn-primary" id="userIdInput"
+                                onclick="blockUser()">Yes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="userUnblock-customModal" class="modal" tabindex="-1" role="dialog" style="z-index: 3000;" >
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Unblock User</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="userUnblock_closeModal()">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Are you sure you want to to unblock this user ?</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal"
+                                onclick="userUnblock_closeModal()">No</button>
+                            <button type="button" class="btn btn-primary" id="userIdInput"
+                                onclick="unblockUser()">Yes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="customModalBulkBlock" class="modal" tabindex="-1" role="dialog" style="z-index: 3000;">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Block Users</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="closeModalBulkBlock()">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Are you sure you want to to block these selected users ?</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal"
+                                onclick="closeModalBulkBlock()">No</button>
+                            <button type="button" class="btn btn-primary" id="bulkBlockConfirmButton">Yes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="customModalBulkUnblock" class="modal" tabindex="-1" role="dialog" style="z-index: 3000;">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Unblock Users</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="closeModalBulkUnblock()">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Are you sure you want to to unblock these selected users ?</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal"
+                                onclick="closeModalBulkUnblock()">No</button>
+                            <button type="button" class="btn btn-primary" id="bulkUnblockConfirmButton">Yes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+
+                function confirmBlock(userId) {
+                    // Show the custom modal
+                    document.getElementById('userBlock-customModal').style.display = 'flex';
+
+                    // Add productId to a hidden input if needed
+                    document.getElementById('userIdInput').value = userId;
+
+
+                }
+
+
+
+                function blockUser() {
+                    // Get the productId from the hidden input
+                    const userId = document.getElementById('userIdInput').value;
+
+                    // Redirect to delete endpoint
+                    window.location.href = '/admin/users-block/' + userId;
+
+                    // Close the modal
+                    userBlock_closeModal();
+                }
+
+                function userBlock_closeModal() {
+                    // Hide the custom modal
+                    document.getElementById('userBlock-customModal').style.display = 'none';
+                }
+
+
+                function confirmUnblock(userId) {
+                    // Show the custom modal
+                    document.getElementById('userUnblock-customModal').style.display = 'flex';
+
+                    // Add productId to a hidden input if needed
+                    document.getElementById('userIdInput').value = userId;
+
+
+                }
+
+
+
+                function unblockUser() {
+                    // Get the productId from the hidden input
+                    const userId = document.getElementById('userIdInput').value;
+
+                    // Redirect to delete endpoint
+                    window.location.href = '/admin/users-unblock/' + userId;
+
+                    // Close the modal
+                    userUnblock_closeModal();
+                }
+
+                function userUnblock_closeModal() {
+                    // Hide the custom modal
+                    document.getElementById('userUnblock-customModal').style.display = 'none';
+                }
+
+
+                function closeModalBulkBlock(){
+                    document.getElementById('customModalBulkBlock').style.display = 'none';
+                }
+                function closeModalBulkUnblock(){
+                    document.getElementById('customModalBulkUnblock').style.display = 'none';
+                }
+
+
+                document.addEventListener('DOMContentLoaded', function () {
+                    // Bulk Block button
+                    const bulkBlockButton = document.getElementById('btnBulkBlock');
+
+                    bulkBlockButton.addEventListener('click', async function () {
+                        const selectedUserIds = getSelectedUserIds();
+
+                        const bulkBlockConfirmButton = document.getElementById('bulkBlockConfirmButton');
+                        document.getElementById('customModalBulkBlock').style.display = 'flex';
+
+                        bulkBlockConfirmButton.addEventListener('click', async function () {
+
+                            if (selectedUserIds.length > 0) {
+                                try {
+                                    const response = await fetch('/admin/users-bulk-block', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                        },
+                                        body: JSON.stringify({ userIds: selectedUserIds }),
+                                    });
+
+                                    if (response.ok) {
+                                        closeModalBulkBlock();
+                                        // Redirect or perform any action after successful bulk block
+                                        window.location.href = '/admin/users-list';
+                                    } else {
+                                        console.error('Bulk block failed');
+                                    }
+                                } catch (error) {
+                                    console.error('Error bulk blocking users:', error);
+                                }
+                            }
+
+                        });
+
+
+                    });
+
+                    // Bulk Block button
+                    const bulkUnblockButton = document.getElementById('btnBulkUnblock');
+
+                    bulkUnblockButton.addEventListener('click', async function () {
+                        const selectedUserIds = getSelectedUserIds();
+
+                        const bulkunblockConfirmButton = document.getElementById('bulkUnblockConfirmButton');
+                        document.getElementById('customModalBulkUnblock').style.display = 'flex';
+
+                        bulkUnblockConfirmButton.addEventListener('click', async function () {
+
+                            if (selectedUserIds.length > 0) {
+                                try {
+                                    const response = await fetch('/admin/users-bulk-unblock', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                        },
+                                        body: JSON.stringify({ userIds: selectedUserIds }),
+                                    });
+
+                                    if (response.ok) {
+                                        closeModalBulkUnblock();
+                                        // Redirect or perform any action after successful bulk block
+                                        window.location.href = '/admin/users-list';
+                                    } else {
+                                        console.error('Bulk unblock failed');
+                                    }
+                                } catch (error) {
+                                    console.error('Error bulk unblocking users:', error);
+                                }
+                            }
+
+                        });
+
+
+                    });
+
+                    function getSelectedUserIds() {
+                        const checkboxes = document.querySelectorAll('.tm-user-checkbox:checked');
+                        return Array.from(checkboxes).map(checkbox => checkbox.getAttribute('data-user-id'));
+                    }
+                });
+            </script>
+
+
+
+
+            <%- include('../layouts/admin-footer') -%>

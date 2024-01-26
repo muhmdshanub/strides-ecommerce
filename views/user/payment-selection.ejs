@@ -1,0 +1,488 @@
+
+
+
+<%- include('../layouts/user-header') -%>
+
+<%- include('../layouts/user-navbar') -%>
+
+<%- include('../layouts/_messages') -%>
+
+
+<style>
+  
+
+  /* Custom sticky class */
+  #sticky-col {
+      position: -webkit-sticky;
+      position: sticky;
+      top: 40px;
+      z-index: 2100;
+      overflow: hidden;
+      background-color: rgb(132, 0, 255);
+      color:rgb(255, 255, 255);
+      font-weight: 700;
+  }
+
+  
+</style>
+
+
+<div class="container mb-5 pb-5 text-black" style="background-color: rgba(186, 251, 251, 0.799);">
+  <div class="row mt-4 mb-5">
+    <!-- Left Part (7/12) -->
+    <div  class="col-md-7 mb-5">
+
+      
+      <h3  class="py-2 mt-3">Select Address</h3>
+      <div class="address-container mt-1 mb-5 border rounded text-black p-3  " style="background-color: rgb(228, 251, 251);">
+       
+
+        
+        <!-- Dynamic Addresses (Use EJS to iterate through addresses) -->
+        <% user.addresses.forEach((address, index)=> { %>
+          <div class="card mb-2" onclick="selectAddress('<%= address._id %>')">
+            
+            <div class="card-body">
+              <div class="form-check">
+                <input type="radio" class="form-check-input" name="addressRadio" id="address_<%= address._id %>" <%= address.id.toString() === firstAddress._id.toString() ? 'checked' : '' %>>
+                <label class="form-check-label" for="address_<%= index %>">
+                  <!-- Display address fields here -->
+                  <strong>
+                    <%= address.name %>
+                  </strong><br>
+                  <%= address.street %>, <%= address.city %>, <%= address.state %>
+                  <%= address.zipCode %><br><br>
+                  Phone Number: <%= address.phoneNumber %>
+                </label>
+              </div>
+              <!-- Include hidden input for _id -->
+              <input type="hidden" name="addressId" value="<%= address._id %>">
+              
+            </div>
+          </div>
+          <% })  %>
+          <% if(user.addresses.length === 0){ %>
+            <h6 class="p-5 m-5">You didn't add any address yet. Please add a valid address now.</h6>
+
+          <%}%>
+
+      </div>
+
+      <div class="payment-container-fluid border rounded py-5 px-2 my-5 " style="background-color: rgb(239, 249, 249);">
+
+        <h3 class="px-3 mb-5">Select the Payment method</h3>
+
+        <div class="row mt-2">
+          
+          <!-- Left Section (4/12 width) -->
+          <div class="col-md-4 border p-0 offset-1">
+            <!-- Content for the left section goes here -->
+            <div class="col-12 py-0 border rounded" style="background-color: rgb(251, 213, 190);">
+              <button class="btn btn-danger btn-block my-3" id="cashOnDeliveryBtn">Cash on Delivery</button>
+            </div>
+            <div class="col-12 py-0 border rounded" style="background-color:rgb(251, 213, 190) ;" >
+              <button class="btn btn-pink btn-block my-3" id="payNowBtn">Pay Now</button>
+            </div>
+            <div class="col-12 py-0 border rounded" style="background-color:rgb(251, 213, 190) ;" >
+              <button class="btn btn-warning btn-block my-3" id="walletMethod">Wallet Purchase</button>
+            </div>
+            
+            
+          </div>
+      
+          <!-- Right Section (8/12 width) -->
+          <div class="col-md-6 border payment-show text-center justify-content-center">
+            
+            
+
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+
+    <!-- Right Part (5/12) -->
+    <div class="col-md-5 ">
+      <div class="container-fluid mt-4 border rounded p-5"  id="sticky-col">
+        <div class="row">
+            <div class="col-md-10 offset-md-1 " >
+                <div  class="total-amount-section">
+                    <h2 >Total Amount</h2>
+    
+                    <!-- MRP Section -->
+                    <div class="amount-row d-flex justify-content-between mt-5 mb-1" style="font-size: larger;">
+                        <span>Total MRP</span>
+                        <span id="totalMRP"><%= cart.totalInitialAmount  %>Rs.</span>
+                    </div>
+    
+                    
+                    <!-- Discount Section -->
+                    <div class="amount-row d-flex justify-content-between my-1">
+                      <span>Discount</span>
+                      <span id="discount"><%= cart.totalInitialAmount - cart.totalAmount + " "   %>Rs.</span>
+                  </div>
+                  <!--  Coupon Section -->
+                  <div class="amount-row d-flex justify-content-between my-1">
+                    <span>Coupon deduction</span>
+                    <span id="deductableAmount"><%= (cart.coupon?.amount || "0") + " " %>Rs.</span>
+                </div>
+                    <hr>
+                    <!-- Amount To Pay Section -->
+                    <div class="amount-row d-flex justify-content-between mt-3 mb-5" style="font-size: larger; font-weight: 900;">
+                        <span>Amount To Pay</span>
+                        <span id="amountToPay"><%= cart.totalAmount - cart.coupon?.amount  %>Rs.</span>
+                    </div>
+                </div>    
+              </div>
+            </div>
+        </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- Place this modal structure at the end of your HTML body -->
+<div class="modal" id="customModal" tabindex="-1" role="dialog" style="z-index: 2500;">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">ALERT</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p id="modalText"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal" >Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<input type="hidden" id="walletBalance" value="<%= JSON.stringify(wallet.balance) %>">
+<input type="hidden" id="cartTotal" value="<%= JSON.stringify(cart.totalAmount) %>">
+
+
+<!--Inside index.html -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script>
+// Access walletBalance and cartTotal from hidden input elements
+const walletBalance = JSON.parse(document.getElementById('walletBalance').value);
+const cartTotal = JSON.parse(document.getElementById('cartTotal').value);
+
+
+function selectAddress(index) {
+    console.log("selectAdress function called")
+    // Get the radio button corresponding to the clicked card
+    const radioButton = document.getElementById(`address_${index}`);
+
+    // Check the radio button
+    radioButton.checked = true;
+  }
+
+
+function showAlert(message) {
+  // Set the modal text
+  document.getElementById('modalText').innerText = message;
+
+  // Show the modal
+  $('#customModal').modal('show');
+}
+  // Assuming this is triggered when the "Cash on Delivery" button is clicked
+  document.getElementById('cashOnDeliveryBtn').addEventListener('click', function () {
+    // Check if the "Place Order Now" button already exists
+    if (!document.getElementById('placeOrderBtn')) {
+
+      // Remove existing elements inside the payment show section
+      document.querySelector('.payment-show').innerHTML = '';
+
+
+      // Dynamically add the text above the "Place Order Now" button
+      const infoTextCOD = document.createElement('p');
+      infoTextCOD.className = 'p-2 mt-3 ';
+      infoTextCOD.style = 'background-color:rgb(230, 246, 228)'
+      infoTextCOD.textContent = "If you are proceeding with the Cash on Delivery method, please click on the below link to place the order:";
+      document.querySelector('.payment-show').appendChild(infoTextCOD);
+
+      // Dynamically add the "Place Order Now" button to the right section
+      const placeOrderButton = document.createElement('button');
+      placeOrderButton.id = 'placeOrderBtn';
+      placeOrderButton.className = 'btn btn-primary p-2 my-2'; // Adjusted the margin to my-2
+      placeOrderButton.textContent = 'Place Order Now';
+
+      // Add an event listener or any other logic for the "Place Order Now" button if needed
+      // Event listener for the "Continue To Payment" button
+      placeOrderButton.addEventListener('click', function () {
+
+
+        // Find the selected address radio button
+        const selectedAddressRadioButton = document.querySelector('input[name="addressRadio"]:checked');
+
+        // Check if any address is selected
+        if (!selectedAddressRadioButton) {
+          showAlert('Please select an address before placing the order.');
+          return;
+        }
+
+        // Extract the addressId from the selected radio button
+        const addressId = selectedAddressRadioButton.id.split('_')[1];
+        console.log("addressID is " + addressId)
+        // Update the window location directly without making a fetch request
+        window.location.href = `/cod-place-order/${addressId}`;
+
+      });
+
+      // Append the button to the right section
+      document.querySelector('.payment-show').appendChild(placeOrderButton);
+    }
+  });
+
+  document.getElementById('payNowBtn').addEventListener('click', async function () {
+
+
+    if (!document.getElementById('razorpayOrderBtn')) {
+      try {
+
+        // Remove existing elements inside the payment show section
+        document.querySelector('.payment-show').innerHTML = '';
+
+        // Add new info text specific to Razorpay
+        const infoTextRazorPay = document.createElement('p');
+        infoTextRazorPay.className = 'p-2 mt-3 ';
+        infoTextRazorPay.style = 'background-color:rgb(230, 246, 228)';
+        infoTextRazorPay.textContent = "If you are proceeding with the Razorpay method, please click on the below link to complete the payment:";
+        document.querySelector('.payment-show').appendChild(infoTextRazorPay);
+
+        // Dynamically add the Razorpay button to the right section
+        const razorpayOrderBtn = document.createElement('button');
+        razorpayOrderBtn.id = 'razorpayOrderBtn';
+        razorpayOrderBtn.className = 'btn btn-success p-2 my-2'; // Adjusted the style
+        razorpayOrderBtn.textContent = 'Proceed to Razorpay';
+
+        razorpayOrderBtn.addEventListener('click', async () => {
+    try {
+        // Find the selected address radio button
+        const selectedAddressRadioButton = document.querySelector('input[name="addressRadio"]:checked');
+
+        // Check if any address is selected
+        if (!selectedAddressRadioButton) {
+            showAlert('Please select an address before placing the order.');
+            return;
+        }
+
+        // Extract the addressId from the selected radio button
+        const addressId = selectedAddressRadioButton.id.split('_')[1];
+        console.log("addressID is " + addressId);
+
+        // Make a request to the server to get necessary data (except addressId)
+        const serverDataResponse = await fetch(`/razorpay-place-order/${addressId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            
+        });
+
+        const serverData = await serverDataResponse.json();
+
+        // Check if the server data retrieval was successful
+        if (serverData.success) {
+            
+          const rzp_key = '<%= process.env.RAZORPAY_KEY_ID %>'
+
+          var options = {
+            "key": rzp_key, // Enter the Key ID generated from the Dashboard
+            "amount": serverData.order.amount, // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
+            "currency": "INR",
+            "name": "Male fashion", //your business name
+            "description": "Test Transaction",
+            "image": "/user/img/logo.png",
+            "order_id": serverData.order.id, //This is a sample Order ID. Pass the `id` obtained in the response of Step 1
+            "notes": {
+              "address": "Male fashion office"
+            },
+            "theme": {
+              "color": "#3399cc"
+            },
+            "handler": function (response){
+              handlePaymentSuccess(response);
+            },
+          };
+
+            const razorpayObject = new Razorpay(options);
+
+            // Define a function to handle payment success
+          const handlePaymentSuccess = async (response) => {
+            try {
+                
+                // Make a request to your server to verify the payment
+                const verificationResponse = await fetch(`/verify-razorpay-payment/${response.razorpay_order_id}`, {
+                     method: 'POST',
+                     headers: {
+                        'Content-Type': 'application/json',
+                     },
+
+                     body: JSON.stringify({
+                     payment_id: response.razorpay_payment_id,
+                     razorpay_signature: response.razorpay_signature,
+                   }),
+                 });
+
+                const verificationData = await verificationResponse.json();
+
+                if (verificationResponse.ok && verificationData.success) {
+                   // Payment verification successful
+                   const { paymentDBId } = verificationData;
+
+                   // Redirect to the specific route with the paymentDBId
+                   window.location.href = `/order-confirm/${paymentDBId}`;
+
+
+                } else {
+                    // Payment verification failed
+                    console.error('Payment verification failed:', verificationData.error);
+                   showAlert('Payment verification failed. Please contact support.');
+                }
+             
+              } catch (error) {
+              console.error('Error during payment verification:', error);
+              showAlert('Error during payment verification. Please contact support.');
+            }
+         };
+
+            razorpayObject.on('payment.failed', function (response) {
+                // Handle failure
+                showAlert('Payment failed! Error: ' + response.error.description);
+            });
+
+            // Trigger the Razorpay checkout
+            razorpayObject.open();
+        } else {
+            // Handle the case where the server data retrieval failed
+            console.error('Failed to fetch server data:', serverData.error);
+            showAlert('Failed to fetch server data. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error during Razorpay order creation:', error);
+        showAlert('Error during Razorpay order creation. Please try again.');
+    }
+});
+
+        // Append the Razorpay button to the right section
+        document.querySelector('.payment-show').appendChild(razorpayOrderBtn);
+      } catch (error) {
+        console.error('Error during Razorpay order creation:', error);
+        showAlert('Error during Razorpay order creation. Please try again.');
+      }
+    }
+
+
+  });
+
+  document.getElementById('walletMethod').addEventListener('click', async function () {
+    // Check if the "Place Order By Wallet" button already exists
+    if (!document.getElementById('placeOrderByWallet')) {
+
+        // Remove existing elements inside the payment show section
+        document.querySelector('.payment-show').innerHTML = '';
+
+        // Display current wallet amount
+        const walletAmountDisplay = document.createElement('p');
+        walletAmountDisplay.className = 'p-2 mt-3 text-white';
+        walletAmountDisplay.style = 'background-color: rgba(66, 4, 253, 0.499);';
+        walletAmountDisplay.textContent = `Current Wallet Amount: ${walletBalance} Rs.`;
+        document.querySelector('.payment-show').appendChild(walletAmountDisplay);
+
+
+        // Add new info text specific to Wallet
+        const infoTextWallet = document.createElement('p');
+        infoTextWallet.className = 'p-2 mt-3 text-white';
+        
+        if (cartTotal <= walletBalance) {
+          infoTextWallet.style = 'background-color:rgba(0, 0, 0, 0.773)';
+          infoTextWallet.textContent = "If you are proceeding with the Wallet method, please click on the below button to place the order:";
+        }else{
+          infoTextWallet.style = 'background-color:rgba(253, 4, 4, 0.4)';
+          infoTextWallet.textContent = "You do not have enough amount in your wallet. Please add money to your wallet or choose another payment method";
+        }
+
+        
+        document.querySelector('.payment-show').appendChild(infoTextWallet);
+
+        if (cartTotal <= walletBalance) {
+          // Dynamically add the "Place Order By Wallet" button to the right section
+        const placeOrderByWalletButton = document.createElement('button');
+        placeOrderByWalletButton.id = 'placeOrderByWallet';
+        placeOrderByWalletButton.className = 'btn btn-success p-2 my-2'; // Adjusted the style
+        placeOrderByWalletButton.textContent = 'Place Order By Wallet';
+
+        placeOrderByWalletButton.addEventListener('click', async () => {
+            try {
+              
+                // Find the selected address radio button
+                const selectedAddressRadioButton = document.querySelector('input[name="addressRadio"]:checked');
+
+                // Check if any address is selected
+                if (!selectedAddressRadioButton) {
+                    showAlert('Please select an address before placing the order.');
+                    return;
+                }
+
+                // Extract the addressId from the selected radio button
+                const addressId = selectedAddressRadioButton.id.split('_')[1];
+                console.log("addressID is " + addressId);
+
+                // Make a request to the server to place an order using the wallet
+                const walletOrderResponse = await fetch(`/wallet-place-order/${addressId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const walletOrderData = await walletOrderResponse.json();
+
+                // Check if the wallet order placement was successful
+                if (walletOrderResponse.ok && walletOrderData.success) {
+                  
+                    // Redirect to the specific route with the paymentDBId or any other relevant data
+                    window.location.href = `/order-confirm/${walletOrderData.paymentDBId}`;
+                } else {
+                    // Handle the case where the wallet order placement failed
+                    console.error('Failed to place order by wallet:', walletOrderData.error);
+                    showAlert('Failed to place order by wallet. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error during wallet order placement:', error);
+                showAlert('Error during wallet order placement. Please try again.');
+            }
+        });
+
+        // Append the "Place Order By Wallet" button to the right section
+        document.querySelector('.payment-show').appendChild(placeOrderByWalletButton);
+        }
+
+        
+    }
+});
+
+
+  
+
+
+
+</script>
+
+
+
+<%- include('../layouts/user-footer') -%>
+
+
+

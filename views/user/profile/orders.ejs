@@ -1,0 +1,258 @@
+<%- include('../../layouts/user-header') -%>
+
+
+<%- include('../../layouts/user-navbar') -%>
+
+
+<div class="container-fluid">
+    <%- include('../../layouts/_messages') -%>
+    <div class="row mt-4">
+      
+        <!-- First Section (7/12 width on medium screens) -->
+        <div class="col-10 offset-1 border rounded   text-black">
+            
+          
+              <section style="background-color: #eee;" class="mx-0 px-1 my-2">
+
+                <div class="container-fluid py-3 mx-0 px-1" id="ordersWrapper">
+                    <div class="container-fluid py-3 mx-0 px-1">
+                        <% orders.forEach(order => { %>
+                            <div id="item-<%=order._id %>" class="row justify-content-center mb-1">
+                              
+                                <div class="col-md-12">
+                                    <div class="card shadow-0 border rounded-3 position-relative">
+                                        <div class="alert alert-info d-inline-block" role="alert" id="status-<%=order._id%>" style="position:absolute;left: 20px;bottom:-10px;">
+                                            <h5><%= order.status  %></h5>
+                                        </div>
+                                        <div class="card-body pr-0">
+                                            <div class="row pr-0 mr-0">
+                                                <div class="col-md-3 col-lg-3 col-xl-3 mb-4 mb-lg-0">
+                                                    <div class="bg-image hover-zoom ripple border rounded ripple-surface text-center ">
+                                                        <img src="/images/productImages/<%= order.product.images.image1 %>" class="rounded mx-auto" style="width:70%;" />
+                                                        
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-9 col-lg-9 col-xl-9">
+                                                    
+                                                    
+                                                    <section class="row border rounded p-3 ml-1 position-relative">
+                                                        
+                                                        <!-- Placeholder for order details content -->
+                                                        <div class="col-10 mb-1 pb-1">
+                                                            <h5><strong>Product:</strong> <strong><%= order.brandName %></strong>  <%= order.productName %> </h5>
+                                                            <div class="d-flex">
+                                                                <p><strong>SIze: </strong><%= order.size %></p>
+                                                                <p class="ml-5"><strong>Quantity:</strong>  <%= order.quantity %></p>
+                                                            </div>
+                                                            
+    
+                                                            <% const year = order.orderDate.getFullYear();
+                                                            const month = (order.orderDate.getMonth() + 1).toString().padStart(2, '0');
+                                                            const day = order.orderDate.getDate().toString().padStart(2, '0');
+                                                    
+                                                            stringDate = `${day}-${month}-${year}`; 
+                                                            %>
+                                                            <div class="d-flex">
+                                                                <p><strong>Order Date:</strong> <%= stringDate %></p>
+                                                                <p class="ml-5"><strong>Payment Method:</strong> <%= order.payment.paymentMethod %></p>
+                                                            </div>
+                                                            
+                                                        </div>
+                                                        <div class="d-flex col-10 mb-1 pb-1">
+                                                            <p class="mr-5"><strong>Total Initial Price:</strong> <%= parseFloat(order.totalInitialMrp).toFixed(2) %></p>
+                                                            <p><strong>Discount Amount:</strong> <%= parseFloat(order.totalInitialMrp - order.totalFinalAmount).toFixed(2) %></p>
+                                                            
+                                                        </div>
+                                                        <div class="col-10 mb-2 pb-1 mt-3">
+                                                            <p style="font-size: larger; font-weight: 600;"><strong>Total MRP:</strong> <%= parseFloat(order.totalFinalAmount).toFixed(2) %></p>
+                                                        </div>
+    
+                                                        <div class="border p-2" style="position: absolute; right:10px;top:50px;background-color: #f7ebeb;">
+                                                            <p class=""> <%= order.address.name %> <strong>|</strong> <%= order.address.phoneNumber %> </p>
+                                                            <p class=""> <%= order.address?.street %>, <%= order.address.city %>, <%= order.address.state %>,<%= order.address.zipCode %> </p>
+                                                        </div>
+                                                         <!-- Buttons -->
+                                                         
+                                                         <% if (order.status === 'Delivered') {  
+                                                            order.deliveredDate = new Date(order.deliveredDate);
+                                                            currentDate = new Date();
+                                                            daysDifference = Math.abs(order.deliveredDate - currentDate) / (1000 * 60 * 60 * 24);
+                                                            } 
+                                                        %>
+    
+    
+                                                        <div class=" mt-3 text-right">
+                                                             <% if (order.status === 'Placed') { %>
+                                                                <!-- Show cancel button -->
+                                                                <div class="d-inline-block" style="position: absolute; bottom: 20px; right: 20px;">
+                                                                    <button type="button" class="btn btn-danger" id="cancelOrderButton-<%=order._id%>"  onclick="cancelOrder('<%= order._id %>')">Cancel Order</button>
+                                                                </div>
+    
+                                                                
+                                                            <% } else if (order.status === 'Delivered' && daysDifference <= 10 ) { %>
+                                                                <!-- Show return button -->
+                                                                <div class="d-inline-block" style="position: absolute; bottom: 20px; right: 20px;">
+                                                                    <button type="button" class="btn btn-warning" id="returnOrderButton-<%=order._id%>"  onclick="returnOrder('<%= order._id %>')">Return Order</button>
+                                                                </div>
+                                                            <% } else if (order.status === 'Delivered' && daysDifference > 10 ) { %>
+                                                                <!-- Show Generate Invoice button -->
+                                                                <div class="d-inline-block" style="position: absolute; bottom: 20px; right: 20px;">
+                                                                    <button type="button" class="btn btn-dark" id="generateInvoiceButton-<%=order._id%>" onclick="generateInvoice('<%= order._id %>')">Generate Invoice</button>
+                                                                </div>
+                                                            <% } %>
+                                                        </div>
+                                                        
+                                                    </section>
+                                                   
+    
+                                                    
+                                                    
+                                            </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }); %>
+                        <% if(orders.length < 1 ){ %>
+                            <div style="margin:0;">
+                                <p>You have no orders right now.</p>
+                                <a href="/products" class="btn btn-success ml-2">Shop Now</a>
+                            </div>
+                            
+                        <% } %>
+                    </div>
+                </div>
+                 
+                
+            </section>
+            
+              <!-- Pagination -->
+              <div class="row my-5 p-3" data-aos="fade-up">
+                <div class="col-md-12 text-center">
+                    <div class="site-block-27">
+                        <% function generatePageLink(pageNumber) {
+                            return `/list-profile-orders?page=${pageNumber}`;
+                        } %>
+
+                        <% if (currentPage > 1) { %>
+                            <a href="<%= generatePageLink(currentPage - 1) %>" class="prev border rounded px-2 mx-1">&lt;</a>
+                        <% } %>
+
+                        <% for (let i = 1; i <= totalPages; i++) { %>
+                            <a href="<%= generatePageLink(i) %>" class="<%= i === currentPage ? 'active' : '' %> border rounded px-2 mx-1">
+                                <%= i %>
+                            </a>
+                        <% } %>
+
+                        <% if (currentPage < totalPages) { %>
+                            <a href="<%= generatePageLink(currentPage + 1) %>" class="next border rounded px-2 mx-1"> &gt;</a>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+              
+        </div>
+
+
+            
+
+        </div>
+    </div>
+    <input type="hidden" id="hiddenOrders" value="<%= JSON.stringify(orders) %>">
+
+
+<script>
+    
+
+    // Function to handle canceling an order
+    const cancelOrder = async (orderId) => {
+        try {
+            // Send a POST request to the server with orderId as a URL parameter
+            const response = await fetch(`/profile-orders-cancel/${orderId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                // You can still include the order ID in the request body if needed
+                body: JSON.stringify({ orderId }),
+            });
+
+            // Check if the request was successful
+            if (response.ok) {
+                // Update the order status on the client side
+                document.getElementById(`status-${orderId}`).innerText = 'Cancelled';
+                // Remove the buttons
+                document.getElementById(`cancelOrderButton-${orderId}`).remove();
+
+            } else {
+                console.error('Failed to cancel the order');
+            }
+        } catch (error) {
+            console.error('An error occurred:', error);
+        }
+    };
+
+    // Function to handle returning an order
+    const returnOrder = async (orderId) => {
+        try {
+            // Send a POST request to the server with orderId as a URL parameter
+            const response = await fetch(`/profile-orders-return/${orderId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                // You can still include the order ID in the request body if needed
+                body: JSON.stringify({ orderId }),
+            });
+
+            // Check if the request was successful
+            if (response.ok) {
+                // Update the order status on the client side
+                document.getElementById(`status-${orderId}`).innerText = 'Returned';
+                // Remove the buttons
+                document.getElementById(`returnOrderButton-${orderId}`).remove();
+            } else {
+                console.error('Failed to return the order');
+            }
+        } catch (error) {
+            console.error('An error occurred:', error);
+        }
+    };
+
+
+    //handle the generate invoice button
+
+    async function generateInvoice(orderId) {
+        try {
+            // Send a request to the server to generate the invoice
+            const response = await fetch('generate-invoice-for-order', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ orderId: orderId }), // Pass the orderId parameter
+            });
+
+            // Handle the response (e.g., trigger download)
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `invoice_${orderId}.pdf`; // Set the desired filename, including orderId
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            } else {
+                console.error('Failed to generate invoice');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    
+</script>
+
+<%- include('../../layouts/user-footer') -%>

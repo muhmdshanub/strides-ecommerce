@@ -1,0 +1,319 @@
+<%- include('../layouts/admin-header') -%>
+
+
+</style>
+    <body id="reportsPage">
+
+        <%- include('../layouts/admin-navbar') -%>
+
+            <div class="container-fluid mt-5">
+                <div class="row tm-content-row">
+                    <div class="col-12 tm-block-col">
+                        <div class="tm-bg-primary-dark tm-block tm-block-products">
+
+                            <%- include('../layouts/_messages') -%>
+
+                                <a href="/admin/products-add" class="btn btn-primary btn-block text-uppercase mb-3">Add
+                                    new
+                                    product</a>
+
+                                <div class="tm-product-table-container">
+                                    <table class="table table-hover tm-table-small tm-product-table">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">&nbsp;</th>
+                                                <th scope="col">IMAGE</th>
+                                                <th scope="col">BRAND</th>
+                                                <th scope="col">NAME</th>
+                                                <th scope="col">GENDER</th>
+                                                <th scope="col">CATEGORY</th>
+                                                <th scope="col">COLORS</th>
+                                                <th scope="col">SIZE</th>
+                                                <th scope="col">IN STOCK</th>
+                                                <th scope="col">UNIT SOLD</th>
+                                                <th scope="col">INITIAL PRICE</th>
+                                                <th scope="col">DISCOUNT</th>
+                                                <th scope="col">FINAL PRICE</th>
+                                                <th scope="col">ADDED DATE</th>
+                                                <th scope="col">PRIORITY SCORE</th>
+                                                <th scope="col">&nbsp;</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+
+
+                                            <% if(products.length>0){
+                                                for(let i=0; i<products.length; i++){ %>
+
+                                                    <tr>
+
+
+                                                        <th scope="row"><input type="checkbox"
+                                                                class="tm-product-checkbox"
+                                                                data-product-id="<%=products[i]._id %>" /></th>
+                                                        <td class="tm-product-thumbnail">
+                                                            <img src="/images/productImages/<%= products[i].images.image1.name %>"
+                                                                alt="Thumbnail Image"
+                                                                style="width: 50px; height: 50px;">
+                                                        </td>
+                                                        <td class="tm-product-brand">
+                                                            <%= products[i].brandName %>
+                                                        </td>
+                                                        <td class="tm-product-name">
+                                                            <%= products[i].productName %>
+                                                        </td>
+                                                        <td class="tm-product-gender">
+                                                            <%= products[i].gender %>
+                                                        </td>
+                                                        <td class="tm-product-category">
+                                                            <%= products[i].category?.name%>
+                                                        </td>
+                                                        <td class="tm-product-colors">
+
+                                                            <% if (products[i].colors && products[i].colors.length> 0) {
+                                                                %>
+                                                                <%= products[i].colors.join(', ') %>
+                                                            <% } else { %>
+                                                                 No colors available
+                                                             <% } %>    
+                                                
+                                            </td>
+                                            <td>
+                                                <table>
+                                                    <tr>
+                                                        <th>Small</th>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Medium</th>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Large</th>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Extra Large</th>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                            <td>
+                                                <table>
+                                                    <tr>
+                                                        <th> <%= products[i].sizes[0].small.availableStock %> </th>
+                                                    </tr>
+                                                    <tr>
+                                                        <th> <%= products[i].sizes[0].medium.availableStock %> </th>
+                                                    </tr>
+                                                    <tr>
+                                                        <th> <%= products[i].sizes[0].large.availableStock %> </th>
+                                                    </tr>
+                                                    <tr>
+                                                        <th><%= products[i].sizes[0].extraLarge.availableStock %></th>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                            <td>
+                                                <table >
+                                                    <tr>
+                                                        <th> <%= products[i].sizes[0].small.soldStock %> </th>
+                                                    </tr>
+                                                    <tr>
+                                                        <th> <%= products[i].sizes[0].medium.soldStock %> </th>
+                                                    </tr>
+                                                    <tr>
+                                                        <th> <%= products[i].sizes[0].large.soldStock %> </th>
+                                                    </tr>
+                                                    <tr>
+                                                        <th> <%= products[i].sizes[0].extraLarge.soldStock %> </th>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                            <td> <%= products[i].initialPrice %> </td>
+                                            <td> <%= products[i].maxDiscountPercentage %> %</td>
+                                            <td> <%= products[i].finalPrice %> </td>
+                                            <td> <%= products[i].addedDate.toISOString().split(' T')[0] %>
+                                                        </td>
+                                                        <td>
+                                                            <%= parseFloat(products[i].popularity).toFixed(3) %>
+                                                        </td>
+                                                        <td>
+                                                            <a href="#" class="tm-product-soft-delete-link"
+                                                                onclick="confirmDelete('<%= products[i]._id %>')">
+                                                                <i class="far fa-trash-alt tm-product-delete-icon"></i>
+                                                            </a>
+                                                        </td>
+                                                        <td>
+                                                            <a href="/admin/products-edit/<%= products[i]._id %>"
+                                                                class="tm-product-edit-link">
+                                                                <i
+                                                                    class="far fa-edit tm-product-edit-icon text-white"></i>
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+
+                                                    <% } } else { %>
+                                                        <tr>
+                                                            <td colspan="5">No Products found.</td>
+                                                        </tr>
+                                                        <% } %>
+
+                                        </tbody>
+
+                                        
+                                    </table>
+
+                                    
+                                </div>
+                                <!-- Pagination -->
+                                        <div>
+                                            <% if (currentPage> 1) { %>
+                                                <a href="?page=<%= currentPage - 1 %>" class="border rounded p-2 m-1 bg-white" style="color: rgb(255, 157, 0);">Previous</a>
+                                                <% } %>
+
+                                                    <% for (let i=1; i <=totalPages; i++) { %>
+                                                        <a href="?page=<%= i %>" <%= i === currentPage ? 'class="active text-black"' : '' %> class=" border rounded p-2 m-1 bg-white" style="color: rgb(255, 157, 0);"><%= i %></a>
+
+                                                        <% } %>
+
+                                                            <% if (currentPage < totalPages) { %>
+                                                                <a href="?page=<%= currentPage + 1 %>" class="border rounded p-2 m-1 bg-white" style="color: rgb(255, 157, 0);">Next</a>
+                                                                <% } %>
+                                        </div>
+                                <!-- table container -->
+
+                                <button class="btn btn-primary btn-block text-uppercase mt-4" id="btnBulkDelete">
+                                    Delete selected products
+                                </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            
+
+
+            <div id="customModal" class="modal" tabindex="-1" role="dialog">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Delete Product</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Are you sure you want to to delete this product ?</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="closeModal()">No</button>
+                            <button type="button" class="btn btn-primary" id="productIdInput" onclick="deleteProduct()" >Yes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="customModalBulk" class="modal" tabindex="-1" role="dialog">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Delete Products</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Are you sure you want to to delete these selected products ?</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="closeModalBulk()">No</button>
+                            <button type="button" class="btn btn-primary" id="bulkDeleteConfirmButton"   >Yes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+
+                
+                
+                function confirmDelete(productId) {
+                    // Show the custom modal
+                    document.getElementById('customModal').style.display = 'flex';
+
+                    // Add productId to a hidden input if needed
+                    document.getElementById('productIdInput').value = productId;
+                }
+
+                function deleteProduct() {
+                        // Get the productId from the hidden input
+                        const productId = document.getElementById('productIdInput').value;
+
+                        // Redirect to delete endpoint
+                         window.location.href = '/admin/products-delete/' + productId;
+
+                        // Close the modal
+                        closeModal();
+                }
+
+                function closeModal() {
+                    // Hide the custom modal
+                    document.getElementById('customModal').style.display = 'none';
+                }
+
+                function closeModalBulk() {
+                    // Hide the custom modal
+                    document.getElementById('customModalBulk').style.display = 'none';
+                }
+
+
+
+                document.addEventListener('DOMContentLoaded', function () {
+
+                    
+                    const bulkDeleteButton = document.getElementById('btnBulkDelete');
+                    const checkboxes = document.querySelectorAll('.tm-product-checkbox');
+
+                    // Bulk delete
+                    bulkDeleteButton.addEventListener('click', async function () {
+
+                        // Show the custom modal
+                        document.getElementById('customModalBulk').style.display = 'flex';
+
+                        const bulkDeleteConfirmButton  = document.getElementById('bulkDeleteConfirmButton');
+
+                        bulkDeleteConfirmButton.addEventListener('click', async function () {
+                            
+                            const selectedProductIds = Array.from(checkboxes)
+                            .filter(checkbox => checkbox.checked)
+                            .map(checkbox => checkbox.getAttribute('data-product-id'));
+
+                            try {
+                                const response = await fetch('/admin/products-bulk-delete', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({ productIds: selectedProductIds }),
+                                });
+
+                                if (response.ok) {
+                                    closeModalBulk();
+                                    // Redirect to the product list page after successful bulk delete
+                                    window.location.href = '/admin/products-list';
+                                } else {
+                                    console.error('Bulk delete failed');
+                                }
+                            } catch (error) {
+                                closeModalBulk();
+                                console.error('Error bulk deleting products:', error);
+                            }
+                        });
+                    });
+
+                    
+                });
+            </script>
+
+
+
+
+            <%- include('../layouts/admin-footer') -%>

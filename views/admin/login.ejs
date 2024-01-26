@@ -1,0 +1,126 @@
+<%- include('../layouts/header') -%>
+
+    <link rel="stylesheet" href="/styles/signup.css">
+    <style>
+        body, html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+    }
+    
+    </style>
+    
+
+
+
+    <section class="bg-dark">
+        <div class="container-fluid mx-1 py-5">
+            <div class="logo-container">
+                <!-- Add your logo here -->
+                <img src="/images/logo.jpg" alt="Logo" width="100">
+            </div>
+            <div class="row justify-content-center align-items-center">
+                <div class="col-12 col-lg-9 col-xl-7">
+                    <div class="card shadow-2-strong card-registration bg-transparent gradient-custom my-5" style="border-radius: 15px;">
+                        <div class="card-body p-4 p-md-5">
+                            <div class="text-center my-5">
+                                <h4 class="mb-0 pb-md-0 mb-md-5 text-danger">ADMIN LOGIN</h3>
+                            </div>
+                            <%- include('../layouts/_messages') -%>
+                            <form method="POST" action="/admin/login" id="loginForm" novalidate>
+    
+                                <div class="mt-5 mb-3">
+                                    <input type="text" class="form-control" id="exampleInputEmail1"
+                                        aria-describedby="emailHelp" placeholder="Email or Phone" name="emailOrPhone" required>
+                                </div>
+                                <div class="mb-5">
+                                    <input type="password" class="form-control" id="exampleInputPassword1" placeholder="Password" name="password" required>
+                                </div>
+
+                                <button type="submit" class="  btn btn-danger d-block mx-auto my-5">Signup</button>
+
+
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script defer>
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('DOM is loaded');
+    
+            const form = document.getElementById('loginForm');
+    
+            function validateForm() {
+                const emailOrPhone = form.elements['emailOrPhone'].value.trim();
+                const password = form.elements['password'].value.trim();
+    
+                // Custom validation logic
+                const errors = [];
+    
+                if (!emailOrPhone) {
+                    errors.push('Email or Phone cannot be empty.');
+                    showPopover('exampleInputEmail1', 'Email or Phone cannot be empty.');
+                } else {
+                    // Check for email or phone format
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    const phoneRegex = /^\+\d{12}$/;
+    
+                    if (!emailRegex.test(emailOrPhone) && !phoneRegex.test(emailOrPhone)) {
+                        errors.push('Invalid email or phone format.');
+                        showPopover('exampleInputEmail1', 'Invalid email or phone format.');
+                    } else {
+                        hidePopover('exampleInputEmail1');
+                    }
+                }
+    
+                if (!password) {
+                    errors.push('Password cannot be empty.');
+                    showPopover('exampleInputPassword1', 'Password cannot be empty.');
+                } else if (password.length < 8) {
+                    errors.push('Password must be at least 8 characters long.');
+                    showPopover('exampleInputPassword1', 'Password must be at least 8 characters long.');
+                } else {
+                    hidePopover('exampleInputPassword1');
+                }
+    
+                return errors;
+            }
+    
+            function showPopover(inputId, message) {
+                hidePopover(inputId); // Remove existing popover if any
+    
+                const inputField = document.getElementById(inputId);
+                const popover = document.createElement('div');
+                popover.className = 'custom-popover';
+                popover.textContent = message;
+    
+                // Set styles for the popover
+                popover.style.color = 'white'; // Text color
+                popover.style.backgroundColor = 'red'; // Background color (you can change it as needed)
+    
+                inputField.parentElement.appendChild(popover);
+            }
+    
+            function hidePopover(inputId) {
+                const inputField = document.getElementById(inputId);
+                const existingPopover = inputField.parentElement.querySelector('.custom-popover');
+                if (existingPopover) {
+                    existingPopover.remove();
+                }
+            }
+    
+            form.addEventListener('submit', function (event) {
+                const errors = validateForm();
+    
+                if (errors.length > 0) {
+                    event.preventDefault();
+                }
+            });
+        });
+    </script>
+
+    <%- include('../layouts/footer') -%>

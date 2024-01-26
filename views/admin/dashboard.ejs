@@ -1,0 +1,988 @@
+<%- include('../layouts/admin-header') -%>
+    <%- include('../layouts/admin-navbar') -%>
+     <!-- Add these script tags to include the required libraries -->
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+     <script type="text/javascript" src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+     <!-- Include the tableToExcel library -->
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.full.min.js"></script>
+        <!-- Chart.js -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+        <!-- jQuery -->
+        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+        <!-- Bootstrap JS with Popper.js -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+
+       
+
+        
+
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                font-family: Arial, sans-serif;
+                
+                
+            }
+
+            .custom-container {
+                display: flex;
+                height: 100%;
+                width: 100%;
+                border-radius: 15px;
+                /* Rounded border for the entire container */
+                overflow-y: auto;
+                /* Hide overflowing content */
+            }
+
+            .custom-sidebar {
+                width: 25%;
+                max-height: 100%;
+                overflow-y: auto;
+                /* Light faded green color */
+                padding: 20px;
+                box-sizing: border-box;
+            }
+
+            .custom-navlink {
+                color: #ffffff;
+                /* Navbar text color */
+                border-bottom: 1px solid #495057;
+                /* Navbar border color */
+                transition: background-color 0.3s;
+                background-color: #ff0073da;
+                margin-bottom: 5px;
+                border-radius: 5px;
+            }
+
+            .custom-navlink:hover {
+                background-color: #ff007382;
+                /* Navbar background color on hover */
+                color: #fff;
+            }
+
+            .custom-navlink.active {
+                background-color: #3e0226;
+                /* Highlighted color for active navbar */
+                color: #fff;
+                /* Text color for active navbar */
+            }
+
+            .custom-content {
+                width: 100%;
+                padding: 0;
+                margin:0;
+                box-sizing: border-box;
+                overflow-y: auto;
+            }
+
+            .container-fluid {
+                 
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            .dashboard-box {
+                border: 2px solid #ddd;
+                border-radius: 15px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                transition: transform 0.3s ease-in-out;
+                overflow: hidden;
+            }
+
+            .dashboard-box:hover {
+                transform: scale(1.05);
+            }
+
+            .box-content {
+                margin: 20px;
+                text-align: center;
+            }
+
+            .box-number {
+                font-size: 36px;
+                font-weight: bold;
+                margin-bottom: 10px;
+            }
+
+            .box-text {
+                font-size: 18px;
+            }
+        </style>
+
+        <div class="container-fluid border shadow my-2 mb-2">
+            <div class="row h-100">
+                <!-- Side Navbar (3/12 width) -->
+                <nav class="col-2 d-none d-md-block sidebar custom-sidebar" style="background-color: #71737532;">
+                    <div class="sidebar-sticky pt-5">
+                        <ul class="nav flex-column">
+                            <li class="nav-item">
+                                <a class="nav-link custom-navlink active" href="#" onclick="showSection('dashboard')">
+                                    Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link custom-navlink" href="#" onclick="showSection('userAnalytics')">
+                                    User Analytics
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link custom-navlink" href="#" onclick="showSection('productAnalytics')">
+                                    Product Analytics
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link custom-navlink" href="#" onclick="showSection('salesAnalytics')">
+                                    Sales Analytics
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+
+                <!-- Content Section (9/12 width) -->
+                <main role="main" class="row col-10 px-4 custom-content px-0">
+                    <!-- Section: dashboard -->
+                    <div id="dashboard" class="col-12 " style="color: #ff0687;">
+                        <!-- dashboard Box -->
+                        <!-- First Box -->
+                        <div class="row col-12 my-5">
+                            <div class="col-12 col-sm-6 mt-2">
+                                <div class="col-6 offset-3 dashboard-box bg-white p-3"
+                                    style="background-image: radial-gradient( circle 369px at -2.9% 12.9%, rgba(247,234,163,1) 0%, rgba(236,180,238,0.56) 46.4%, rgba(163,203,247,1) 100.7% );">
+                                    <div class="box-content"
+                                        style="background-color: #ffffff46;border-radius: 70px;padding-top:20px;padding-bottom:20px;">
+                                        <div class="box-number">
+                                            <%=userData.totalUsers %>
+                                        </div>
+                                        <div class="box-text">Users count</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                            <!-- second Box -->
+                            <div class="col-12 col-sm-6 mt-2 ">
+                                <div class="col-6 offset-3 dashboard-box bg-white p-3"
+                                    style="background-image: radial-gradient( circle 297px at 8% 45%, rgba(245,234,176,1) 0%, rgba(133,239,212,1) 100.7% );">
+                                    <div class="box-content"
+                                        style="background-color: #ffffff46;border-radius: 70px;padding-top:20px;padding-bottom:20px;">
+                                        <div class="box-number">
+                                            <%=totalProducts %>
+                                        </div>
+                                        <div class="box-text">Products in stock</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row col-12 my-5">
+                            <!-- third Box -->
+                            <div class="col-12 col-sm-6 mt-5">
+                                <div class="col-6 offset-3 dashboard-box bg-white p-3"
+                                    style="background-image: linear-gradient( 111.4deg, rgba(238,113,113,1) 1%, rgba(246,215,148,1) 58% );">
+                                    <div class="box-content"
+                                        style="background-color: #ffffff46;border-radius: 70px;padding-top:20px;padding-bottom:20px;">
+                                        <div class="box-number">
+                                            <%=totalSales %>
+                                        </div>
+                                        <div class="box-text">Sales count</div>
+                                    </div>
+                                </div>
+                            </div>
+                
+                            <!-- fourth Box -->
+                            <div class="col-12 col-sm-6 mt-5">
+                                <div class="col-6 offset-3 dashboard-box bg-white p-3"
+                                    style="background-image: linear-gradient( 90.2deg, rgba(79,255,255,1) 0.3%, rgba(0,213,255,1) 99.8% );">
+                                    <div class="box-content"
+                                        style="background-color: #ffffff46;border-radius: 70px;padding-top:20px;padding-bottom:20px;">
+                                        <div class="box-number">
+                                            <%=parseFloat(totalRevenue).toFixed(2) %>
+                                        </div>
+                                        <div class="box-text">Total Revenue</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <!-- Section: user -->
+                    <div id="userAnalytics" class="col-12 p-3 border rounded text-black ml-2" style="display: none;">
+                        <!-- Content for the second horizontal section goes here -->
+                        <div class="row col-12 my-5">
+                            <div class="col-12- col-sm-6 mt-2">
+                                <div class="col-10 col-sm-6 offset-3 dashboard-box bg-white p-3"
+                                    style="background-image: radial-gradient( circle 369px at -2.9% 12.9%, rgba(247,234,163,1) 0%, rgba(236,180,238,0.56) 46.4%, rgba(163,203,247,1) 100.7% );">
+                                    <div class="box-content"
+                                        style="background-color: #ffffff46;border-radius: 70px;padding-top:20px;padding-bottom:20px;">
+                                        <div class="box-number">
+                                            <%=userData.totalUsers %>
+                                        </div>
+                                        <div class="box-text">Users count</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-sm-6 mt-2" style="position: relative;">
+                                <!--pie chart goes here-->
+                                <canvas id="myPieChart" width="400" height="400"></canvas>
+                            </div>
+                
+                            <div class="row col-10 offset-1 col-sm-6" style="position: absolute; bottom: -50px; right: 0px;">
+                                <div style="width: 50%;background-color: #FF6384;height:25px;">
+                                    Non-Purchasing users
+                                </div>
+                                <div style="width: 50%;background-color: #36A2EB;height:25px;">
+                                    Purchasing users
+                                </div>
+                            </div>
+                        </div>
+                
+                        <div class="row col-12 mt-5">
+                
+                            <div class="col-10 offset-1 mt-2 bg-light text-dark p-5 border rounded my-5"
+                                id="newUserCreationStatisticsGraphContainer" style="position:relative;">
+                                <!--new user statistics graph goes exactly here-->
+                                <h2 class=" border rounded bg-primary text-light p-3 d-inline-block"
+                                    style="position:absolute;left:10px;top:10px;">User Creation Statistics</h2>
+                                <select id="timeFrameOption" name="timeFrameOption" class="form-select p-2"
+                                    style="background-image: linear-gradient( 90.2deg,  rgba(79,255,255,1) 0.3%, rgba(0,213,255,1) 99.8% );position:absolute;right:50px;top:50px;">
+                                    <option value="thisYear" selected>This Year</option>
+                                    <option value="thisMonth">This Month</option>
+                                    <option value="thisWeek">This Week</option>
+                                    <option value="today">Today</option>
+                                </select>
+                
+                                <!-- New user statistics graph canvas -->
+                                <canvas id="newUserCreationStatisticsGraph" width="400px" height="200px" class="mt-5"></canvas>
+                            </div>
+                
+                
+                            <div class="col-10 offset-1 mt-2 bg-light text-dark p-5 border rounded my-5"
+                                id="monthlySpendingStatisticsGraphContainer" style="position:relative;">
+                
+                
+                                <!-- Monthly Spending Statistics Graph -->
+                                <canvas id="monthlySpendingStatisticsGraph" width="400px" height="200px" class="mt-5"></canvas>
+                
+                                <h2 class="align-center mt-5 border rounded bg-warning text-light p-3 d-inline-block"
+                                    style="position: absolute; top: -30px;left:10px;">Monthly Spending Statistics</h2>
+                
+                                <!-- Year Selector at Top Right Corner -->
+                                <select id="yearSelector" class="p-2 form-select"
+                                    style="background-image: linear-gradient(90.2deg, rgba(79,255,255,1) 0.3%, rgba(0,213,255,1) 99.8%); position: absolute; top: 50px; right: 50px;">
+                                    <!-- Options will be dynamically added using JavaScript -->
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <!-- Section: product -->
+                    <div id="productAnalytics" class="row col-12 mt-5" style="display: none;">
+                        <div class="col-12 border rounded py-4 mt-4" style="background-color: rgb(227, 249, 250);">
+                            <!-- Content for the first full-width div goes here -->
+                        </div>
+                    </div>
+                
+                    <!-- Section: sales -->
+                    <div id="salesAnalytics" class="row col-12 mb-5" style="display: none;">
+                        <div class="col-12 border rounded py-4 mt-4" style="background-color: rgb(227, 249, 250);">
+                            <!-- Content for the first full-width div goes here -->
+                            <h2>Sales Report</h2>
+                
+                            <!-- Sales Report Form -->
+                            <form id="salesReportForm" novalidate>
+                                <div class="form-row">
+                                    <!-- Start Date Input -->
+                                    <div class="form-group col-md-6 ">
+                                        <label for="startDate" class="text-danger">Start Date</label>
+                                        <input type="text" class="form-control date-input bg-light text-dark" id="startDate"
+                                            placeholder="dd-mm-yyyy" required>
+                                        <div class="invalid-feedback">
+                                            Please enter a valid date in the format dd-mm-yyyy.
+                                        </div>
+                                    </div>
+                
+                                    <!-- End Date Input -->
+                                    <div class="form-group col-md-6">
+                                        <label for="endDate" class="text-danger">End Date</label>
+                                        <input type="text" class="form-control date-input bg-light text-dark" id="endDate"
+                                            placeholder="dd-mm-yyyy" pattern="\d{2}-\d{2}-\d{4}" required>
+                                        <div class="invalid-feedback">
+                                            Please enter a valid date in the format dd-mm-yyyy.
+                                        </div>
+                                    </div>
+                                </div>
+                
+                                <!-- Submit Button -->
+                                <button type="button" class="btn btn-primary" onclick="fetchAndDisplaySalesData()">Generate
+                                    Report</button>
+                            </form>
+                
+                            <div class="col-10 offset-1 mt-2 bg-light text-dark p-5 border rounded my-5"
+                                id="categoryWiseOrderStatisticsGraphContainer" style="position:relative;">
+                
+                
+                                <!-- Monthly Spending Statistics Graph -->
+                                <canvas id="categoryWiseOrderStatisticsGraph" width="400px" height="200px" class="mt-5"></canvas>
+                
+                                <h2 class="align-center mt-5 border rounded bg-warning text-light p-3 d-inline-block"
+                                    style="position: absolute; top: -30px;left:10px;">Category Wise Order Statistics</h2>
+                
+                                <!-- Year Selector at Top Right Corner -->
+                                <select id="categoryWiseOrderGraphtimeFrame" name="categoryWiseOrderGraphtimeFrame" class="p-2 form-select"
+                                    style="background-image: linear-gradient(90.2deg, rgba(79,255,255,1) 0.3%, rgba(0,213,255,1) 99.8%); position: absolute; top: 50px; right: 50px;">
+                                    <!-- Options will be dynamically added using JavaScript -->
+                                    <option value="yearWise" >Last 10 year</option>
+                                    <option value="monthWise">Last 12 Months</option>
+                                    <option value="weekWise">Last 4 weeks</option>
+                                    <option value="daysWise" selected>last 7 days</option>
+                                    
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+
+<!-- Sales Report Modal -->
+<div class="modal" id="salesModal" tabindex="-1" role="dialog" aria-labelledby="salesModalLabel" aria-hidden="true" > 
+    <div class="modal-dialog" role="document" >
+        <div class="modal-content" style="min-width:fit-content;min-height:fit-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="salesModalLabel">Sales Report</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body mb-5">
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="salesreportTable">
+                        <thead>
+                            <tr>
+                                <th >Time Period</th>
+                                <th>Total Orders</th>
+                                <th>Successful Orders</th>
+                                <th>Cancelled Orders</th>
+                                <th>Returned Orders</th>
+                                <th>Orders Men's</th>
+                                <th>Orders Women's</th>
+                                <th>Orders Unisex</th>
+                                <th>Total Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Replace the following row with data from the server -->
+                            <tr>
+                                <td id="timePeriod" style="min-width: fit-content;"></td>
+                                <td id="totalOrders"></td>
+                                <td id="successfulOrders"></td>
+                                <td id="cancelledOrders"></td>
+                                <td id="returnedOrders"></td>
+                                <td id="ordersMens"></td>
+                                <td id="ordersWomens"></td>
+                                <td id="ordersUnisex"></td>
+                                <td id="totalRevenue"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                
+            </div>
+            <div class="modal-footer">
+                
+                <button type="button" class="btn btn-primary" onclick="exportAsPDF()">Export as PDF</button>
+                <button type="button" class="btn btn-success" onclick="exportAsExcel()">Export as Excel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- modal structure for show alert -->
+<div class="modal" id="customModalAlert" tabindex="-1" role="dialog" style="z-index: 2500;">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">ALERT</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p id="modalTextAlert"></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal" >Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+        
+        <script>
+            function showSection(sectionId) {
+                // Hide all sections
+                var sections = document.querySelectorAll('.custom-content > div');
+                sections.forEach(function (section) {
+                    section.style.display = 'none';
+                });
+
+                // Show the selected section
+                document.getElementById(sectionId).style.display = 'block';
+
+                // Remove 'active' class from all nav links
+                var navLinks = document.querySelectorAll('.nav-link');
+                navLinks.forEach(function (navLink) {
+                    navLink.classList.remove('active');
+                });
+                // Add 'active' class to the clicked nav link
+                event.currentTarget.classList.add('active');
+            }
+
+
+
+            document.addEventListener('DOMContentLoaded', function () {
+                // Your chart data with two labels
+                var pieChartData = {
+                    labels: ['Users with zero purchase', 'Users made at least one purchase'],
+                    datasets: [{
+                        backgroundColor: ['#FF6384', '#36A2EB'],
+                        data: [<%=userData.totalUsers - userData.purchasingUsers %>, <%=userData.purchasingUsers %>]
+                    }]
+                };
+
+                // Chart options
+                var pieChartOptions = {
+                    cutoutPercentage: 0,
+                    responsive: true,
+                    maintainAspectRatio: false
+                };
+
+                // Get the canvas element
+                var pieChartCanvas = document.getElementById('myPieChart').getContext('2d');
+
+                // Create the pie chart
+                var myPieChart = new Chart(pieChartCanvas, {
+                    type: 'pie',
+                    data: pieChartData,
+                    options: pieChartOptions
+                });
+
+                // Function to fetch user creation statistics data based on the selected option
+                async function fetchUserCreationStatistics(option) {
+                    try {
+                        const response = await fetch(`/admin/user-creation-statistics?option=${option}`);
+                        const data = await response.json();
+                        createUserCreationStatisticsGraph(data.labels, data.data);
+                    } catch (error) {
+                        console.error(error);
+                    }
+                }
+
+                // Function to create the user creation statistics line chart
+                function createUserCreationStatisticsGraph(labels, data) {
+                    const ctx = document.getElementById('newUserCreationStatisticsGraph').getContext('2d');
+
+                    const config = {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'User Creation Statistics',
+                                data: data,
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                                borderWidth: 1,
+                                pointStyle: 'rectRot', // You can customize the point style here
+                                pointRadius: 5,
+                                pointHoverRadius: 8
+                            }],
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                x: {
+                                    type: 'category',
+                                    labels: labels,
+                                    title: {
+                                        display: true,
+                                        text: 'Time Frame',
+                                    },
+                                },
+                                y: {
+                                    beginAtZero: true,
+                                    title: {
+                                        display: true,
+                                        text: 'Number of Users',
+                                    },
+                                },
+                            },
+                        },
+                    };
+
+                    // If the line chart already exists, destroy it before creating a new one
+                    if (window.myLineChart) {
+                        window.myLineChart.destroy();
+                    }
+
+                    window.myLineChart = new Chart(ctx, config);
+                }
+
+                // Initial fetch and display for 'this year'
+                fetchUserCreationStatistics('thisYear');
+
+                // Event listener for changing the option and updating the graph
+                document.getElementById('userAnalytics').addEventListener('change', function (event) {
+                    if (event.target.name === 'timeFrameOption') {
+                        const selectedOption = event.target.value;
+                        fetchUserCreationStatistics(selectedOption);
+                    }
+                });
+
+                //monthly spend graph
+
+
+
+                // Assume you have a function to fetch monthly spending data for a given year from the server
+                async function fetchMonthlySpendingData(year) {
+                    try {
+                        const response = await fetch(`/admin/monthly-spend-statistics?selectedYear=${year}`);
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch data');
+                        }
+
+                        const data = await response.json();
+
+                        // Assuming 'createMonthlySpendingChart' is a function to create/update the chart
+                        createMonthlySpendingChart(data);
+
+                        return data;
+                    } catch (error) {
+                        console.error('Error fetching data:', error.message);
+                        return [];
+                    }
+                }
+
+                // Function to create or update the monthly spending chart
+                function createMonthlySpendingChart(data) {
+                    const ctx = document.getElementById('monthlySpendingStatisticsGraph').getContext('2d');
+
+                    // Define your color values here
+                    const redColor = 'rgba(255, 99, 132, 0.7)';
+                    const blueColor = 'rgba(54, 162, 235, 0.7)';
+                    const greenColor = 'rgba(75, 192, 192, 0.7)';
+
+                    // Map month ids to month names
+                    const monthNames = [
+                        'January', 'February', 'March', 'April', 'May', 'June',
+                        'July', 'August', 'September', 'October', 'November', 'December'
+                    ];
+                    // Your chart configuration goes here
+                    const config = {
+                        type: 'bar',
+                        data: {
+                            labels: data.map(item => monthNames[item._id - 1]), // Map month id to month name
+                            datasets: [
+                                {
+                                    label: '1 to 5000 Rs',
+                                    data: data.map(item => item.total1to5000),
+                                    backgroundColor: redColor,
+                                    stack: 'Stack 0',
+                                },
+                                {
+                                    label: '5000 to 10000 Rs',
+                                    data: data.map(item => item.total5000to10000),
+                                    backgroundColor: blueColor,
+                                    stack: 'Stack 0',
+                                },
+                                {
+                                    label: 'Above 10000 Rs',
+                                    data: data.map(item => item.totalAbove10000),
+                                    backgroundColor: greenColor,
+                                    stack: 'Stack 1',
+                                },
+                            ],
+                        },
+                        options: {
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Monthly Spending Statistics',
+                                },
+                            },
+                            responsive: true,
+                            interaction: {
+                                intersect: false,
+                            },
+                            scales: {
+                                x: {
+                                    stacked: true,
+                                },
+                                y: {
+                                    stacked: true,
+                                },
+                            },
+                        },
+                    };
+
+                    // Check if the chart instance already exists, destroy it before creating a new one
+                    if (window.myMonthlySpendingChart) {
+                        window.myMonthlySpendingChart.destroy();
+                    }
+
+                    // Create the new chart
+                    window.myMonthlySpendingChart = new Chart(ctx, config);
+                }
+
+                // Populate the year selector options dynamically, assuming you have a range of years
+                function populateYearSelector() {
+                    const yearSelector = document.getElementById('yearSelector');
+                    const currentYear = new Date().getFullYear();
+                    const years = Array.from({ length: 5 }, (_, index) => currentYear - index);
+
+                    years.forEach(year => {
+                        const option = document.createElement('option');
+                        option.value = year;
+                        option.text = year;
+                        yearSelector.add(option);
+                    });
+                }
+
+                // Initial setup: Populate the year selector and fetch/update the chart for the current year
+                populateYearSelector();
+                const currentYear = new Date().getFullYear(); // Get the current year dynamically
+                fetchMonthlySpendingData(currentYear);
+
+                // Event listener for changing the year and updating the monthly spending chart
+                document.getElementById('yearSelector').addEventListener('change', async function () {
+                    const selectedYear = this.value;
+                    await fetchMonthlySpendingData(selectedYear);
+                });
+
+
+
+
+
+                // categoryWiseOrdev graph
+
+               // Function to create the category-wise order statistics line chart
+function createCategoryWiseOrderStatisticsGraph(responseData) {
+    const ctx = document.getElementById('categoryWiseOrderStatisticsGraph').getContext('2d');
+
+    const config = {
+        type: 'line',
+        data: {
+            labels: responseData[0].data.map(entry => entry.date), // Assuming all categories have the same labels
+            datasets: responseData.map((categoryData, index) => ({
+                label: categoryData.categoryName, // Category label
+                data: categoryData.data.map(entry => entry.count),
+                borderColor: getBorderColor(index), // Function to get different colors for each line
+                backgroundColor: 'rgba(0, 0, 0, 0)', // You can customize the background color here
+                borderWidth: 2,
+                pointStyle: 'rectRot', // You can customize the point style here
+                pointRadius: 5,
+                pointHoverRadius: 8,
+            })),
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    type: 'category',
+                    labels: responseData[0].data.map(entry => entry.date), // Assuming all categories have the same labels
+                    title: {
+                        display: true,
+                        text: 'Time Frame',
+                    },
+                },
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Number of Orders',
+                    },
+                },
+            },
+        },
+    };
+
+    // If the line chart already exists, destroy it before creating a new one
+    if (window.myLineChartOrders) {
+        window.myLineChartOrders.destroy();
+    }
+
+    window.myLineChartOrders = new Chart(ctx, config);
+}
+
+// Function to fetch user creation statistics data based on the selected option
+async function fetchCategoryWiseOrderStatistics(option) {
+    console.log("entered the graph main function");
+    try {
+        console.log("entered the try of graph main function");
+        const response = await fetch(`/admin/category-wise-order-statistics?option=${option}`);
+        console.log(response);
+
+        if (!response.ok) {
+            console.log("response not ok");
+            // Display an alert for non-successful responses
+            alert('Failed here');
+            return;
+        }
+
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            // Call the function for successful JSON responses
+            createCategoryWiseOrderStatisticsGraph(data);
+        } else {
+            // Display an alert for invalid content type
+            alert('Invalid content type. Expected JSON.');
+            console.error('Invalid content type. Expected JSON.');
+        }
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+// Assuming this is already defined in your code
+function getBorderColor(index) {
+    const colors = [
+        'rgba(75, 192, 192, 1)',
+        'rgba(255, 99, 132, 1)',
+        'rgba(54, 162, 235, 1)',
+        'rgba(255, 205, 86, 1)',
+        'rgba(153, 102, 255, 1)',
+        'rgba(255, 159, 64, 1)',
+        'rgba(220, 20, 60, 1)',
+        'rgba(0, 128, 0, 1)',
+        'rgba(128, 0, 128, 1)',
+        'rgba(255, 0, 0, 1)'
+    ];
+    return colors[index % colors.length];
+}
+
+// Fetch data on page load
+fetchCategoryWiseOrderStatistics("daysWise");
+
+// Event listener for changing the option and updating the graph
+document.getElementById('categoryWiseOrderGraphtimeFrame').addEventListener('change', function (event) {
+    if (event.target.name === 'categoryWiseOrderGraphtimeFrame') {
+        const selectedOption = event.target.value;
+        fetchCategoryWiseOrderStatistics(selectedOption);
+    }
+});
+
+
+
+            });
+
+
+            // Function to validate date format
+            function isValidDateFormat(dateString) {
+                const regex = /^\d{2}-\d{2}-\d{4}$/;
+                return regex.test(dateString);
+            }
+
+            async function fetchAndDisplaySalesData() {
+                const startDateInput = document.getElementById('startDate');
+                const endDateInput = document.getElementById('endDate');
+
+                const startDate = startDateInput.value;
+                const endDate = endDateInput.value;
+
+                // Validate dates
+                if (!isValidDateFormat(startDate)) {
+                    startDateInput.classList.add('is-invalid');
+
+                    return;
+                }
+
+                if (!isValidDateFormat(endDate)) {
+
+                    endDateInput.classList.add('is-invalid');
+                    return;
+                }
+
+                startDateInput.classList.remove('is-invalid');
+                endDateInput.classList.remove('is-invalid');
+
+                // Function to convert dd-mm-yyyy to ISO 8601 format
+                function convertToISODate(ddmmyyyy) {
+                    const [day, month, year] = ddmmyyyy.split('-');
+                    return new Date(`${year}-${month}-${day}T00:00:00.000Z`).toISOString();
+                }
+
+                // Convert start and end dates to ISO format
+                const isoStartDate = convertToISODate(startDate);
+                const isoEndDate = convertToISODate(endDate);
+
+
+
+                // Parse the dates and check if they are valid
+                const updatedISOstartDate = new Date(isoStartDate);
+                const updatedISOendDate = new Date(isoEndDate);
+
+                const currentDate = new Date();
+
+                if (updatedISOstartDate > currentDate || updatedISOendDate > currentDate) {
+                    alert("Enter a valid that not in the future.");
+                    return;
+                }
+
+                if (updatedISOstartDate > updatedISOendDate) {
+                    alert("Enter a valid date combination in the ascending order.");
+                    return;
+                }
+
+                // Fetch data from the server
+                try {
+                    console.log(`startDate is ${updatedISOstartDate} and endDate is ${updatedISOendDate}`)
+                    const response = await fetch(`/admin/generate-sales-report?startDate=${updatedISOstartDate}&endDate=${updatedISOendDate}`);
+                    if (!response.ok) {
+
+
+                        alert('Failed to fetch sales data')
+                    }
+
+                    const data = await response.json();
+
+                    // Set response values to the table body fields
+                    document.getElementById('timePeriod').textContent = `${startDate} to ${endDate}`;
+                    document.getElementById('totalOrders').textContent = data.totalOrders;
+                    document.getElementById('successfulOrders').textContent = data.successfulOrders;
+                    document.getElementById('cancelledOrders').textContent = data.cancelledOrders;
+                    document.getElementById('returnedOrders').textContent = data.returnedOrders;
+                    document.getElementById('ordersMens').textContent = data.mensOrders;
+                    document.getElementById('ordersWomens').textContent = data.womensOrders;
+                    document.getElementById('ordersUnisex').textContent = data.unisexOrders;
+                    document.getElementById('totalRevenue').textContent = data.totalRevenue;
+
+                    // Show the modal
+                    // Get the modal element
+                    const salesModal = document.getElementById('salesModal');
+
+                    // Make the modal visible
+                    salesModal.style.display = 'block';
+
+                    // Optionally, you might want to add a class to handle modal styling (e.g., fade-in animation)
+                    salesModal.classList.add('show');
+
+
+                    const modalCloseButton = salesModal.querySelector('.close');
+
+                    // Add event listener to close button
+                    modalCloseButton.addEventListener('click', function () {
+                        // Hide the modal
+                        salesModal.style.display = 'none';
+
+                        // Optionally, remove the class for styling
+                        salesModal.classList.remove('show');
+
+
+                    });
+
+                    // Resize the modal based on the table size
+                    updateModalSize();
+
+
+
+                } catch (error) {
+                    console.error('Error fetching sales data:', error);
+                    alert(error.message)
+                    // Handle the error, show an alert, or handle it as needed
+                }
+            }
+
+            function updateModalSize() {
+                const modalBody = document.querySelector('#salesModal .modal-body');
+                const salesTable = document.getElementById('salesreportTable'); // Replace 'yourTableId' with the actual ID of your table
+
+                const newHeight = salesTable.offsetHeight;
+                const newWidth = salesTable.offsetWidth;
+
+                // Set modal body height to match the table height
+                modalBody.style.height = newHeight + 'px';
+
+                // Set modal content width to match the table width
+                modalBody.style.width = newWidth + 'px';
+
+                // Force the modal to recalculate its size
+                // Force the modal to recalculate its size using pure JavaScript
+                const salesModal = document.getElementById('salesModal');
+                const modal = new bootstrap.Modal(salesModal);
+                modal.handleUpdate();
+            }
+
+            // Update the input value with hyphens as the user types
+            document.getElementById('endDate').addEventListener('input', function () {
+                const inputValue = this.value;
+                if (/^\d{2}\d?$/.test(inputValue)) {
+                    this.value = inputValue + '-';
+                } else if (/^\d{2}-\d{2}\d?$/.test(inputValue)) {
+                    this.value = inputValue + '-';
+                }
+            });
+
+
+            document.getElementById('startDate').addEventListener('input', function () {
+                const inputValue = this.value;
+                if (/^\d{2}\d?$/.test(inputValue)) {
+                    this.value = inputValue + '-';
+                } else if (/^\d{2}-\d{2}\d?$/.test(inputValue)) {
+                    this.value = inputValue + '-';
+                }
+            });
+
+
+            function showAlert(message) {
+                // Set the modal text
+                document.getElementById('modalTextAlert').innerText = message;
+
+                // Show the modal
+                $('#customModalAlert').modal('show');
+            }
+
+
+            function exportAsPDF() {
+                // Get the table element
+                const table = document.getElementById('salesreportTable');
+
+                // Use html2canvas to capture the table as an image
+                html2canvas(table).then((canvas) => {
+                    const { jsPDF } = window.jspdf;
+                    const imgData = canvas.toDataURL('image/png');
+
+                    // Use jsPDF to create a PDF document
+                    const pdf = new jsPDF();
+                    const imgProps = pdf.getImageProperties(imgData);
+                    const pdfWidth = pdf.internal.pageSize.getWidth();
+                    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+                    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+
+                    // Download the PDF file
+                    pdf.save('sales_report.pdf');
+                });
+            }
+
+
+            function exportAsExcel() {
+                // Table element
+                var table = document.getElementById('salesreportTable');
+
+                // Convert table to worksheet
+                var ws = XLSX.utils.table_to_sheet(table);
+
+                // Create a workbook and add the worksheet
+                var wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'SalesReport');
+
+                // Save the workbook as an Excel file
+                XLSX.writeFile(wb, 'SalesReport.xlsx');
+            }
+        </script>
+
+        <%- include('../layouts/admin-footer') -%>
