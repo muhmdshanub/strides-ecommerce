@@ -30,6 +30,8 @@ userRoute.post('/forgotten-password-otp-verify',auth.isLogOut,userController.for
 userRoute.get('/forgot-password-update-password',auth.isLogOut,userController.forgotPasswordUpdateLoader);
 userRoute.post('/forgot-password-update-password',auth.isLogOut,userController.forgotPasswordUpdateHandler);
 
+userRoute.get('/get-current-user-id',auth.isLogin,userController.getCurrentUserId)
+
 userRoute.get('/signup',auth.isLogOut,userController.signupLoader);
 userRoute.post('/signup',userController.signupHandler);
 userRoute.get('/resend-otp',userController.resendOtpHandler);

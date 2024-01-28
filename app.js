@@ -21,6 +21,13 @@ app.use(express.urlencoded({ extended: true }));
 app.use(flash());
 app.use(cacheBlock);
 
+// Attach the io instance to the request object
+app.use((req, res, next) => {
+    req.io = app.get('io'); // Access the io instance set in server.js
+    next();
+});
+
+
 
 app.use('/',userRoute);
 app.use('/admin',adminRoute);

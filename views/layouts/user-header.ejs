@@ -17,6 +17,70 @@
     <!-- Bootstrap Table CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-table@1.18.2/dist/bootstrap-table.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.19.0/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="/node_modules/socket.io/client-dist/socket.io.js"></script>
     
   </head>
   <body>
+
+    <input type="hidden" id="currentlyLoggedInUserId" value="">
+
+
+    <script>
+      document.addEventListener('DOMContentLoaded', async function () {
+          try {
+              const response = await fetch('/get-current-user-id'); // Replace with the actual route in your server
+              const data = await response.json();
+  
+              if (response.ok) {
+                  const currentlyLoggedInUserIdInput = document.getElementById('currentlyLoggedInUserId');
+                  currentlyLoggedInUserIdInput.value = data.userId;
+                  console.log('Successfully fetched currently logged-in user ID:', data.userId);
+              } else {
+                  console.error('Error fetching currently logged-in user ID:', data.message || 'Unknown error');
+              }
+          } catch (error) {
+              console.error('Error fetching currently logged-in user ID:', error.message || 'Unknown error');
+          }
+      });
+
+
+      // Establish a Socket.IO connection
+      const socket = io();
+
+      if(socket){
+        console.log("socket is present")
+      }
+  
+     
+
+      // Handle the 'force-logout' event for single user block
+      socket.on('force-logout', ({ userId }) => {
+        
+        const currentlyLoggedInUserId = document.getElementById('currentlyLoggedInUserId').value;
+        
+          // Check if the forced logout is for the currently logged-in user
+          if (userId === currentlyLoggedInUserId) {
+            
+              // Log out the user on the client side
+              window.location.href = '/logout'; // Redirect to the logout route or perform the logout action
+          }
+      });
+  
+      // Handle the 'force-logout-multiple' event for multiple user block
+      socket.on('force-logout-multiple', ({ userIds }) => {
+          // Check if the forced logout includes the currently logged-in user(s)
+          if (userIds.includes(currentlyLoggedInUserId)) {
+              // Log out the user on the client side
+              window.location.href = '/logout'; // Redirect to the logout route or perform the logout action
+          }
+      });
+  </script>
+  
+
+    <script>
+
+      
+      
+  
+      
+  </script>

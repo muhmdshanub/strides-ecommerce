@@ -194,7 +194,7 @@ const singleUserBlockHandler = async (req, res, next) => {
 
         if (result) {
 
-            req.session.userId = null; // Invalidate the session
+            req.io.emit('force-logout', { userId });
 
             req.flash('success', 'User blocked.');
             return res.redirect('/admin/users-list');
@@ -244,6 +244,9 @@ const multipleUsersBlockHandler = async (req, res, next) => {
         const result = await Users.updateMany({ _id: { $in: userIds } }, { $set: { isBlocked: true } });
 
         if (result.modifiedCount > 0) {
+
+            req.io.emit('force-logout-multiple', { userIds });
+
             req.flash('success', 'Selected users blocked successfully');
             res.redirect('/admin/users-list'); // Redirect to the product list page
         } else {

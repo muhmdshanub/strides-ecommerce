@@ -368,10 +368,14 @@ const loginHandler = async (req, res) => {
                 { email: emailOrPhone },
                 { phone: emailOrPhone }
             ],
-            isBlocked: false,
         });
 
         if (userData) {
+            if (userData.isBlocked === true) {
+                req.flash('error', "You are currently BLOCKED by admin.");
+                return res.redirect('/login');
+            }
+
             const passwordMatch = await bcrypt.compare(password, userData.password);
 
             if (passwordMatch) {
@@ -382,26 +386,26 @@ const loginHandler = async (req, res) => {
 
                 if (userUpdate) {
                     req.session.userId = userData._id;
-                    res.redirect('/home');
+                    return res.redirect('/home');
                 } else {
-                    req.flash('error', "Something Happened while trying to log you in. Please try again");
-                    res.redirect('/login');
+                    req.flash('error', "Something happened while trying to log you in. Please try again");
+                    return res.redirect('/login');
                 }
-
             } else {
-                req.flash('error', "Invalid credetials.");
-                res.redirect('/login');
+                req.flash('error', "Invalid credentials.");
+                return res.redirect('/login');
             }
         } else {
-            req.flash('error', "Invalid credetials.");
-            res.redirect('/login');
+            req.flash('error', "Invalid credentials.");
+            return res.redirect('/login');
         }
     } catch (error) {
-        console.log(error.message);
-        req.flash('error', "Something Happened while trying to log you in. Please try again");
-        res.redirect('/login');
+        console.error(error.message);
+        req.flash('error', "Something happened while trying to log you in. Please try again");
+        return res.redirect('/login');
     }
 }
+
 
 const forgotPasswordFormLoader = async (req, res, next) => {
     try {
@@ -635,13 +639,25 @@ const homeLoader = async (req, res, next) => {
         const categories = await getAllCategories();
         const products = await Products.find().sort({ createdAt: -1 }).limit(12);
 
-        res.render('./user/home.ejs', { categories, products })
+        const currentlyLoggedInUserId = req.session.userId;
+
+        res.render('./user/home.ejs', { categories, products, currentlyLoggedInUserId })
     } catch (error) {
         console.log(error.message);
         next(error)
     }
 }
 
+const getCurrentUserId = (req, res) => {
+    try {
+        console.log("recieved the get use id request")
+        const currentlyLoggedInUserId = req.session.userId; // Adjust this based on how you store user information in your session
+        res.json({ userId: currentlyLoggedInUserId });
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
 
 const paymentSelectionLoader = async (req, res, next) => {
     try {
@@ -1070,5 +1086,6 @@ module.exports = {
     profileLoader,
     profileUserEditHandler,
     passwordChangeHandler,
+    getCurrentUserId,
 
 }
