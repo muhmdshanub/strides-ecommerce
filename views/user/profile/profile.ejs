@@ -318,6 +318,28 @@
     </div>
 </div>
 
+<!-- Place this modal structure at the end of your HTML body -->
+<div class="modal" id="customModal" tabindex="-1" role="dialog" style="z-index: 2600;">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header bg-dark ">
+          <h5 class="modal-title text-light" id="modal-title">ALERT</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body bg-light text-dark">
+          <p id="modalText"></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
 <script>
 function showSection(sectionId) {
         // Hide all sections
@@ -387,7 +409,7 @@ $(function () {
                     // Handle success response from the server
                     console.log('Password change successful:', response);
 
-                    confirm("Password changed successfully");
+                    showAlert("Confirm","Password changed successfully");
                     
                     
                 },
@@ -395,7 +417,7 @@ $(function () {
                     // Handle error response from the server
                     console.error('Password change failed:', error);
                     // Optionally, display an error message to the user
-                    alert('Password change failed. Please try again.');
+                    showAlert("Error",'Password change failed. Please try again.');
                 }
             });
 
@@ -538,7 +560,7 @@ function hidePopover(modalId, inputId) {
                     },
                     success: function (response) {
                         // Handle success response from the server
-                        console.log('Update successful:', response);
+                        console.log('Update successful:');
 
                         // Close the modal after successful update
                         closeEditModal();
@@ -548,10 +570,11 @@ function hidePopover(modalId, inputId) {
                         
                     },
                     error: function (error) {
+                        closeEditModal();
                         // Handle error response from the server
-                        console.error('Update failed:', error);
+                        console.error('Update failed:', error.responseJSON.error);
                         // Optionally display an error message to the user
-                        alert('Update failed. Please try again.');
+                        showAlert('Error', error.responseJSON.error);
                     }
             });
     }
@@ -569,21 +592,21 @@ function hidePopover(modalId, inputId) {
     // Validate Email
     var email = $('#editEmail').val();
     if (!email || !isValidEmail(email)) {
-        alert('Please enter a valid email address.');
+        showAlert("Error",'Please enter a valid email address.');
         return false;
     }
 
     // Validate Phone
     var phone = $('#editPhone').val();
     if (!phone || !isValidPhone(phone)) {
-        alert('Please enter a valid phone number.');
+        showAlert("Error",'Please enter a valid phone number.');
         return false;
     }
 
     // Validate Date of Birth
     var dob = $('#editDOB').val();
     if (!dob || !isValidDate(dob)) {
-        alert('Please enter a valid date of birth.');
+        showAlert("Error",'Please enter a valid date of birth.');
         return false;
     }
 
@@ -601,7 +624,7 @@ function isValidEmail(email) {
 function isValidPhone(phone) {
     // Implement your phone number validation logic here
     // Check if it contains at least 10 digits (with or without the country code)
-    var phoneRegex = /^(\+\d{1,})?\d{10}$/;
+    const phoneRegex = /^\+\d{12}$/;
     return phoneRegex.test(phone);
 }
 
@@ -681,6 +704,15 @@ function copyToken() {
     }
 }
 
+
+function showAlert(title,message) {
+  // Set the modal text
+  document.getElementById('modalText').innerText = message;
+  document.getElementById('modal-title').innerText = title;
+
+  // Show the modal
+  $('#customModal').modal('show');
+}
 
 </script>
 

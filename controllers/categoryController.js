@@ -37,29 +37,37 @@ const CategoryListLoaderAdmin = async (req, res, next) => {
                     description: 1,
                     addedDate: 1,
                     productsCount: { $size: '$products' }, // Count the number of products
-                    ordersCount: 'To be calculated after order model is created',
-                    ordersCountIn30Days: 'To be calculated after order model is created',
+                },
+            },
+            {
+                $facet: {
+                    paginatedCategories: [
+                        { $skip: (page - 1) * pageSize },
+                        { $limit: pageSize },
+                    ],
+                    totalCount: [
+                        { $count: 'total' },
+                    ],
                 },
             },
         ];
 
-        const categoriesData = await Category.aggregate(aggregationPipeline);
+        const result = await Category.aggregate(aggregationPipeline);
 
-        // Manually handle pagination
-        const startIdx = (page - 1) * pageSize;
-        const endIdx = startIdx + pageSize;
-        const paginatedCategories = categoriesData.slice(startIdx, endIdx);
+        const paginatedCategories = result[0].paginatedCategories;
+        const totalCount = result[0].totalCount[0] ? result[0].totalCount[0].total : 0;
 
         res.render('./admin/categoryList.ejs', {
             categories: paginatedCategories,
             currentPage: page,
-            totalPages: Math.ceil(categoriesData.length / pageSize),
+            totalPages: Math.ceil(totalCount / pageSize),
         });
     } catch (error) {
         console.error(error.message);
-        next(error)
+        next(error);
     }
 };
+
 
 const categoryAddLoaderAdmin = async (req, res, next) => {
     try {
