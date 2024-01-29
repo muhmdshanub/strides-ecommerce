@@ -145,7 +145,13 @@ const userListLoader = async (req, res, next) => {
             limit: pageSize,
         };
 
+        // Fetch users without populating addresses
         const usersData = await Users.paginate({}, options);
+
+        // Fetch addresses for all users in the result
+        const usersWithAddresses = await Users.populate(usersData.docs, { path: 'addresses' });
+
+        
 
         // Define a function to calculate activity status
         const calculateActivityStatus = (user) => {
@@ -161,7 +167,7 @@ const userListLoader = async (req, res, next) => {
             return user.isBlocked ? 'Blocked' : 'Active';
         };
 
-        const usersDataWithStatus = usersData.docs.map((user) => ({
+        const usersDataWithStatus = usersWithAddresses.map((user) => ({
             ...user.toObject(), // Convert Mongoose document to plain JavaScript object
             activityStatus: calculateActivityStatus(user),
             authenticationStatus: calculateAuthenticationStatus(user),
@@ -174,9 +180,10 @@ const userListLoader = async (req, res, next) => {
         });
     } catch (error) {
         console.log(error.message);
-        next(error)
+        next(error);
     }
 };
+
 
 const singleUserBlockHandler = async (req, res, next) => {
     try {

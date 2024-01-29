@@ -22,8 +22,6 @@
                                                 <th scope="col">Name</th>
                                                 <th scope="col">Description</th>
                                                 <th scope="col">Products</th>
-                                                <th scope="col">Total Sales</th>
-                                                <th scope="col">Sales in 30 days</th>
                                                 <th scope="col">&nbsp;</th>
                                             </tr>
                                         </thead>
@@ -49,13 +47,7 @@
                                                             <%= categories[i].productsCount %>
                                                         </td>
 
-                                                        <td class="tm-category-orderCount">
-                                                            <%= categories[i].ordersCount %>
-                                                        </td>
-
-                                                        <td class="tm-category-thirtyDayOrdercount">
-                                                            <%= categories[i].ordersCountIn30Days %>
-                                                        </td>
+                                                        
                                                         <td>
                                                             <a href="/admin/category-edit/<%= categories[i]._id %>"
                                                                 class="tm-category-edit-link">

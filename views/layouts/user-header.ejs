@@ -34,7 +34,7 @@
               if (response.ok) {
                   const currentlyLoggedInUserIdInput = document.getElementById('currentlyLoggedInUserId');
                   currentlyLoggedInUserIdInput.value = data.userId;
-                  console.log('Successfully fetched currently logged-in user ID:', data.userId);
+                  
               } else {
                   console.error('Error fetching currently logged-in user ID:', data.message || 'Unknown error');
               }
@@ -46,12 +46,6 @@
 
       // Establish a Socket.IO connection
       const socket = io();
-
-      if(socket){
-        console.log("socket is present")
-      }
-  
-     
 
       // Handle the 'force-logout' event for single user block
       socket.on('force-logout', ({ userId }) => {

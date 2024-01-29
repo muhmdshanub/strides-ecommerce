@@ -719,9 +719,9 @@ function createCategoryWiseOrderStatisticsGraph(responseData) {
 
 // Function to fetch user creation statistics data based on the selected option
 async function fetchCategoryWiseOrderStatistics(option) {
-    console.log("entered the graph main function");
+    
     try {
-        console.log("entered the try of graph main function");
+        
         const response = await fetch(`/admin/category-wise-order-statistics?option=${option}`);
         console.log(response);
 

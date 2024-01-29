@@ -650,8 +650,8 @@ const homeLoader = async (req, res, next) => {
 
 const getCurrentUserId = (req, res) => {
     try {
-        console.log("recieved the get use id request")
-        const currentlyLoggedInUserId = req.session.userId; // Adjust this based on how you store user information in your session
+        
+        const currentlyLoggedInUserId = req.session.userId; 
         res.json({ userId: currentlyLoggedInUserId });
     } catch (error) {
         console.error(error.message);
@@ -804,6 +804,18 @@ const profileUserEditHandler = async (req, res, next) => {
 
         // Retrieve updated user details from the request body
         const { name, email, phone, dateOfBirth } = req.body;
+
+        // Check if the new email already exists for another user
+        const emailExists = await User.findOne({ email, _id: { $ne: userId } });
+        if (emailExists) {
+            return res.status(400).json({ error: 'Email is already in use by another user' });
+        }
+
+        // Check if the new phone already exists for another user
+        const phoneExists = await User.findOne({ phone, _id: { $ne: userId } });
+        if (phoneExists) {
+            return res.status(400).json({ error: 'Phone number is already in use by another user' });
+        }
 
         // Update user details in the database
         const updatedUser = await User.findByIdAndUpdate(userId, {

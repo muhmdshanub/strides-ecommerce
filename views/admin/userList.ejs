@@ -24,11 +24,10 @@
                                                 <th scope="col">DATE OF BIRTH</th>
                                                 <th scope="col">PRIMARY ADDRESS</th>
                                                 <th scope="col">ACTIVITY STATUS</th>
-                                                <th scope="col">ORDERS</th>
-                                                <th scope="col">TOTAL AMOUNT SPEND</th>
+                                                <th scope="col">Orders Count</th>
                                                 <th scope="col">AUTHENTICATION STATUS</th>
-                                                <th scope="col">Block</th>
-                                                <th scope="col">Unblock</th>
+                                                <th scope="col">Block / Unblock</th>
+                                                
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -56,35 +55,37 @@
                                                             <%= users[i].dateOfBirth %>
                                                         </td>
                                                         <td class="tm-user-address">
-                                                            <%= users[i].addresses[0] || "Address will be filled later"
-                                                                %>
-                                                        </td>
+                                                            <% if(users[i]?.addresses?.length > 0){%>
+                                                                <p class="py-0 my-0"> <%= users[i].addresses[0].name %> | <%= users[i].addresses[0].phoneNumber %> </p>
+                                                                <p class="py-0 my-0"> <%= users[i].addresses[0].street %>, <%= users[i].addresses[0].city %>, <%= users[i].addresses[0].state %>,<%= users[i].addresses[0].zipCode %> </p>
+                                                            <%}else{%>
+                                                                <p class="py-0 my-0">No address.</p>
+                                                            <%}%>
                                                         <td class="tm-user-activityStatus">
                                                             <%= users[i].activityStatus %>
                                                         </td>
                                                         <td class="tm-user-address">
-                                                            <%= users[i].oreders?.length
-                                                                || "Order count will be filled later" %>
+                                                            <%= users[i].orders?.length
+                                                                || 0 %>
                                                         </td>
-                                                        <td class="tm-user-address">
-                                                            <%= users[i].amount
-                                                                || "Total spen damount will be filled later" %>
-                                                        </td>
+                                                        
                                                         <td class="tm-user-authenticationStatus">
                                                             <%= users[i].authenticationStatus %>
                                                         </td>
                                                         <td>
-                                                            <a href="#" class="tm-user-block"
-                                                                onclick="confirmBlock('<%= users[i]._id %>')">
-                                                                <img src="/admin/img/lock-solid.svg" alt="unblock">
-                                                            </a>
+                                                            <%if(users[i].authenticationStatus === "Active"){ %>
+                                                                <a href="#" class="tm-user-block"
+                                                                    onclick="confirmBlock('<%= users[i]._id %>')">
+                                                                   <img src="/admin/img/lock-solid.svg" alt="block">
+                                                                </a>
+                                                            <%}else{ %>
+                                                                <a href="#" class="tm-user-unblock"
+                                                                    onclick="confirmUnblock('<%= users[i]._id %>')">
+                                                                    <img src="/admin/img/lock-open-solid.svg" alt="unblock">
+                                                                </a>
+                                                            <%} %>
                                                         </td>
-                                                        <td>
-                                                            <a href="#" class="tm-user-unblock"
-                                                                onclick="confirmUnblock('<%= users[i]._id %>')">
-                                                                <img src="/admin/img/lock-open-solid.svg" alt="unblock">
-                                                            </a>
-                                                        </td>
+                                                        
                                                     </tr>
 
                                                     <% } } else { %>
