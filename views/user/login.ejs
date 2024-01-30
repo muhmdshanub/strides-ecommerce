@@ -78,7 +78,7 @@
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 const phoneRegex = /^\+\d{12}$/;
 
-                if (!emailRegex.test(emailOrPhone) && !phoneRegex.test(emailOrPhone)) {
+                if ((!emailRegex.test(emailOrPhone) && !phoneRegex.test(emailOrPhone)) || emailOrPhone.length > 100) {
                     errors.push('Invalid email or phone format.');
                     showPopover('exampleInputEmail1', 'Invalid email or phone format.');
                 } else {
@@ -92,6 +92,9 @@
             } else if (password.length < 8) {
                 errors.push('Password must be at least 8 characters long.');
                 showPopover('exampleInputPassword1', 'Password must be at least 8 characters long.');
+            } else if (password.length > 30) {
+                errors.push('Password must be atmost 30 characters long.');
+                showPopover('exampleInputPassword1', 'Password must be atmost 30 characters long.');
             } else {
                 hidePopover('exampleInputPassword1');
             }

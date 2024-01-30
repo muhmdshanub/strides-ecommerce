@@ -10,9 +10,9 @@
                     </div>
 
                     <div class="col-6 col-md-4 order-2 order-md-1 site-search-icon text-left ">
-                        <form action="/products" method="GET" class="site-block-top-search">
+                        <form action="/products" method="GET" class="site-block-top-search" onsubmit="return validateSearchForm();" novalidate>
                             <span class="icon icon-search2 px-3"></span>
-                            <input type="text" name="search" class="form-control border-0 pl-5" placeholder="Search">
+                            <input type="text" name="search" class="form-control border-0 pl-5" placeholder="Search" id="searchInput">
                         </form>
                     </div>
 
@@ -99,3 +99,46 @@
         </nav>
     </header>
 </div>
+
+<!-- Place this modal structure at the end of your HTML body -->
+<div class="modal" id="customModal" tabindex="-1" role="dialog" style="z-index: 2600;">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header ">
+          <h5 class="modal-title" id="modal-title">ALERT</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p id="modalText"></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+    function validateSearchForm() {
+        
+        var searchInput = document.getElementById('searchInput');
+        var pattern = /^[a-zA-Z]{2,20}$/;
+
+        if (!pattern.test(searchInput.value)) {
+            showAlert("Search Input", 'Please enter 2 to 20 letters for the search.');
+            return false; // Prevent form submission
+        }
+
+        return true; // Allow form submission
+    }
+    function showAlert(title,message) {
+  // Set the modal text
+  document.getElementById('modalText').innerText = message;
+  document.getElementById('modal-title').innerText = title;
+
+  // Show the modal
+  $('#customModal').modal('show');
+}
+</script>
