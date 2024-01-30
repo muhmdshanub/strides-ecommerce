@@ -209,7 +209,7 @@
                                             <label for="minPrice">
                                                 <h4>Min Price:</h4>
                                             </label>
-                                            <input type="text" id="minPrice" name="minPrice" class="form-control"
+                                            <input type="text" id="minPrice" name="minPrice" class="form-control" oninput="validateMinNumericInput(this)"
                                                 placeholder="Min Price" <% if (selectedFilters.minPrice !==null &&
                                                 !isNaN(selectedFilters.minPrice)) { %> value="<%=
                                                 selectedFilters.minPrice %>"<% } %> >
@@ -219,7 +219,7 @@
                                             <label for="maxPrice">
                                                 <h4>Max Price:</h4>
                                             </label>
-                                            <input type="text" id="maxPrice" name="maxPrice" class="form-control"
+                                            <input type="text" id="maxPrice" name="maxPrice" class="form-control" oninput="validateMaxNumericInput(this)"
                                                 placeholder="Max Price" <% if (selectedFilters.maxPrice !==null &&
                                                 !isNaN(selectedFilters.maxPrice)) { %> value="<%=
                                                 selectedFilters.maxPrice %>"<% } %>>
@@ -536,6 +536,40 @@
             document.getElementById("myNav").style.width = "0%";
         }
 
+        function validateMinNumericInput(input) {
+        // Remove non-numeric characters
+        let value = input.value.replace(/[^0-9]/g, '');
+
+        // Ensure the value is between 0 and 100000
+        value = Math.min(Math.max(parseInt(value, 10) || 0, 0), 100000);
+
+        // Get the maxPrice input
+        const maxPriceInput = document.getElementById('maxPrice');
+        const maxPriceValue = maxPriceInput.value;
+
+        // Check if maxPriceValue is present and greater than the current value
+        if (maxPriceValue !== '' && parseInt(maxPriceValue) <= value) {
+            maxPriceInput.value = ''; // Clear maxPrice value
+        }
+        // Update the input value
+        input.value = value;
+    }
+
+    function validateMaxNumericInput(input) {
+        // Remove non-numeric characters
+        let value = input.value.replace(/[^0-9]/g, '');
+
+        // Ensure the value is between 0 and 100000
+        value = Math.min(Math.max(parseInt(value, 10) || 0, 0), 100000);
+
+        // Get the minPrice input
+        const minPriceInput = document.getElementById('minPrice');
+        const minPriceValue = minPriceInput.value;
+
+        
+        // Update the input value
+        input.value = value;
+    }
 
         async function addToWishlist(productId) {
         

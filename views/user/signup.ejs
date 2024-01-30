@@ -142,6 +142,9 @@
                 if (!name) {
                     errors.push('Name cannot be empty.');
                     showPopover('exampleInputName', 'Name cannot be empty.');
+                }else if (name.length > 50) {
+                    errors.push('Name is too large.');
+                    showPopover('exampleInputName', 'Name is too large.');
                 } else {
                     hidePopover('exampleInputName');
                 }
@@ -149,6 +152,10 @@
                 if (!email) {
                     errors.push('Email cannot be empty.');
                     showPopover('exampleInputEmail1', 'Email cannot be empty.');
+
+                }else if (email.length > 100) {
+                    errors.push('Email is too large.');
+                    showPopover('exampleInputName', 'Email is too large.');
                 } else {
                     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                     if (!emailRegex.test(email)) {
@@ -175,6 +182,9 @@
                 if (!dob) {
                     errors.push('Date of Birth cannot be empty.');
                     showPopover('exampleInputDOB', 'Date of Birth cannot be empty.');
+                }else if (dob.length > 15) {
+                    errors.push('DOB is too large.');
+                    showPopover('exampleInputName', 'DOB is too large.');
                 } else {
                     hidePopover('exampleInputDOB');
                 }
@@ -182,6 +192,9 @@
                 if (password.length < 8) {
                     errors.push('Password should be at least 8 characters long.');
                     showPopover('exampleInputPassword1', 'Password should be at least 8 characters long.');
+                }else if (password.length > 30) {
+                    errors.push('Password is too large.');
+                    showPopover('exampleInputName', 'Password is too large.');
                 } else {
                     hidePopover('exampleInputPassword1');
                 }
