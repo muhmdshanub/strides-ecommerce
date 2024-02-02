@@ -37,7 +37,7 @@
                                     <input type="password" class="form-control" id="exampleInputPassword1" placeholder="Password" name="password" required>
                                 </div>
 
-                                <button type="submit" class="  btn btn-danger d-block mx-auto my-5">Signup</button>
+                                <button type="submit" class="  btn btn-danger d-block mx-auto my-5">Login</button>
 
 
                             </form>
@@ -55,41 +55,47 @@
             const form = document.getElementById('loginForm');
     
             function validateForm() {
-                const emailOrPhone = form.elements['emailOrPhone'].value.trim();
-                const password = form.elements['password'].value.trim();
-    
-                // Custom validation logic
-                const errors = [];
-    
-                if (!emailOrPhone) {
-                    errors.push('Email or Phone cannot be empty.');
-                    showPopover('exampleInputEmail1', 'Email or Phone cannot be empty.');
+            const emailOrPhone = form.elements['emailOrPhone'].value.trim();
+            const password = form.elements['password'].value.trim();
+
+            // Custom validation logic
+            const errors = [];
+
+            if (!emailOrPhone) {
+                errors.push('Email or Phone cannot be empty.');
+                showPopover('exampleInputEmail1', 'Email or Phone cannot be empty.');
+            } else {
+                // Check for email or phone format
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                const phoneRegex = /^\+\d{12}$/;
+
+                if ((!emailRegex.test(emailOrPhone) && !phoneRegex.test(emailOrPhone)) || emailOrPhone.length > 100) {
+                    errors.push('Invalid email or phone format.');
+                    showPopover('exampleInputEmail1', 'Invalid email or phone format.');
                 } else {
-                    // Check for email or phone format
-                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                    const phoneRegex = /^\+\d{12}$/;
-    
-                    if (!emailRegex.test(emailOrPhone) && !phoneRegex.test(emailOrPhone)) {
-                        errors.push('Invalid email or phone format.');
-                        showPopover('exampleInputEmail1', 'Invalid email or phone format.');
-                    } else {
-                        hidePopover('exampleInputEmail1');
-                    }
+                    hidePopover('exampleInputEmail1');
                 }
-    
-                if (!password) {
-                    errors.push('Password cannot be empty.');
-                    showPopover('exampleInputPassword1', 'Password cannot be empty.');
-                } else if (password.length < 8) {
-                    errors.push('Password must be at least 8 characters long.');
-                    showPopover('exampleInputPassword1', 'Password must be at least 8 characters long.');
-                } else {
-                    hidePopover('exampleInputPassword1');
-                }
-    
-                return errors;
             }
-    
+
+            if (!password) {
+                errors.push('Password cannot be empty.');
+                showPopover('exampleInputPassword1', 'Password cannot be empty.');
+            } else if (password.length < 8) {
+                errors.push('Password must be at least 8 characters long.');
+                showPopover('exampleInputPassword1', 'Password must be at least 8 characters long.');
+            } else if (password.length > 30) {
+                errors.push('Password must be atmost 30 characters long.');
+                showPopover('exampleInputPassword1', 'Password must be atmost 30 characters long.');
+            } else {
+                hidePopover('exampleInputPassword1');
+            }
+
+            return errors;
+        }
+
+
+
+
             function showPopover(inputId, message) {
                 hidePopover(inputId); // Remove existing popover if any
     

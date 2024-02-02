@@ -124,7 +124,7 @@ otpExpirationTime.setSeconds(otpExpirationTime.getSeconds() + 120);
 
 // Calculate the expiration time for Resend OTP (30 seconds from now)
 let resendOTPExpirationTime = new Date(otpCreatedTime);
-resendOTPExpirationTime.setSeconds(resendOTPExpirationTime.getSeconds() + 36);
+resendOTPExpirationTime.setSeconds(resendOTPExpirationTime.getSeconds() + 10);
 
 // Call the updateOTPTimer function initially
 let otpTimerId = setTimeout(updateOTPTimer, 0);
